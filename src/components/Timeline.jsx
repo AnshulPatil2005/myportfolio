@@ -8,7 +8,7 @@ const timelineData = [
   {
     id: '2024',
     year: 'May 2024',
-    title: 'B.Tech in CS – IIIT Surat',
+    title: 'B.Tech in ECE – IIIT Surat',
     description:
       'Started undergraduate studies in Computer Science, with focus on AI, systems, and scalable web applications.',
     icon: <FaGraduationCap />,
