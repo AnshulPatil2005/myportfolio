@@ -57,19 +57,19 @@ export default function About() {
           <div className="flex flex-wrap justify-center md:justify-start gap-6 mt-8">
             <div className="text-center">
               <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">
-                <CountUp end={50} duration={2} />+
+                <CountUp end={5} duration={2} />+
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-300">Projects Built</p>
             </div>
             <div className="text-center">
               <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">
-                <CountUp end={1000} duration={2} />+
+                <CountUp end={100} duration={2} />+
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-300">GitHub Commits</p>
             </div>
             <div className="text-center">
               <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">
-                <CountUp end={10} duration={2} />+
+                <CountUp end={6} duration={2} />+
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-300">Technologies Mastered</p>
             </div>
