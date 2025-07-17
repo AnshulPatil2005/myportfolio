@@ -7,7 +7,7 @@ const projects = [
     title: 'E-commerce Shopping Website',
     desc: 'Built with the MERN stack, supports authentication, cart, and payments.',
     tech: ['MongoDB', 'Express', 'React', 'Node'],
-    link: '#',
+    link: 'https://github.com/AnshulPatil2005/shoppingmernproject',
     details:
       'This full-featured e-commerce platform supports product listings, user registration, payment integration, cart management, and admin dashboard. Backend uses Express and MongoDB, frontend uses React with Tailwind.',
   },
@@ -23,7 +23,7 @@ const projects = [
     title: 'Snake Game in Terminal',
     desc: 'Classic snake game using C++ and terminal rendering.',
     tech: ['C++', 'OOP', 'Console'],
-    link: '#',
+    link: 'https://github.com/AnshulPatil2005/snake-game-in-terminal',
     details:
       'Written in C++ using object-oriented principles, this project mimics the classic Snake game playable directly in the terminal. It uses ncurses for rendering and keyboard inputs for snake control.',
   },
@@ -31,7 +31,7 @@ const projects = [
     title: 'Trading Bot (Telegram + Zerodha)',
     desc: 'Automates trade execution based on Telegram signal input.',
     tech: ['Python', 'Zerodha', 'Telegram'],
-    link: '#',
+    link: 'https://github.com/AnshulPatil2005/trading-bot',
     details:
       'This bot connects to Zerodha using KiteConnect and listens to trading signals via Telegram bot token. Supports live price polling, automated order placement, and P&L notifications.',
   },
@@ -47,7 +47,7 @@ const projects = [
     title: 'Portfolio Website',
     desc: 'A beautiful developer portfolio built with React and Tailwind CSS.',
     tech: ['React', 'Tailwind CSS', 'Vite', 'Framer Motion'],
-    link: '#',
+    link: 'https://github.com/AnshulPatil2005/myportfolio',
     details:
       'This portfolio showcases my skills, experience, and projects using a modern UI built with React and Tailwind CSS. Features include scroll animations, modals, dark/light mode, and a responsive design powered by Vite.',
   },
