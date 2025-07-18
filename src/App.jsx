@@ -10,6 +10,7 @@ import Timeline from './components/Timeline';
 import Footer from './components/Footer';
 import BackToTop from './components/BackToTop';
 import Loader from './components/Loader';
+import ParticlesBackground from './components/ParticlesBackground';
 
 function ScrollProgressBar() {
   const [scrollTop, setScrollTop] = useState(0);
@@ -63,6 +64,7 @@ export default function App() {
         <Testimonials />
         <Timeline />
         <Contact />
+        <ParticlesBackground />
       </main>
 
       {/* Footer + BackToTop */}

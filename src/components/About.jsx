@@ -10,18 +10,23 @@ export default function About() {
   const funFacts = [
     {
       front: '👨‍💻',
-      back: 'I optimized an API to be 4x faster with async batch queues.',
+      back: 'Optimized APIs to be 4x faster using async queues & caching.',
       tooltip: 'Backend wizardry!',
     },
     {
       front: '🌍',
-      back: 'It took me 263 hours to build this portfolio from scratch.',
-      tooltip: 'Lightning Fast!',
+      back: 'Spent 263+ hours perfecting this portfolio with Vite + Tailwind.',
+      tooltip: 'Crafted with love!',
     },
     {
       front: '🎮',
-      back: 'Gaming honed my strategy + debugging reflexes.',
-      tooltip: 'Level up!',
+      back: 'Gaming taught me real-time debugging and strategic thinking.',
+      tooltip: 'Gamedev vibes!',
+    },
+    {
+      front: '📚',
+      back: 'Self-taught 10+ tools & frameworks via open-source contributions.',
+      tooltip: 'Lifelong learner!',
     },
   ];
 
@@ -47,10 +52,13 @@ export default function About() {
         <div className="w-full md:w-2/3 text-center md:text-left">
           <h3 className="text-3xl font-bold mb-4 text-blue-600 dark:text-blue-400">About Me</h3>
           <p className="text-lg text-gray-700 dark:text-gray-300 mb-4">
-            I'm Anshul — a <span className="font-semibold text-blue-500">Full-Stack Developer</span> who builds fast, scalable apps using React, Node, AWS, and Tailwind.
+            Hey! I'm <span className="font-semibold text-blue-500">Anshul</span>, a passionate{' '}
+            <span className="font-semibold text-blue-500">Full-Stack Developer</span> who thrives on building
+            blazing-fast web apps using React, Node.js, AWS, and Tailwind CSS.
           </p>
           <p className="text-md text-gray-600 dark:text-gray-400 mb-4">
-            I care deeply about clean architecture, smooth UX, and solving real-world problems with impactful code.
+            I focus on clean architecture, delightful user experiences, and solving meaningful problems through
+            thoughtful engineering. Whether it’s backend optimization or frontend polish, I love delivering quality.
           </p>
 
           {/* Animated Counters */}
@@ -69,14 +77,14 @@ export default function About() {
             </div>
             <div className="text-center">
               <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">
-                <CountUp end={6} duration={2} />+
+                <CountUp end={10} duration={2} />+
               </p>
               <p className="text-sm text-gray-600 dark:text-gray-300">Technologies Mastered</p>
             </div>
           </div>
 
           {/* Fun Facts Flip Cards */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
             {funFacts.map((fact, idx) => (
               <div
                 key={idx}

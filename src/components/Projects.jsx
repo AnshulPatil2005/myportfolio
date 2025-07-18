@@ -13,7 +13,7 @@ const projects = [
   },
   {
     title: 'Cat vs Dog Classifier',
-    desc: 'Trained a CNN to distinguish between cat and dog images.',                             
+    desc: 'Trained a CNN to distinguish between cat and dog images.',
     tech: ['Python', 'TensorFlow', 'CNN'],
     link: '#',
     details:
@@ -43,7 +43,7 @@ const projects = [
     details:
       'An interactive narrative game where users drive the plot by entering prompts. Powered by GPT-4, the game generates story branches in real-time, creating an immersive and unpredictable experience.',
   },
-    {
+  {
     title: 'Portfolio Website',
     desc: 'A beautiful developer portfolio built with React and Tailwind CSS.',
     tech: ['React', 'Tailwind CSS', 'Vite', 'Framer Motion'],
@@ -100,17 +100,37 @@ export default function Projects() {
           <div
             key={idx}
             ref={(el) => (cardsRef.current[idx] = el)}
-            className="bg-white dark:bg-gray-800 border dark:border-gray-700 p-6 rounded-2xl shadow-lg transform-gpu cursor-pointer hover:shadow-2xl hover:shadow-blue-500/30 transition-transform duration-300 ease-out"
+            className="bg-white dark:bg-gray-800 border dark:border-gray-700 p-6 rounded-2xl shadow-lg transform-gpu cursor-pointer hover:shadow-2xl hover:shadow-blue-500/30 transition-transform duration-300 ease-out flex flex-col"
             style={{
               transformStyle: 'preserve-3d',
               transformOrigin: 'center center',
               willChange: 'transform',
             }}
           >
-            <h4 className="text-2xl font-semibold text-blue-600 dark:text-blue-400 mb-2">{project.title}</h4>
-            <p className="text-gray-700 dark:text-gray-300 mb-4">{project.desc}</p>
+            <div className="flex flex-col gap-3">
+              <h4 className="text-2xl font-semibold text-blue-600 dark:text-blue-400">{project.title}</h4>
+              <p className="text-gray-700 dark:text-gray-300">{project.desc}</p>
 
-            <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-4">
+              <div className="flex justify-center gap-4 mt-4">
+                <a
+                  href={project.link}
+                  className="flex items-center gap-1 text-blue-500 dark:text-blue-300 font-medium hover:underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View Project <FiExternalLink />
+                </a>
+                <button
+                  onClick={() => setActiveProject(project)}
+                  className="text-gray-600 dark:text-gray-300 underline hover:text-blue-600 dark:hover:text-blue-400"
+                >
+                  Learn More
+                </button>
+              </div>
+            </div>
+
+            {/* Tech Tags pinned to bottom, centered */}
+            <div className="flex flex-wrap justify-center gap-2 mt-auto pt-6">
               {project.tech.map((tag, i) => (
                 <span
                   key={i}
@@ -119,23 +139,6 @@ export default function Projects() {
                   {tag}
                 </span>
               ))}
-            </div>
-
-            <div className="flex justify-center gap-4">
-              <a
-                href={project.link}
-                className="flex items-center gap-1 text-blue-500 dark:text-blue-300 font-medium hover:underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                View Project <FiExternalLink />
-              </a>
-              <button
-                onClick={() => setActiveProject(project)}
-                className="text-gray-600 dark:text-gray-300 underline hover:text-blue-600 dark:hover:text-blue-400"
-              >
-                Learn More
-              </button>
             </div>
           </div>
         ))}
