@@ -13,7 +13,7 @@ const projects = [
   },
   {
     title: 'Cat vs Dog Classifier',
-    desc: 'Trained a CNN to distinguish between cat and dog images.',
+    desc: 'Trained a CNN to distinguish between cat and dog images.',                             
     tech: ['Python', 'TensorFlow', 'CNN'],
     link: '#',
     details:
