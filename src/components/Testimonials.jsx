@@ -7,7 +7,7 @@ export default function Testimonials() {
 
   return (
     <section id="testimonials" className="py-20 px-6 text-center bg-gray-50 dark:bg-gray-900">
-      <h3 className="text-3xl font-bold mb-10">Endorsements</h3>
+      <h3 className="text-3xl font-bold mb-10 text-blue-600 dark:text-blue-400">Endorsements</h3>
       <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
         {feedback.map((item, idx) => (
           <div

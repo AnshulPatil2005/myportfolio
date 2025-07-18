@@ -13,7 +13,7 @@ export default function Contact() {
       }`}
     >
       <div className="max-w-2xl mx-auto p-10 rounded-xl bg-white dark:bg-gray-800 border dark:border-gray-700 shadow">
-        <h3 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">Contact Me</h3>
+        <h3 className="text-3xl font-bold mb-10 text-blue-600 dark:text-blue-400">Contact Me</h3>
         <p className="text-gray-700 dark:text-gray-300 mb-4">
           Email: <a href="anshulpatil1022@gmail.com" className="text-blue-500 hover:underline">anshulpatil1022@gmail.com</a>
         </p>

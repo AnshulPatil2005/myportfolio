@@ -14,7 +14,7 @@ export default function Skills() {
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       }`}
     >
-      <h3 className="text-3xl font-bold mb-6">Skills</h3>
+      <h3 className="text-3xl font-bold mb-10 text-blue-600 dark:text-blue-400">Skills</h3>
       <div className="flex flex-wrap justify-center gap-4 max-w-4xl mx-auto">
         {skills.map((skill, idx) => (
           <span
