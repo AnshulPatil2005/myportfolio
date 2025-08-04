@@ -4,6 +4,15 @@ import { FiExternalLink } from 'react-icons/fi';
 
 const projects = [
   {
+  title: 'AI PR Reviewer Bot',
+  desc: 'An agentic AI-powered PR review tool with risk analysis and suggestions.',
+  tech: ['FastAPI', 'React', 'GitHub API', 'LLM'],
+  link: 'https://github.com/AnshulPatil2005/AI-PR-Reviewer',
+  details:
+    'This tool automatically analyzes GitHub Pull Requests using LLM agents, providing risk assessment and improvement suggestions. It features a React frontend, FastAPI backend, and connects to GitHub via the REST API. It demonstrates practical use of agentic AI, security handling, and project deployment.',
+},
+
+  {
     title: 'E-commerce Shopping Website',
     desc: 'Built with the MERN stack, supports authentication, cart, and payments.',
     tech: ['MongoDB', 'Express', 'React', 'Node'],
