@@ -11,3 +11,23 @@
 .rotate-y-180 {
   transform: rotateY(180deg);
 }
+@keyframes gradientBG {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-gradient {
+  background: linear-gradient(-45deg, #0f172a, #1a1a2e, #16213e, #0f172a);
+  background-size: 400% 400%;
+  animation: gradientBG 15s ease infinite;
+}
+html {
+  scroll-behavior: smooth;
+}

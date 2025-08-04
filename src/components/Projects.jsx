@@ -4,14 +4,13 @@ import { FiExternalLink } from 'react-icons/fi';
 
 const projects = [
   {
-  title: 'AI PR Reviewer Bot',
-  desc: 'An agentic AI-powered PR review tool with risk analysis and suggestions.',
-  tech: ['FastAPI', 'React', 'GitHub API', 'LLM'],
-  link: 'https://github.com/AnshulPatil2005/AI-PR-Reviewer',
-  details:
-    'This tool automatically analyzes GitHub Pull Requests using LLM agents, providing risk assessment and improvement suggestions. It features a React frontend, FastAPI backend, and connects to GitHub via the REST API. It demonstrates practical use of agentic AI, security handling, and project deployment.',
-},
-
+    title: 'AI PR Reviewer Bot',
+    desc: 'An agentic AI-powered PR review tool with risk analysis and suggestions.',
+    tech: ['FastAPI', 'React', 'GitHub API', 'LLM'],
+    link: 'https://github.com/AnshulPatil2005/AI-PR-Reviewer',
+    details:
+      'This tool automatically analyzes GitHub Pull Requests using LLM agents, providing risk assessment and improvement suggestions. It features a React frontend, FastAPI backend, and connects to GitHub via the REST API. It demonstrates practical use of agentic AI, security handling, and project deployment.',
+  },
   {
     title: 'E-commerce Shopping Website',
     desc: 'Built with the MERN stack, supports authentication, cart, and payments.',
@@ -138,7 +137,6 @@ export default function Projects() {
               </div>
             </div>
 
-            {/* Tech Tags pinned to bottom, centered */}
             <div className="flex flex-wrap justify-center gap-2 mt-auto pt-6">
               {project.tech.map((tag, i) => (
                 <span
@@ -153,7 +151,6 @@ export default function Projects() {
         ))}
       </div>
 
-      {/* Modal */}
       {activeProject && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center animate-fadeIn">
           <div className="bg-white dark:bg-gray-900 p-8 rounded-lg max-w-xl w-full shadow-2xl relative">

@@ -10,8 +10,10 @@ import Timeline from './components/Timeline';
 import Footer from './components/Footer';
 import BackToTop from './components/BackToTop';
 import Loader from './components/Loader';
-import ParticlesBackground from './components/ParticlesBackground';
+import SocialLinks from './components/SocialLinks';
+import StarsBackground from './components/StarsBackground'; // ✅ imported global stars background
 
+// 🔵 Scroll progress bar at the top
 function ScrollProgressBar() {
   const [scrollTop, setScrollTop] = useState(0);
 
@@ -41,33 +43,39 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1500); // 1.5s spinner
+    const timer = setTimeout(() => setLoading(false), 1500);
     return () => clearTimeout(timer);
   }, []);
 
   if (loading) return <Loader />;
 
   return (
-    <div className="bg-white text-gray-900 dark:bg-black dark:text-white font-sans scroll-smooth">
-      {/* Scroll progress bar */}
+    <div className="relative min-h-screen text-white font-sans scroll-smooth overflow-x-hidden bg-black">
+      {/* 🔵 Subtle noise texture */}
+      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5 z-0 pointer-events-none"></div>
+
+      {/* 🔵 Global 3D stars background */}
+      <StarsBackground />
+
+      {/* 🔵 Scroll progress bar */}
       <ScrollProgressBar />
 
-      {/* Navbar */}
+      {/* 🔵 Navbar */}
       <Navbar />
 
-      {/* Sections */}
-      <main className="pt-16">
-        <Hero />
-        <About />
-        <Projects />
-        <Skills />
-        <Testimonials />
-        <Timeline />
-        <Contact />
-        <ParticlesBackground />
+      {/* 🔵 Main content with proper stacking */}
+      <main className="relative z-10 pt-16">
+        <section id="hero"><Hero /></section>
+        <section id="about"><About /></section>
+        <section id="projects"><Projects /></section>
+        <section id="skills"><Skills /></section>
+        <section id="testimonials"><Testimonials /></section>
+        <section id="timeline"><Timeline /></section>
+        <section id="contact"><Contact /></section>
       </main>
 
-      {/* Footer + BackToTop */}
+      {/* 🔵 Footer and floating actions */}
+      <SocialLinks />
       <Footer />
       <BackToTop />
     </div>

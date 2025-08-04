@@ -4,7 +4,10 @@ export default {
     './index.html',
     './src/**/*.{js,jsx,ts,tsx}',
   ],
-  darkMode: 'class', // enable dark mode toggling via class
+  darkMode: 'class',
+  safelist: [
+    'z-[-1]', // required to render Particles background behind content
+  ],
   theme: {
     extend: {
       transformOrigin: {
