@@ -1,8 +1,33 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Typewriter } from 'react-simple-typewriter';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { Stars } from '@react-three/drei';
 import resume from '../assets/resume.pdf';
+
+// 🌌 Moving & Shining Stars
+function MovingStars() {
+  const starsRef = useRef();
+
+  useFrame(() => {
+    if (starsRef.current) {
+      starsRef.current.rotation.y += 0.0008; // Horizontal drift
+      starsRef.current.rotation.x += 0.0004; // Vertical drift
+    }
+  });
+
+  return (
+    <Stars
+      ref={starsRef}
+      radius={100}      // Spread wider
+      depth={80}        // More depth for realism
+      count={7000}      // More stars
+      factor={6}        // Larger star size → brighter appearance
+      saturation={0.5}  // Slight color tint for shine
+      fade              // Smooth fade with depth
+      speed={1}         // Faster twinkling
+    />
+  );
+}
 
 export default function Hero() {
   return (
@@ -13,15 +38,11 @@ export default function Hero() {
       {/* ⭐ Three.js Stars Canvas */}
       <div className="absolute top-0 left-0 w-full h-full z-0">
         <Canvas camera={{ position: [0, 0, 1] }}>
-          <Stars
-            radius={80}
-            depth={50}
-            count={5000}
-            factor={4}
-            saturation={0}
-            fade
-            speed={1}
-          />
+          {/* Soft ambient light to make stars glow */}
+          <ambientLight intensity={0.5} />
+          {/* Faint point light for subtle shine */}
+          <pointLight position={[0, 0, 2]} intensity={0.5} color="#ffffff" />
+          <MovingStars />
         </Canvas>
       </div>
 

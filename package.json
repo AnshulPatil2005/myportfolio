@@ -24,6 +24,7 @@
     "react-simple-typewriter": "^5.0.1",
     "react-tooltip": "^5.29.1",
     "react-tsparticles": "^2.12.2",
+    "swiper": "^11.2.10",
     "tailwindcss": "^4.1.11",
     "three": "^0.179.1",
     "tsparticles": "^3.8.1"

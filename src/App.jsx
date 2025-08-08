@@ -1,3 +1,4 @@
+// src/App.jsx
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
@@ -6,7 +7,6 @@ import Projects from './components/Projects';
 import Skills from './components/Skills';
 import Contact from './components/Contact';
 import Testimonials from './components/Testimonials';
-import Timeline from './components/Timeline';
 import Footer from './components/Footer';
 import BackToTop from './components/BackToTop';
 import Loader from './components/Loader';
@@ -70,7 +70,8 @@ export default function App() {
         <section id="projects"><Projects /></section>
         <section id="skills"><Skills /></section>
         <section id="testimonials"><Testimonials /></section>
-        <section id="timeline"><Timeline /></section>
+        
+
         <section id="contact"><Contact /></section>
       </main>
 
