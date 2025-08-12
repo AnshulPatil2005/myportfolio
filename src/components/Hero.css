@@ -1,0 +1,87 @@
+/* src/components/Hero.css */
+
+/* Full-screen container behind content */
+.aurora-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: radial-gradient(1000px 600px at 50% 100%, rgba(16, 24, 48, 0.6), rgba(0, 0, 0, 0) 60%),
+              radial-gradient(800px 500px at 50% 0%, rgba(10, 14, 28, 0.6), rgba(0, 0, 0, 0) 60%),
+              #000; /* base */
+  filter: saturate(115%);
+}
+
+/* Soft colorful blobs that drift & glow */
+.blob {
+  position: absolute;
+  width: 55vmax;
+  height: 55vmax;
+  border-radius: 50%;
+  opacity: 0.45;
+  filter: blur(60px);
+  mix-blend-mode: screen; /* blends nicely on dark bg */
+  transform: translate(-50%, -50%);
+  animation: float 26s linear infinite;
+  will-change: transform, opacity;
+}
+
+/* Individual blob tints */
+.blob-1 { 
+  left: 20%; top: 30%;
+  background: radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.8), rgba(99, 102, 241, 0.0) 60%);
+  animation-name: floatA;
+}
+.blob-2 { 
+  left: 70%; top: 35%;
+  background: radial-gradient(circle at 60% 40%, rgba(16, 185, 129, 0.8), rgba(16, 185, 129, 0.0) 60%);
+  animation-name: floatB;
+  animation-duration: 28s;
+}
+.blob-3 { 
+  left: 40%; top: 75%;
+  background: radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.8), rgba(56, 189, 248, 0.0) 60%);
+  animation-name: floatC;
+  animation-duration: 32s;
+}
+.blob-4 { 
+  left: 85%; top: 70%;
+  background: radial-gradient(circle at 50% 60%, rgba(236, 72, 153, 0.7), rgba(236, 72, 153, 0.0) 60%);
+  animation-name: floatD;
+  animation-duration: 30s;
+}
+
+/* Gentle drifts (different paths for parallax feel) */
+@keyframes floatA {
+  0%   { transform: translate(-50%, -50%) translate3d(0, 0, 0); }
+  25%  { transform: translate(-50%, -50%) translate3d(8%, -6%, 0); }
+  50%  { transform: translate(-50%, -50%) translate3d(0%, -12%, 0); }
+  75%  { transform: translate(-50%, -50%) translate3d(-6%, 4%, 0); }
+  100% { transform: translate(-50%, -50%) translate3d(0, 0, 0); }
+}
+@keyframes floatB {
+  0%   { transform: translate(-50%, -50%) translate3d(0, 0, 0); }
+  25%  { transform: translate(-50%, -50%) translate3d(-10%, 8%, 0); }
+  50%  { transform: translate(-50%, -50%) translate3d(-6%, -8%, 0); }
+  75%  { transform: translate(-50%, -50%) translate3d(6%, 6%, 0); }
+  100% { transform: translate(-50%, -50%) translate3d(0, 0, 0); }
+}
+@keyframes floatC {
+  0%   { transform: translate(-50%, -50%) translate3d(0, 0, 0); }
+  25%  { transform: translate(-50%, -50%) translate3d(6%, 8%, 0); }
+  50%  { transform: translate(-50%, -50%) translate3d(12%, 0%, 0); }
+  75%  { transform: translate(-50%, -50%) translate3d(-6%, -6%, 0); }
+  100% { transform: translate(-50%, -50%) translate3d(0, 0, 0); }
+}
+@keyframes floatD {
+  0%   { transform: translate(-50%, -50%) translate3d(0, 0, 0); }
+  25%  { transform: translate(-50%, -50%) translate3d(-8%, -6%, 0); }
+  50%  { transform: translate(-50%, -50%) translate3d(-12%, 2%, 0); }
+  75%  { transform: translate(-50%, -50%) translate3d(6%, 6%, 0); }
+  100% { transform: translate(-50%, -50%) translate3d(0, 0, 0); }
+}
+
+/* Respect reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .blob { animation: none; }
+}

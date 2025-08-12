@@ -1,33 +1,8 @@
-import React, { useRef } from 'react';
+// src/components/Hero.jsx
+import React from 'react';
 import { Typewriter } from 'react-simple-typewriter';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Stars } from '@react-three/drei';
 import resume from '../assets/resume.pdf';
-
-// 🌌 Moving & Shining Stars
-function MovingStars() {
-  const starsRef = useRef();
-
-  useFrame(() => {
-    if (starsRef.current) {
-      starsRef.current.rotation.y += 0.0008; // Horizontal drift
-      starsRef.current.rotation.x += 0.0004; // Vertical drift
-    }
-  });
-
-  return (
-    <Stars
-      ref={starsRef}
-      radius={100}      // Spread wider
-      depth={80}        // More depth for realism
-      count={7000}      // More stars
-      factor={6}        // Larger star size → brighter appearance
-      saturation={0.5}  // Slight color tint for shine
-      fade              // Smooth fade with depth
-      speed={1}         // Faster twinkling
-    />
-  );
-}
+import './Hero.css'; // <-- add this
 
 export default function Hero() {
   return (
@@ -35,15 +10,12 @@ export default function Hero() {
       id="hero"
       className="relative w-full h-screen flex items-center justify-center text-center overflow-hidden bg-black"
     >
-      {/* ⭐ Three.js Stars Canvas */}
-      <div className="absolute top-0 left-0 w-full h-full z-0">
-        <Canvas camera={{ position: [0, 0, 1] }}>
-          {/* Soft ambient light to make stars glow */}
-          <ambientLight intensity={0.5} />
-          {/* Faint point light for subtle shine */}
-          <pointLight position={[0, 0, 2]} intensity={0.5} color="#ffffff" />
-          <MovingStars />
-        </Canvas>
+      {/* 🌌 Aurora background (pure CSS, no Three.js) */}
+      <div className="aurora-bg" aria-hidden="true">
+        <span className="blob blob-1" />
+        <span className="blob blob-2" />
+        <span className="blob blob-3" />
+        <span className="blob blob-4" />
       </div>
 
       {/* 💬 Hero Content */}
