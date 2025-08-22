@@ -1,7 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
+// Custom hook to animate reveal when scrolled into view
 import useScrollReveal from '../hooks/useScrollReveal';
+// External link icon
 import { FiExternalLink } from 'react-icons/fi';
 
+// List of projects with metadata
 const projects = [
   {
     title: 'AI PR Reviewer Bot',
@@ -62,15 +65,23 @@ const projects = [
 ];
 
 export default function Projects() {
+  // Hook for scroll animation
   const [ref, visible] = useScrollReveal();
+
+  // Array of refs, one per project card (for tilt effect)
   const cardsRef = useRef([]);
+
+  // Currently opened modal project
   const [activeProject, setActiveProject] = useState(null);
 
   useEffect(() => {
+    // Add tilt / 3D hover effect for each card
     cardsRef.current.forEach((card) => {
-      if (!card) return;
+      if (!card) return; // Skip if null (not rendered yet)
 
-      let frame;
+      let frame; // Track animation frame for smoothness
+
+      // Mouse move handler: calculate rotation based on cursor position
       const handleMove = (e) => {
         cancelAnimationFrame(frame);
         frame = requestAnimationFrame(() => {
@@ -82,6 +93,8 @@ export default function Projects() {
           card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
         });
       };
+
+      // Reset card to default when mouse leaves
       const handleLeave = () => {
         cancelAnimationFrame(frame);
         card.style.transition = 'transform 0.4s ease';
@@ -89,6 +102,7 @@ export default function Projects() {
         setTimeout(() => (card.style.transition = ''), 400);
       };
 
+      // Attach listeners
       card.addEventListener('mousemove', handleMove);
       card.addEventListener('mouseleave', handleLeave);
     });
@@ -102,24 +116,32 @@ export default function Projects() {
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       }`}
     >
+      {/* Section heading */}
       <h3 className="text-3xl font-bold mb-10 text-blue-600 dark:text-blue-400">Projects</h3>
+
+      {/* Project grid */}
       <div className="grid gap-10 md:grid-cols-2 max-w-6xl mx-auto">
         {projects.map((project, idx) => (
           <div
             key={idx}
-            ref={(el) => (cardsRef.current[idx] = el)}
+            ref={(el) => (cardsRef.current[idx] = el)} // Assign card DOM element
             className="bg-white dark:bg-gray-800 border dark:border-gray-700 p-6 rounded-2xl shadow-lg transform-gpu cursor-pointer hover:shadow-2xl hover:shadow-blue-500/30 transition-transform duration-300 ease-out flex flex-col"
             style={{
-              transformStyle: 'preserve-3d',
+              transformStyle: 'preserve-3d', // Enable 3D transforms
               transformOrigin: 'center center',
-              willChange: 'transform',
+              willChange: 'transform', // Hint for browser optimization
             }}
           >
+            {/* Title + short description */}
             <div className="flex flex-col gap-3">
-              <h4 className="text-2xl font-semibold text-blue-600 dark:text-blue-400">{project.title}</h4>
+              <h4 className="text-2xl font-semibold text-blue-600 dark:text-blue-400">
+                {project.title}
+              </h4>
               <p className="text-gray-700 dark:text-gray-300">{project.desc}</p>
 
+              {/* Action links */}
               <div className="flex justify-center gap-4 mt-4">
+                {/* External link to GitHub or demo */}
                 <a
                   href={project.link}
                   className="flex items-center gap-1 text-blue-500 dark:text-blue-300 font-medium hover:underline"
@@ -128,6 +150,7 @@ export default function Projects() {
                 >
                   View Project <FiExternalLink />
                 </a>
+                {/* Learn More opens modal */}
                 <button
                   onClick={() => setActiveProject(project)}
                   className="text-gray-600 dark:text-gray-300 underline hover:text-blue-600 dark:hover:text-blue-400"
@@ -137,6 +160,7 @@ export default function Projects() {
               </div>
             </div>
 
+            {/* Tech tags */}
             <div className="flex flex-wrap justify-center gap-2 mt-auto pt-6">
               {project.tech.map((tag, i) => (
                 <span
@@ -151,11 +175,19 @@ export default function Projects() {
         ))}
       </div>
 
+      {/* Modal for active project */}
       {activeProject && (
         <div className="fixed inset-0 z-50 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center animate-fadeIn">
           <div className="bg-white dark:bg-gray-900 p-8 rounded-lg max-w-xl w-full shadow-2xl relative">
-            <h2 className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-4">{activeProject.title}</h2>
-            <p className="text-gray-700 dark:text-gray-300 mb-4">{activeProject.details}</p>
+            {/* Title */}
+            <h2 className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-4">
+              {activeProject.title}
+            </h2>
+            {/* Detailed description */}
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
+              {activeProject.details}
+            </p>
+            {/* Close button */}
             <button
               onClick={() => setActiveProject(null)}
               className="absolute top-3 right-4 text-gray-500 hover:text-red-500 text-xl"

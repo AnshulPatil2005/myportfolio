@@ -1,12 +1,129 @@
-# React + Vite
+Got it 👍 To make a proper README for your **AI-PR-Reviewer** project, I’ll draft it in a professional open-source style, highlighting setup, features, usage, and contribution.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Here’s a suggested `README.md` file:
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+````markdown
+# 🤖 AI PR Reviewer Bot
 
-## Expanding the ESLint configuration
+An **AI-powered Pull Request reviewer** that analyzes GitHub PRs, highlights potential risks, and suggests improvements.  
+Built with **FastAPI (backend)**, **React (frontend)**, and **LLM agents** connected to the GitHub REST API.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## ✨ Features
+- 🔍 **Automated Review** – Analyzes code changes in GitHub PRs.
+- ⚠️ **Risk Detection** – Flags security, performance, and maintainability issues.
+- 💡 **Improvement Suggestions** – Provides actionable recommendations.
+- 🎨 **Modern UI** – Clean React-based frontend for PR review visualization.
+- ⚡ **Fast & Scalable** – Backend powered by FastAPI with async requests.
+- 🔗 **Seamless GitHub Integration** – Fetches PRs and commits via REST API.
+
+---
+
+## 🛠️ Tech Stack
+- **Frontend**: React, TailwindCSS  
+- **Backend**: FastAPI, Python  
+- **AI/ML**: Large Language Model (LLM agents)  
+- **Database (optional)**: PostgreSQL / SQLite  
+- **APIs**: GitHub REST API  
+
+---
+
+## 🚀 Getting Started
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/AnshulPatil2005/AI-PR-Reviewer.git
+cd AI-PR-Reviewer
+````
+
+### 2. Backend Setup (FastAPI)
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
+
+Backend will start at `http://127.0.0.1:8000`.
+
+### 3. Frontend Setup (React)
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend will start at `http://localhost:5173` (Vite default).
+
+---
+
+## ⚙️ Configuration
+
+* Create a `.env` file in the backend folder with:
+
+```env
+GITHUB_TOKEN=your_personal_access_token
+OPENAI_API_KEY=your_openai_key   # or other LLM key
+```
+
+---
+
+## 📖 Usage
+
+1. Open the frontend in browser.
+2. Connect to your GitHub account using the token.
+3. Select a repository & PR.
+4. Get automated **review feedback, risk analysis, and suggestions** instantly.
+
+---
+
+## 📸 Demo
+
+*(Add screenshots or a short GIF here for better visibility)*
+
+---
+
+## 🧩 Project Structure
+
+```
+AI-PR-Reviewer/
+│── backend/          # FastAPI backend
+│   ├── main.py
+│   ├── services/
+│   └── requirements.txt
+│
+│── frontend/         # React frontend
+│   ├── src/
+│   ├── package.json
+│   └── vite.config.js
+│
+│── README.md
+```
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome!
+
+1. Fork the repo
+2. Create a new branch (`feature/your-feature`)
+3. Commit changes
+4. Open a Pull Request
+
+---
+
+## 📜 License
+
+MIT License © 2025 [Anshul Patil](https://github.com/AnshulPatil2005)
+
+---
+
+```
+
+---
+
