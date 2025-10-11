@@ -1,6 +1,4 @@
-Got it 👍 To make a proper README for your **AI-PR-Reviewer** project, I’ll draft it in a professional open-source style, highlighting setup, features, usage, and contribution.
 
-Here’s a suggested `README.md` file:
 
 ---
 
