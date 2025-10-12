@@ -1,127 +1,79 @@
 
+# Anshul’s Portfolio
+
+A modern, responsive portfolio built using **React**, **Vite**, and **Tailwind CSS**, designed to highlight projects, skills, and achievements with smooth animations and optimized performance.
+🔗 **Live Site:** [https://anshulportfolio2011.netlify.app/](https://anshulportfolio2011.netlify.app/)
 
 ---
 
-````markdown
-# 🤖 AI PR Reviewer Bot
+## Features
 
-An **AI-powered Pull Request reviewer** that analyzes GitHub PRs, highlights potential risks, and suggests improvements.  
-Built with **FastAPI (backend)**, **React (frontend)**, and **LLM agents** connected to the GitHub REST API.
-
----
-
-## ✨ Features
-- 🔍 **Automated Review** – Analyzes code changes in GitHub PRs.
-- ⚠️ **Risk Detection** – Flags security, performance, and maintainability issues.
-- 💡 **Improvement Suggestions** – Provides actionable recommendations.
-- 🎨 **Modern UI** – Clean React-based frontend for PR review visualization.
-- ⚡ **Fast & Scalable** – Backend powered by FastAPI with async requests.
-- 🔗 **Seamless GitHub Integration** – Fetches PRs and commits via REST API.
+* Responsive design for all devices
+* Animated hero section with typing effect
+* Smooth scroll and section transitions
+* 3D stars background using Three.js
+* Dark and light mode support
+* Integrated LeetCode statistics and GitHub links
+* Optimized SEO and metadata for visibility
+* Fast build and deployment using Netlify
 
 ---
 
-## 🛠️ Tech Stack
-- **Frontend**: React, TailwindCSS  
-- **Backend**: FastAPI, Python  
-- **AI/ML**: Large Language Model (LLM agents)  
-- **Database (optional)**: PostgreSQL / SQLite  
-- **APIs**: GitHub REST API  
+## Tech Stack
+
+* **Frontend:** React, Vite, Tailwind CSS
+* **Animation:** Framer Motion, Three.js, Drei
+* **Utilities:** EmailJS (contact form), AOS (scroll animations)
+* **Deployment:** Netlify
 
 ---
 
-## 🚀 Getting Started
-
-### 1. Clone the repository
-```bash
-git clone https://github.com/AnshulPatil2005/AI-PR-Reviewer.git
-cd AI-PR-Reviewer
-````
-
-### 2. Backend Setup (FastAPI)
+## Setup
 
 ```bash
-cd backend
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
-
-Backend will start at `http://127.0.0.1:8000`.
-
-### 3. Frontend Setup (React)
-
-```bash
-cd frontend
+# Install dependencies
 npm install
+
+# Run locally
 npm run dev
-```
 
-Frontend will start at `http://localhost:5173` (Vite default).
+# Build for production
+npm run build
 
----
-
-## ⚙️ Configuration
-
-* Create a `.env` file in the backend folder with:
-
-```env
-GITHUB_TOKEN=your_personal_access_token
-OPENAI_API_KEY=your_openai_key   # or other LLM key
+# Preview the build
+npm run preview
 ```
 
 ---
 
-## 📖 Usage
+## Customization
 
-1. Open the frontend in browser.
-2. Connect to your GitHub account using the token.
-3. Select a repository & PR.
-4. Get automated **review feedback, risk analysis, and suggestions** instantly.
-
----
-
-## 📸 Demo
-
-*(Add screenshots or a short GIF here for better visibility)*
+* Update portfolio data in `src/data/` (projects, skills, etc.)
+* Modify text and sections in component files (`Hero.jsx`, `About.jsx`, `Projects.jsx`, etc.)
+* Replace resume and images in `public/` directory
 
 ---
 
-## 🧩 Project Structure
+## Deployment
+
+Hosted on **Netlify**.
+Build command:
+
+```bash
+npm run build
+```
+
+Publish directory:
 
 ```
-AI-PR-Reviewer/
-│── backend/          # FastAPI backend
-│   ├── main.py
-│   ├── services/
-│   └── requirements.txt
-│
-│── frontend/         # React frontend
-│   ├── src/
-│   ├── package.json
-│   └── vite.config.js
-│
-│── README.md
+dist
 ```
 
 ---
 
-## 🤝 Contributing
+## License
 
-Contributions are welcome!
-
-1. Fork the repo
-2. Create a new branch (`feature/your-feature`)
-3. Commit changes
-4. Open a Pull Request
-
----
-
-## 📜 License
-
-MIT License © 2025 [Anshul Patil](https://github.com/AnshulPatil2005)
-
----
-
-```
+MIT © [Anshul](https://anshulportfolio2011.netlify.app/)
 
 ---
 

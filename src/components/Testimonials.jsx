@@ -21,7 +21,7 @@ const timelineData = [
   {
     id: '2025',
     year: 'Jun 2025',
-    title: 'Intern – Ecube Solutions',
+    title: 'Intern – Techvisio Design',
     description:
       'Built real-time traffic dashboard using Django and AWS. Focused on accident detection, video analytics, and cloud deployment.',
     icon: <FaBriefcase />, // Briefcase icon for work experience
