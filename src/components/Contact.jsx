@@ -1,15 +1,25 @@
 // Import React and useState hook for local component state
-import React, { useState } from 'react';
-// Custom hook to reveal the section on scroll (intersection‑observer under the hood)
+import React, { useState, useRef } from 'react';
+// Custom hook to reveal the section on scroll (intersection observer under the hood)
 import useScrollReveal from '../hooks/useScrollReveal';
 // Icons for email, LinkedIn, copy, and check indicators
-import { FiMail, FiLinkedin, FiCopy, FiCheck } from 'react-icons/fi';
+import { FiMail, FiLinkedin, FiCopy, FiCheck, FiSend } from 'react-icons/fi';
 
 export default function Contact() {
   // Get a ref for the section and a boolean "visible" for entrance animation
   const [ref, visible] = useScrollReveal();
   // Track "copied" state separately for email and LinkedIn (to toggle icon/text briefly)
   const [copied, setCopied] = useState({ email: false, linkedin: false });
+
+  // Form state
+  const formRef = useRef();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: ''
+  });
+  const [formStatus, setFormStatus] = useState({ type: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Contact details (could be moved to env/props if you want configurability)
   const email = 'anshulpatil1022@gmail.com';
@@ -25,7 +35,44 @@ export default function Contact() {
       // Reset the flag after a short delay to restore the "Copy" label/icon
       setTimeout(() => setCopied((c) => ({ ...c, [key]: false })), 1400);
     } catch {
-      // Silently ignore errors (e.g., non‑secure context, permission issues)
+      // Silently ignore errors (e.g., non secure context, permission issues)
+    }
+  };
+
+  // Handle form input changes
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setFormStatus({ type: '', message: '' });
+
+    try {
+      // Note: To use EmailJS, install @emailjs/browser and configure with your service ID
+      // For now, this is a fallback that opens the default email client
+      const subject = encodeURIComponent(`Portfolio Contact from ${formData.name}`);
+      const body = encodeURIComponent(`Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`);
+      window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+
+      setFormStatus({
+        type: 'success',
+        message: 'Opening your email client. If it doesn\'t open, please email me directly.'
+      });
+      setFormData({ name: '', email: '', message: '' });
+    } catch (error) {
+      setFormStatus({
+        type: 'error',
+        message: 'Something went wrong. Please email me directly.'
+      });
+    } finally {
+      setIsSubmitting(false);
+      setTimeout(() => setFormStatus({ type: '', message: '' }), 5000);
     }
   };
 
@@ -52,8 +99,80 @@ export default function Contact() {
 
           {/* Short intro/CTA line */}
           <p className="text-gray-300/90 text-center mb-8">
-            I’m open to internships, freelance, and collaboration. Reach out anytime!
+            I'm open to internships, freelance, and collaboration. Reach out anytime!
           </p>
+
+          {/* Contact Form */}
+          <form ref={formRef} onSubmit={handleSubmit} className="mb-8 space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
+                Your Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 outline-none transition"
+                placeholder="John Doe"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                Your Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 outline-none transition"
+                placeholder="john@example.com"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="message" className="block text-sm font-medium text-gray-300 mb-2">
+                Message
+              </label>
+              <textarea
+                id="message"
+                name="message"
+                value={formData.message}
+                onChange={handleChange}
+                required
+                rows="5"
+                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 outline-none transition resize-none"
+                placeholder="Your message here..."
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full px-6 py-3 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? 'Sending...' : 'Send Message'}
+              <FiSend />
+            </button>
+
+            {formStatus.message && (
+              <div className={`p-3 rounded-lg text-sm ${
+                formStatus.type === 'success'
+                  ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                  : 'bg-red-500/20 text-red-300 border border-red-500/30'
+              }`}>
+                {formStatus.message}
+              </div>
+            )}
+          </form>
+
+          <div className="border-t border-white/10 my-8"></div>
 
           {/* Contact items list (email + LinkedIn) */}
           <div className="space-y-5">

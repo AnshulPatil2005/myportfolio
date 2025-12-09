@@ -11,9 +11,12 @@ import Footer from './components/Footer';
 import BackToTop from './components/BackToTop';
 import Loader from './components/Loader';
 import SocialLinks from './components/SocialLinks';
-import StarsBackground from './components/StarsBackground'; // ✅ imported global stars background
+import StarsBackground from './components/StarsBackground';
+import Research from './components/Research';
+import Achievements from './components/Achievements';
+import ThemeToggle from './components/ThemeToggle';
 
-// 🔵 Scroll progress bar at the top
+// Scroll progress bar at the top
 function ScrollProgressBar() {
   const [scrollTop, setScrollTop] = useState(0);
 
@@ -51,32 +54,33 @@ export default function App() {
 
   return (
     <div className="relative min-h-screen text-white font-sans scroll-smooth overflow-x-hidden bg-black">
-      {/* 🔵 Subtle noise texture */}
+      {/* Subtle noise texture */}
       <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5 z-0 pointer-events-none"></div>
 
-      {/* 🔵 Global 3D stars background */}
+      {/* Global 3D stars background */}
       <StarsBackground />
 
-      {/* 🔵 Scroll progress bar */}
+      {/* Scroll progress bar */}
       <ScrollProgressBar />
 
-      {/* 🔵 Navbar */}
+      {/* Navbar */}
       <Navbar />
 
-      {/* 🔵 Main content with proper stacking */}
+      {/* Main content with proper stacking */}
       <main className="relative z-10 pt-16">
         <section id="hero"><Hero /></section>
         <section id="about"><About /></section>
+        <section id="achievements"><Achievements /></section>
         <section id="projects"><Projects /></section>
         <section id="skills"><Skills /></section>
+        <section id="research"><Research /></section>
         <section id="testimonials"><Testimonials /></section>
-        
-
         <section id="contact"><Contact /></section>
       </main>
 
-      {/* 🔵 Footer and floating actions */}
+      {/* Footer and floating actions */}
       <SocialLinks />
+      <ThemeToggle />
       <Footer />
       <BackToTop />
     </div>

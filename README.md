@@ -2,7 +2,8 @@
 # Anshul’s Portfolio
 
 A modern, responsive portfolio built using **React**, **Vite**, and **Tailwind CSS**, designed to highlight projects, skills, and achievements with smooth animations and optimized performance.
-🔗 **Live Site:** [https://anshulportfolio2011.netlify.app/](https://anshulportfolio2011.netlify.app/)
+
+**Live Site:** [https://anshulportfolio2011.netlify.app/](https://anshulportfolio2011.netlify.app/)
 
 ---
 
