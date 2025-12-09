@@ -6,9 +6,7 @@
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background: radial-gradient(1000px 600px at 50% 100%, rgba(16, 24, 48, 0.6), rgba(0, 0, 0, 0) 60%),
-              radial-gradient(800px 500px at 50% 0%, rgba(10, 14, 28, 0.6), rgba(0, 0, 0, 0) 60%),
-              #000; /* base */
+  background: #000;
   filter: saturate(115%);
 }
 
@@ -27,26 +25,26 @@
 }
 
 /* Individual blob tints */
-.blob-1 { 
+.blob-1 {
   left: 20%; top: 30%;
-  background: radial-gradient(circle at 30% 30%, rgba(99, 102, 241, 0.8), rgba(99, 102, 241, 0.0) 60%);
+  background: rgba(99, 102, 241, 0.3);
   animation-name: floatA;
 }
-.blob-2 { 
+.blob-2 {
   left: 70%; top: 35%;
-  background: radial-gradient(circle at 60% 40%, rgba(16, 185, 129, 0.8), rgba(16, 185, 129, 0.0) 60%);
+  background: rgba(16, 185, 129, 0.3);
   animation-name: floatB;
   animation-duration: 28s;
 }
-.blob-3 { 
+.blob-3 {
   left: 40%; top: 75%;
-  background: radial-gradient(circle at 50% 50%, rgba(56, 189, 248, 0.8), rgba(56, 189, 248, 0.0) 60%);
+  background: rgba(56, 189, 248, 0.3);
   animation-name: floatC;
   animation-duration: 32s;
 }
-.blob-4 { 
+.blob-4 {
   left: 85%; top: 70%;
-  background: radial-gradient(circle at 50% 60%, rgba(236, 72, 153, 0.7), rgba(236, 72, 153, 0.0) 60%);
+  background: rgba(236, 72, 153, 0.3);
   animation-name: floatD;
   animation-duration: 30s;
 }

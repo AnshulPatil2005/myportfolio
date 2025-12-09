@@ -39,13 +39,13 @@ export default function Skills() {
         {skills.map((skill, idx) => (
           <span
             key={idx} // Unique key for each skill item
-            className="px-5 py-2 rounded-full 
-                       bg-gradient-to-r from-blue-600 to-cyan-500  // Gradient background
-                       text-white font-medium 
-                       shadow-lg hover:shadow-xl hover:shadow-blue-400/40 // Stronger shadow on hover
-                       hover:from-cyan-500 hover:to-blue-600           // Gradient flips on hover
-                       hover:scale-110                                 // Slight grow effect
-                       transition-all duration-300 cursor-default"     // Smooth animation
+            className="px-5 py-2 rounded-full
+                       bg-blue-600
+                       text-white font-medium
+                       shadow-lg hover:shadow-xl hover:shadow-blue-400/40
+                       hover:bg-cyan-500
+                       hover:scale-110
+                       transition-all duration-300 cursor-default"
           >
             {skill}
           </span>

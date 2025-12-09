@@ -46,7 +46,7 @@ export default function Timeline() {
     <section
       id="timeline"
       ref={ref} // Attach ref for scroll reveal animation
-      className={`py-20 px-6 bg-gradient-to-b from-black to-gray-900 text-white transition-all duration-700 ${
+      className={`py-20 px-6 bg-black text-white transition-all duration-700 ${
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       }`}
     >
@@ -56,8 +56,8 @@ export default function Timeline() {
           <button
             key={item.id}
             onClick={() => handleScrollTo(item.id)} // Scroll to card
-            className="px-4 py-2 rounded-full text-sm font-medium bg-gray-800 text-white 
-                       hover:bg-gradient-to-r hover:from-blue-500 hover:to-cyan-400 
+            className="px-4 py-2 rounded-full text-sm font-medium bg-gray-800 text-white
+                       hover:bg-blue-500
                        transition-all duration-300 hover:scale-105"
           >
             {item.year}

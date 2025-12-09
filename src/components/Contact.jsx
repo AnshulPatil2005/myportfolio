@@ -37,19 +37,17 @@ export default function Contact() {
       className={`py-20 px-6 transition-all duration-700 ${
         // Fade/slide in when "visible" flips true
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-      } bg-gradient-to-b from-black to-gray-900`}
+      } bg-black`}
     >
       {/* Constrain width and center the card */}
       <div className="max-w-2xl mx-auto relative">
-        {/* Decorative blurred gradient halo behind the card */}
-        <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-blue-500 via-cyan-400 to-blue-500 blur opacity-30" />
+        {/* Decorative blurred halo behind the card */}
+        <div className="absolute -inset-0.5 rounded-2xl bg-blue-500 blur opacity-30" />
         {/* Glassy card container with border and backdrop blur */}
         <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-8 shadow-xl">
-          {/* Section title with gradient text */}
-          <h3 className="text-3xl font-extrabold mb-6 text-center">
-            <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-              Contact Me
-            </span>
+          {/* Section title */}
+          <h3 className="text-3xl font-extrabold mb-6 text-center text-blue-400">
+            Contact Me
           </h3>
 
           {/* Short intro/CTA line */}
@@ -125,7 +123,7 @@ export default function Contact() {
             {/* Pre-filled email with subject/body (URL-encoded) */}
             <a
               href={`mailto:${email}?subject=Hello%20Anshul&body=Hi%20Anshul,%0D%0A%0D%0A`}
-              className="px-5 py-3 rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-medium hover:opacity-90 transition"
+              className="px-5 py-3 rounded-full bg-blue-600 text-white font-medium hover:bg-cyan-500 transition"
             >
               Send an Email
             </a>

@@ -6,28 +6,12 @@
   transform: translateX(-50%);
   width: 4px;
   height: 100%;
-  background: linear-gradient(180deg, #3b82f6, #06b6d4, #3b82f6);
-  background-size: 400% 400%;
-  animation: scrollPulse 8s ease infinite;
+  background: #3b82f6;
   z-index: 0;
 }
 
 .timeline-dot {
-  background: linear-gradient(45deg, #3b82f6, #06b6d4, #3b82f6);
-  background-size: 200% 200%;
-  animation: glowShift 5s ease infinite;
+  background: #3b82f6;
   border: 4px solid #000;
   box-shadow: 0 0 12px rgba(59, 130, 246, 0.7), 0 0 24px rgba(6, 182, 212, 0.5);
-}
-
-@keyframes scrollPulse {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-@keyframes glowShift {
-  0% { background-position: 0% 50%; box-shadow: 0 0 12px rgba(59, 130, 246, 0.7); }
-  50% { background-position: 100% 50%; box-shadow: 0 0 18px rgba(6, 182, 212, 0.7); }
-  100% { background-position: 0% 50%; box-shadow: 0 0 12px rgba(59, 130, 246, 0.7); }
 }
