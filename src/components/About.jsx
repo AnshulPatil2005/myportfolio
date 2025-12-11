@@ -175,7 +175,7 @@ export default function About() {
 
           {/* LeetCode stats block: shows list + bar chart or error/loading states */}
           <div className="mt-14">
-            <h3 className="text-2xl font-bold text-blue-400 mb-4">📊 LeetCode Stats</h3>
+            <h3 className="text-2xl font-bold text-blue-400 mb-4">LeetCode Stats</h3>
 
             {/* Error state if fetch failed */}
             {error ? (
