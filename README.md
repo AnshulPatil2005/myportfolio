@@ -13,7 +13,6 @@ A modern, responsive portfolio built using **React**, **Vite**, and **Tailwind C
 * Animated hero section with typing effect
 * Smooth scroll and section transitions
 * 3D stars background using Three.js
-* Dark and light mode support
 * Integrated LeetCode statistics and GitHub links
 * Optimized SEO and metadata for visibility
 * Fast build and deployment using Netlify
