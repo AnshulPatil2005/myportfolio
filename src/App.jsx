@@ -14,7 +14,6 @@ import SocialLinks from './components/SocialLinks';
 import StarsBackground from './components/StarsBackground';
 import Research from './components/Research';
 import Achievements from './components/Achievements';
-import ThemeToggle from './components/ThemeToggle';
 
 // Scroll progress bar at the top
 function ScrollProgressBar() {
@@ -80,7 +79,6 @@ export default function App() {
 
       {/* Footer and floating actions */}
       <SocialLinks />
-      <ThemeToggle />
       <Footer />
       <BackToTop />
     </div>

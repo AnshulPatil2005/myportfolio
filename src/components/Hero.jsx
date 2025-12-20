@@ -1,7 +1,7 @@
 // src/components/Hero.jsx
 import React from 'react';
 import { Typewriter } from 'react-simple-typewriter';
-import resume from '../assets/resume.pdf';
+import resume from '../assets/AnshulPatil.pdf';
 import './Hero.css'; // <-- add this
 
 export default function Hero() {

@@ -1,5 +1,5 @@
 // React core imports for component logic and hooks
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 // Static profile image used in the "About" section
 import profile from '../assets/profile.jpg';
@@ -12,6 +12,9 @@ import CountUp from 'react-countup';
 
 // Simple tooltip library for hover hints on fun‑fact cards
 import { Tooltip } from 'react-tooltip';
+
+// Anime.js for timeline-based DOM animations
+import { animate, createTimeline, stagger } from 'animejs';
 
 // HTTP client for fetching LeetCode stats
 import axios from 'axios';
@@ -37,6 +40,15 @@ export default function About() {
   // Hook returns a ref to attach to the section and a boolean "visible" for reveal animation
   const [ref, visible] = useScrollReveal();
 
+  // Track if entrance animations already ran
+  const hasAnimated = useRef(false);
+
+  // Prevent duplicate timelines during re-renders
+  const isAnimating = useRef(false);
+
+  // Store a long-running animation instance to avoid duplicates
+  const floatAnimation = useRef(null);
+
   // LeetCode stats object once fetched; null while loading
   const [stats, setStats] = useState(null);
 
@@ -53,11 +65,11 @@ export default function About() {
 
   // Fetch LeetCode stats on first render
   useEffect(() => {
-    // Define async function inside effect (effects themselves can’t be async)
+    // Define async function inside effect (effects themselves can't be async)
     async function fetchLeetCodeStats() {
       try {
         // Public API that returns user stats; username is PaNdA2069 (configurable)
-        const res = await axios.get('https://leetcode-stats-api.herokuapp.com/PaNdA2069');
+        const res = await axios.get('https://leetcode-stats.tashif.codes/PaNdA2069');
         // Store the response JSON on success
         setStats(res.data);
       } catch (err) {
@@ -70,6 +82,120 @@ export default function About() {
     fetchLeetCodeStats();
     // Empty dependency array → run only once on mount
   }, []);
+
+  // Entry animations when the section first becomes visible
+  useEffect(() => {
+    if (!visible || !ref.current || hasAnimated.current || isAnimating.current) return;
+
+    const root = ref.current;
+    const selectAll = (selector) => root.querySelectorAll(selector);
+
+    isAnimating.current = true;
+
+    const timeline = createTimeline({
+      defaults: {
+        duration: 900,
+        ease: 'outExpo',
+      },
+      onComplete: () => {
+        hasAnimated.current = true;
+        isAnimating.current = false;
+      },
+    });
+
+    timeline
+      .add(selectAll('[data-animate="profile"]'), {
+        opacity: [0, 1],
+        translateY: [20, 0],
+        scale: [0.95, 1],
+        duration: 900,
+      })
+      .add(selectAll('[data-animate="title"]'), {
+        opacity: [0, 1],
+        translateY: [14, 0],
+        duration: 700,
+      }, '-=500')
+      .add(selectAll('[data-animate="text"]'), {
+        opacity: [0, 1],
+        translateY: [12, 0],
+        delay: stagger(120),
+        duration: 650,
+      }, '-=450')
+      .add(selectAll('[data-animate="counter"]'), {
+        opacity: [0, 1],
+        translateY: [10, 0],
+        scale: [0.96, 1],
+        delay: stagger(120),
+        duration: 600,
+      }, '-=500')
+      .add(selectAll('[data-animate="fact"]'), {
+        opacity: [0, 1],
+        translateY: [16, 0],
+        delay: stagger(90),
+        duration: 650,
+      }, '-=450')
+      .add(selectAll('[data-animate="stats"]'), {
+        opacity: [0, 1],
+        translateY: [16, 0],
+        duration: 650,
+      }, '-=450')
+      .add(selectAll('[data-animate="github"]'), {
+        opacity: [0, 1],
+        translateY: [16, 0],
+        duration: 650,
+      }, '-=500');
+
+    return () => {
+      timeline.pause();
+      isAnimating.current = false;
+    };
+  }, [visible, ref]);
+
+  // Animate stats list and chart once data is available
+  useEffect(() => {
+    if (!visible || !stats || !ref.current) return;
+
+    const root = ref.current;
+
+    animate(root.querySelectorAll('[data-animate="stats-item"]'), {
+      opacity: [0, 1],
+      translateX: [-8, 0],
+      delay: stagger(80),
+      ease: 'outQuad',
+      duration: 500,
+    });
+
+    animate(root.querySelectorAll('[data-animate="chart"]'), {
+      opacity: [0, 1],
+      scale: [0.96, 1],
+      duration: 700,
+      ease: 'outExpo',
+    });
+  }, [visible, stats, ref]);
+
+  // Subtle floating animation on the profile image
+  useEffect(() => {
+    if (!visible || !ref.current || floatAnimation.current) return;
+
+    const target = ref.current.querySelector('[data-animate="profile"]');
+    if (!target) return;
+
+    floatAnimation.current = animate(target, {
+      translateY: [0, -8],
+      alternate: true,
+      ease: 'inOutSine',
+      duration: 2500,
+      delay: 2000,
+      loop: true,
+    });
+
+    return () => {
+      if (floatAnimation.current) {
+        floatAnimation.current.pause();
+        floatAnimation.current = null;
+      }
+    };
+  }, [visible, ref]);
 
   // Prepare chart dataset only when stats are available (short‑circuit with &&)
   const chartData = stats && {
@@ -108,6 +234,7 @@ export default function About() {
           <img
             src={profile} // Local imported asset
             alt="Profile" // Accessibility alt text
+            data-animate="profile"
             className="rounded-xl shadow-lg w-64 h-64 object-cover mx-auto border-4 border-blue-500 dark:border-white"
           />
         </div>
@@ -115,32 +242,32 @@ export default function About() {
         {/* Right column: text, counters, fun facts, and LeetCode stats */}
         <div className="w-full md:w-2/3 text-center md:text-left">
           {/* Section heading */}
-          <h3 className="text-3xl font-bold mb-4 text-blue-400">About Me</h3>
+          <h3 className="text-3xl font-bold mb-4 text-blue-400" data-animate="title">About Me</h3>
 
           {/* Intro paragraph with highlighted name/role */}
-          <p className="text-lg text-gray-200 mb-4">
+          <p className="text-lg text-gray-200 mb-4" data-animate="text">
             Hey! I'm <span className="font-semibold text-blue-300">Anshul</span>, a passionate{' '}
             <span className="font-semibold text-blue-300">Full‑Stack Developer</span> building fast React & Node apps.
           </p>
 
           {/* Short mission/values statement */}
-          <p className="text-md text-gray-300 mb-6">
+          <p className="text-md text-gray-300 mb-6" data-animate="text">
             I focus on clean architecture, delightful UX, and solving real problems with thoughtful engineering.
           </p>
 
           {/* Animated KPI counters using CountUp */}
           <div className="flex flex-wrap justify-center md:justify-start gap-6 mt-8">
-            <div className="text-center">
+            <div className="text-center" data-animate="counter">
               {/* CountUp animates from 0 to 5 over 2s */}
               <p className="text-4xl font-bold text-blue-400"><CountUp end={5} duration={2} />+</p>
               <p className="text-sm text-gray-200">Projects Built</p>
             </div>
-            <div className="text-center">
+            <div className="text-center" data-animate="counter">
               {/* CountUp animates to 100 */}
               <p className="text-4xl font-bold text-blue-400"><CountUp end={100} duration={2} />+</p>
               <p className="text-sm text-gray-200">GitHub Commits</p>
             </div>
-            <div className="text-center">
+            <div className="text-center" data-animate="counter">
               {/* CountUp animates to 10 */}
               <p className="text-4xl font-bold text-blue-400"><CountUp end={10} duration={2} />+</p>
               <p className="text-sm text-gray-200">Technologies Mastered</p>
@@ -153,6 +280,7 @@ export default function About() {
               <div
                 key={i} // Stable key for list rendering
                 className="group perspective" // "group" enables group‑hover; "perspective" for 3D effect
+                data-animate="fact"
                 data-tooltip-id={`tooltip-${i}`} // Connect card to its tooltip
                 data-tooltip-content={fact.tooltip} // Tooltip text
               >
@@ -174,7 +302,7 @@ export default function About() {
           </div>
 
           {/* LeetCode stats block: shows list + bar chart or error/loading states */}
-          <div className="mt-14">
+          <div className="mt-14" data-animate="stats">
             <h3 className="text-2xl font-bold text-blue-400 mb-4">LeetCode Stats</h3>
 
             {/* Error state if fetch failed */}
@@ -188,21 +316,33 @@ export default function About() {
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
                 {/* Key stat figures (text list) */}
                 <ul className="text-left space-y-2 text-gray-200 flex-1">
-                  <li>Acceptance Rate: <span className="font-semibold">{stats.acceptanceRate}%</span></li>
-                  <li>Global Rank: <span className="font-semibold">#{stats.ranking}</span></li>
-                  <li>Total Solved: <span className="font-semibold">{stats.totalSolved}</span></li>
-                  <li>Easy: <span className="text-green-400 font-semibold">{stats.easySolved}</span></li>
-                  <li>Medium: <span className="text-yellow-400 font-semibold">{stats.mediumSolved}</span></li>
-                  <li>Hard: <span className="text-red-400 font-semibold">{stats.hardSolved}</span></li>
+                  <li data-animate="stats-item">Acceptance Rate: <span className="font-semibold">{stats.acceptanceRate}%</span></li>
+                  <li data-animate="stats-item">Global Rank: <span className="font-semibold">#{stats.ranking}</span></li>
+                  <li data-animate="stats-item">Total Solved: <span className="font-semibold">{stats.totalSolved}</span></li>
+                  <li data-animate="stats-item">Easy: <span className="text-green-400 font-semibold">{stats.easySolved}</span></li>
+                  <li data-animate="stats-item">Medium: <span className="text-yellow-400 font-semibold">{stats.mediumSolved}</span></li>
+                  <li data-animate="stats-item">Hard: <span className="text-red-400 font-semibold">{stats.hardSolved}</span></li>
                 </ul>
 
                 {/* Bar chart visualization of solved counts */}
-                <div className="w-full lg:w-1/2">
+                <div className="w-full lg:w-1/2" data-animate="chart">
                   {/* Bar expects defined data/options; guarded above with stats && chartData */}
                   <Bar data={chartData} options={chartOptions} />
                 </div>
               </div>
             )}
+          </div>
+
+          {/* GitHub Stats Card */}
+          <div className="mt-14" data-animate="github">
+            <h3 className="text-2xl font-bold text-blue-400 mb-4">GitHub Stats</h3>
+            <div className="flex justify-center md:justify-start">
+              <img
+                src="https://github-readme-stats.vercel.app/api?username=AnshulPatil2005&show_icons=true&theme=dark&bg_color=000000&title_color=60a5fa&text_color=ffffff&icon_color=60a5fa&border_color=3b82f6"
+                alt="GitHub Stats"
+                className="rounded-xl shadow-lg"
+              />
+            </div>
           </div>
 
         </div>

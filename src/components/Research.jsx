@@ -4,22 +4,22 @@ import { FiExternalLink, FiFileText } from 'react-icons/fi';
 
 const publications = [
   {
-    title: 'Working on AI-Powered Document Analysis Systems',
-    status: 'In Progress',
+    title: 'Coming Soon',
+    status: 'Coming Soon',
     authors: 'Anshul Patil',
-    venue: 'Research in Progress',
+    venue: 'Coming Soon',
     year: '2025',
-    description: 'Exploring novel approaches to automated document analysis using large language models and vector databases for legal and contract documents.',
-    topics: ['Natural Language Processing', 'Document AI', 'LLM Applications'],
+    description: 'Exciting research projects are in the pipeline. Check back soon for updates on my latest work.',
+    topics: ['AI & ML', 'Software Engineering', 'Research'],
   },
   {
-    title: 'Working on Agentic AI Systems for Code Review',
-    status: 'In Progress',
+    title: 'Coming Soon',
+    status: 'Coming Soon',
     authors: 'Anshul Patil',
-    venue: 'Research in Progress',
+    venue: 'Coming Soon',
     year: '2025',
-    description: 'Investigating multi-agent systems for automated code review, risk assessment, and security vulnerability detection in pull requests.',
-    topics: ['AI Agents', 'Software Engineering', 'Code Analysis'],
+    description: 'More research publications and projects will be shared here. Stay tuned for upcoming announcements.',
+    topics: ['Innovation', 'Technology', 'Development'],
   },
 ];
 
@@ -67,7 +67,9 @@ export default function Research() {
                   </div>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap ${
-                  pub.status === 'In Progress'
+                  pub.status === 'Coming Soon'
+                    ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300'
+                    : pub.status === 'In Progress'
                     ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300'
                     : 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
                 }`}>

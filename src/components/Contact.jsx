@@ -116,7 +116,7 @@ export default function Contact() {
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 outline-none transition"
-                placeholder="John Doe"
+                placeholder="Your Name"
               />
             </div>
 
@@ -132,7 +132,7 @@ export default function Contact() {
                 onChange={handleChange}
                 required
                 className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 outline-none transition"
-                placeholder="john@example.com"
+                placeholder="your.email@example.com"
               />
             </div>
 

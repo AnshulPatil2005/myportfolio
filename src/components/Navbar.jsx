@@ -12,14 +12,14 @@ export default function Navbar() {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach(entry => {
-          // If a section is at least 60% visible in the viewport
+          // Mark active when the section crosses the viewport center band
           if (entry.isIntersecting) {
             // Update activeSection state with the section's id
             setActiveSection(entry.target.id);
           }
         });
       },
-      { threshold: 0.6 } // 60% of the section must be visible to trigger
+      { rootMargin: '-45% 0px -45% 0px', threshold: 0 }
     );
 
     // Attach the observer to each section in the list
