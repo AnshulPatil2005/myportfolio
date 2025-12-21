@@ -46,7 +46,7 @@ export default function Timeline() {
     <section
       id="timeline"
       ref={ref} // Attach ref for scroll reveal animation
-      className={`py-20 px-6 bg-black text-white transition-all duration-700 ${
+      className={`py-20 px-6 text-white transition-all duration-700 ${
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       }`}
     >

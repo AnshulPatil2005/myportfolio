@@ -152,7 +152,7 @@ export default function Projects() {
       }`}
     >
       {/* Section heading */}
-      <h3 className="text-3xl font-bold mb-6 text-blue-600 dark:text-blue-400">Projects</h3>
+      <h3 className="text-3xl font-bold mb-6 text-white">Projects</h3>
 
       {/* Category filters */}
       <div className="flex flex-wrap justify-center gap-3 mb-10">

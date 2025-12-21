@@ -84,21 +84,21 @@ export default function Contact() {
       className={`py-20 px-6 transition-all duration-700 ${
         // Fade/slide in when "visible" flips true
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-      } bg-black`}
+      }`}
     >
       {/* Constrain width and center the card */}
       <div className="max-w-2xl mx-auto relative">
         {/* Decorative blurred halo behind the card */}
-        <div className="absolute -inset-0.5 rounded-2xl bg-blue-500 blur opacity-30" />
+        <div className="absolute -inset-0.5 rounded-2xl blur opacity-40" style={{ background: 'linear-gradient(135deg, #87CEEB, #4682B4)' }} />
         {/* Glassy card container with border and backdrop blur */}
-        <div className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-8 shadow-xl">
+        <div className="relative rounded-2xl border p-8 shadow-xl" style={{ borderColor: 'rgba(135, 206, 235, 0.4)', backgroundColor: 'rgba(26, 26, 46, 0.9)', backdropFilter: 'blur(20px)' }}>
           {/* Section title */}
-          <h3 className="text-3xl font-extrabold mb-6 text-center text-blue-400">
+          <h3 className="text-3xl font-extrabold mb-6 text-center" style={{ color: '#FFFFFF' }}>
             Contact Me
           </h3>
 
           {/* Short intro/CTA line */}
-          <p className="text-gray-300/90 text-center mb-8">
+          <p className="text-center mb-8" style={{ color: '#F0F0F0' }}>
             I'm open to internships, freelance, and collaboration. Reach out anytime!
           </p>
 

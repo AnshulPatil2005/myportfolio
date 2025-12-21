@@ -35,7 +35,7 @@ export default function Achievements() {
       }`}
     >
       <div className="max-w-6xl mx-auto">
-        <h3 className="text-3xl font-bold mb-12 text-center text-blue-600 dark:text-blue-400">
+        <h3 className="text-3xl font-bold mb-12 text-center text-white">
           Achievements & Highlights
         </h3>
 

@@ -8,15 +8,8 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative w-full h-screen flex items-center justify-center text-center overflow-hidden bg-black"
+      className="relative w-full h-screen flex items-center justify-center text-center overflow-hidden"
     >
-      {/* 🌌 Aurora background (pure CSS, no Three.js) */}
-      <div className="aurora-bg" aria-hidden="true">
-        <span className="blob blob-1" />
-        <span className="blob blob-2" />
-        <span className="blob blob-3" />
-        <span className="blob blob-4" />
-      </div>
 
       {/* 💬 Hero Content */}
       <div className="relative z-10 px-4">

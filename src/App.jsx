@@ -11,7 +11,7 @@ import Footer from './components/Footer';
 import BackToTop from './components/BackToTop';
 import Loader from './components/Loader';
 import SocialLinks from './components/SocialLinks';
-import StarsBackground from './components/StarsBackground';
+import Dither from './components/Dither';
 import Research from './components/Research';
 import Achievements from './components/Achievements';
 
@@ -52,12 +52,21 @@ export default function App() {
   if (loading) return <Loader />;
 
   return (
-    <div className="relative min-h-screen text-white font-sans scroll-smooth overflow-x-hidden bg-black">
-      {/* Subtle noise texture */}
-      <div className="absolute inset-0 bg-[url('/noise.png')] opacity-5 z-0 pointer-events-none"></div>
-
-      {/* Global 3D stars background */}
-      <StarsBackground />
+    <div className="relative min-h-screen text-white font-sans scroll-smooth overflow-x-hidden" style={{ backgroundColor: '#0A0F1E' }}>
+      {/* Global dithered wave background */}
+      <div className="fixed inset-0 w-full h-full z-0">
+        <Dither
+          waveSpeed={0.02}
+          waveFrequency={2.5}
+          waveAmplitude={0.35}
+          waveColor={[0.294, 0.0, 0.51]}
+          colorNum={4}
+          pixelSize={2}
+          disableAnimation={false}
+          enableMouseInteraction={false}
+          mouseRadius={0.5}
+        />
+      </div>
 
       {/* Scroll progress bar */}
       <ScrollProgressBar />
