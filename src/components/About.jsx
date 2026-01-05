@@ -68,8 +68,8 @@ export default function About() {
     // Define async function inside effect (effects themselves can't be async)
     async function fetchLeetCodeStats() {
       try {
-        // Public API that returns user stats; username is PaNdA2069 (configurable)
-        const res = await axios.get('https://leetcode-stats.tashif.codes/PaNdA2069');
+        // Public API that returns user stats; username is Anshulpatil20 (configurable)
+        const res = await axios.get('https://leetcode-stats.tashif.codes/Anshulpatil20');
         // Store the response JSON on success
         setStats(res.data);
       } catch (err) {

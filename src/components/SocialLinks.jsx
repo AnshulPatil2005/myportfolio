@@ -3,6 +3,7 @@
 import React from 'react';
 // Import LinkedIn and GitHub icons from react-icons
 import { FaGithub, FaLinkedin } from 'react-icons/fa';
+import { SiCodeforces, SiLeetcode } from 'react-icons/si';
 
 const SocialLinks = () => {
   return (
@@ -27,7 +28,7 @@ const SocialLinks = () => {
 
         {/* GitHub link item */}
         <li
-          className="group w-40 h-12 flex justify-between items-center 
+          className="group w-40 h-12 flex justify-between items-center
                      ml-[-100px] hover:ml-[-10px] duration-300 bg-gray-800"
         >
           <a
@@ -37,6 +38,36 @@ const SocialLinks = () => {
             className="flex justify-between items-center w-full text-white px-4"
           >
             GitHub <FaGithub size={25} />
+          </a>
+        </li>
+
+        {/* Codeforces link item */}
+        <li
+          className="group w-40 h-12 flex justify-between items-center
+                     ml-[-100px] hover:ml-[-10px] duration-300 bg-yellow-600"
+        >
+          <a
+            href="https://codeforces.com/profile/Anshul2102"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex justify-between items-center w-full text-white px-4"
+          >
+            Codeforces <SiCodeforces size={25} />
+          </a>
+        </li>
+
+        {/* LeetCode link item */}
+        <li
+          className="group w-40 h-12 flex justify-between items-center
+                     ml-[-100px] hover:ml-[-10px] duration-300 bg-orange-600"
+        >
+          <a
+            href="https://leetcode.com/u/Anshulpatil20/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex justify-between items-center w-full text-white px-4"
+          >
+            LeetCode <SiLeetcode size={25} />
           </a>
         </li>
       </ul>
