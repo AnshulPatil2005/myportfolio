@@ -89,9 +89,9 @@ export default function Contact() {
       {/* Constrain width and center the card */}
       <div className="max-w-2xl mx-auto relative">
         {/* Decorative blurred halo behind the card */}
-        <div className="absolute -inset-0.5 rounded-2xl blur opacity-40" style={{ background: 'linear-gradient(135deg, #87CEEB, #4682B4)' }} />
+        <div className="absolute -inset-0.5 rounded-2xl blur opacity-40" style={{ background: 'linear-gradient(135deg, #6d28d9, #2563eb)' }} />
         {/* Glassy card container with border and backdrop blur */}
-        <div className="relative rounded-2xl border p-8 shadow-xl" style={{ borderColor: 'rgba(135, 206, 235, 0.4)', backgroundColor: 'rgba(26, 26, 46, 0.9)', backdropFilter: 'blur(20px)' }}>
+        <div className="relative rounded-2xl border p-8 shadow-xl" style={{ borderColor: 'rgba(99, 102, 241, 0.35)', backgroundColor: 'rgba(17, 24, 39, 0.9)', backdropFilter: 'blur(20px)' }}>
           {/* Section title */}
           <h3 className="text-3xl font-extrabold mb-6 text-center" style={{ color: '#FFFFFF' }}>
             Contact Me
@@ -115,7 +115,7 @@ export default function Contact() {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 outline-none transition"
+                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/40 outline-none transition"
                 placeholder="Your Name"
               />
             </div>
@@ -131,7 +131,7 @@ export default function Contact() {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 outline-none transition"
+                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/40 outline-none transition"
                 placeholder="your.email@example.com"
               />
             </div>
@@ -147,7 +147,7 @@ export default function Contact() {
                 onChange={handleChange}
                 required
                 rows="5"
-                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/50 outline-none transition resize-none"
+                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-slate-500 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-400/40 outline-none transition resize-none"
                 placeholder="Your message here..."
               />
             </div>
@@ -155,7 +155,7 @@ export default function Contact() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full px-6 py-3 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+              className="w-full px-6 py-3 bg-indigo-500 text-white rounded-full font-medium hover:bg-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
             >
               {isSubmitting ? 'Sending...' : 'Send Message'}
               <FiSend />
@@ -181,13 +181,13 @@ export default function Contact() {
               {/* Left: icon + mailto link */}
               <div className="flex items-center gap-3">
                 {/* Icon with subtle tinted background */}
-                <span className="p-2 rounded-lg bg-blue-500/20 text-blue-300">
+                <span className="p-2 rounded-lg bg-indigo-500/20 text-indigo-300">
                   <FiMail />
                 </span>
                 {/* Mail link; break-all to handle narrow screens */}
                 <a
                   href={`mailto:${email}`}
-                  className="text-blue-300 hover:text-blue-200 break-all"
+                  className="text-indigo-300 hover:text-indigo-200 break-all"
                 >
                   {email}
                 </a>
@@ -196,7 +196,7 @@ export default function Contact() {
               {/* Right: copy-to-clipboard button */}
               <button
                 onClick={() => copy('email', email)} // Copy email address
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 text-sm text-gray-200 hover:bg-white/10 transition"
+                className="inline-flex items-center gap-2 rounded-full border border-indigo-400/20 px-3 py-1.5 text-sm text-slate-200 hover:bg-indigo-500/10 transition"
                 aria-label="Copy email" // A11y label for screen readers
               >
                 {/* Toggle icon based on copied state */}
@@ -210,7 +210,7 @@ export default function Contact() {
             <div className="flex flex-col sm:flex-row items-center gap-3 justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3">
               {/* Left: icon + external link */}
               <div className="flex items-center gap-3">
-                <span className="p-2 rounded-lg bg-cyan-500/20 text-cyan-300">
+                <span className="p-2 rounded-lg bg-indigo-500/20 text-indigo-300">
                   <FiLinkedin />
                 </span>
                 {/* Open in new tab; rel="noreferrer" to avoid leaking referrer */}
@@ -218,7 +218,7 @@ export default function Contact() {
                   href={linkedin}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-cyan-300 hover:text-cyan-200 break-all"
+                  className="text-indigo-300 hover:text-indigo-200 break-all"
                 >
                   {linkedin}
                 </a>
@@ -227,7 +227,7 @@ export default function Contact() {
               {/* Right: copy LinkedIn URL */}
               <button
                 onClick={() => copy('linkedin', linkedin)} // Copy profile URL
-                className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 text-sm text-gray-200 hover:bg-white/10 transition"
+                className="inline-flex items-center gap-2 rounded-full border border-indigo-400/20 px-3 py-1.5 text-sm text-slate-200 hover:bg-indigo-500/10 transition"
                 aria-label="Copy LinkedIn URL"
               >
                 {/* Toggle icon/label using copied.linkedin */}
@@ -242,7 +242,7 @@ export default function Contact() {
             {/* Pre-filled email with subject/body (URL-encoded) */}
             <a
               href={`mailto:${email}?subject=Hello%20Anshul&body=Hi%20Anshul,%0D%0A%0D%0A`}
-              className="px-5 py-3 rounded-full bg-blue-600 text-white font-medium hover:bg-cyan-500 transition"
+              className="px-5 py-3 rounded-full bg-indigo-500 text-white font-medium hover:bg-indigo-400 transition"
             >
               Send an Email
             </a>
@@ -252,7 +252,7 @@ export default function Contact() {
               href={linkedin}
               target="_blank"
               rel="noreferrer"
-              className="px-5 py-3 rounded-full border border-white/15 text-white hover:bg-white/10 transition"
+              className="px-5 py-3 rounded-full border border-indigo-400/30 text-white hover:bg-indigo-500/10 transition"
             >
               Connect on LinkedIn
             </a>

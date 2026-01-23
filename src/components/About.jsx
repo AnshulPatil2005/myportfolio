@@ -222,61 +222,61 @@ export default function About() {
     <section
       id="about"                 // Anchor for in‑page navigation
       ref={ref}                  // Connect to intersection observer from useScrollReveal
-      className={`relative py-20 px-6 overflow-hidden text-white transition-all duration-700 ${
+      className={`relative py-16 sm:py-20 px-4 sm:px-6 overflow-hidden text-white transition-all duration-700 ${
         // Fade/slide in based on visibility
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       }`}
       style={{ minHeight: '100vh' }}
     >
       {/* Constrain content width and manage layout across breakpoints */}
-      <div className="relative z-10 max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-12">
+      <div className="relative z-10 max-w-6xl mx-auto flex flex-col md:flex-row items-center gap-10 md:gap-12">
         {/* Left column: profile image */}
         <div className="w-full md:w-1/3">
           <img
             src={profile} // Local imported asset
             alt="Profile" // Accessibility alt text
             data-animate="profile"
-            className="rounded-xl shadow-lg w-64 h-64 object-cover mx-auto border-4 border-blue-500 dark:border-white"
+            className="rounded-xl shadow-lg w-40 h-40 sm:w-56 sm:h-56 md:w-64 md:h-64 object-cover mx-auto border-2 sm:border-4 border-blue-500 dark:border-white"
           />
         </div>
 
         {/* Right column: text, counters, fun facts, and LeetCode stats */}
         <div className="w-full md:w-2/3 text-center md:text-left">
           {/* Section heading */}
-          <h3 className="text-3xl font-bold mb-4" data-animate="title" style={{ color: '#FFFFFF' }}>About Me</h3>
+          <h3 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4" data-animate="title" style={{ color: '#FFFFFF' }}>About Me</h3>
 
           {/* Intro paragraph with highlighted name/role */}
-          <p className="text-lg mb-4" data-animate="text" style={{ color: '#F0F0F0' }}>
+          <p className="text-base sm:text-lg mb-3 sm:mb-4" data-animate="text" style={{ color: '#F0F0F0' }}>
             Hey! I'm <span className="font-semibold" style={{ color: '#87CEEB' }}>Anshul</span>, a passionate{' '}
             <span className="font-semibold" style={{ color: '#87CEEB' }}>Full‑Stack Developer</span> building fast React & Node apps.
           </p>
 
           {/* Short mission/values statement */}
-          <p className="text-md mb-6" data-animate="text" style={{ color: '#F0F0F0' }}>
+          <p className="text-sm sm:text-base mb-5 sm:mb-6" data-animate="text" style={{ color: '#F0F0F0' }}>
             I focus on clean architecture, delightful UX, and solving real problems with thoughtful engineering.
           </p>
 
           {/* Animated KPI counters using CountUp */}
-          <div className="flex flex-wrap justify-center md:justify-start gap-6 mt-8">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-6 sm:mt-8 justify-items-center md:justify-items-start">
             <div className="text-center" data-animate="counter">
               {/* CountUp animates from 0 to 5 over 2s */}
-              <p className="text-4xl font-bold" style={{ color: '#FFFFFF' }}><CountUp end={5} duration={2} />+</p>
-              <p className="text-sm" style={{ color: '#F0F0F0' }}>Projects Built</p>
+              <p className="text-3xl sm:text-4xl font-bold" style={{ color: '#FFFFFF' }}><CountUp end={5} duration={2} />+</p>
+              <p className="text-xs sm:text-sm" style={{ color: '#F0F0F0' }}>Projects Built</p>
             </div>
             <div className="text-center" data-animate="counter">
               {/* CountUp animates to 100 */}
-              <p className="text-4xl font-bold" style={{ color: '#87CEEB' }}><CountUp end={100} duration={2} />+</p>
-              <p className="text-sm" style={{ color: '#F0F0F0' }}>GitHub Commits</p>
+              <p className="text-3xl sm:text-4xl font-bold" style={{ color: '#87CEEB' }}><CountUp end={100} duration={2} />+</p>
+              <p className="text-xs sm:text-sm" style={{ color: '#F0F0F0' }}>GitHub Commits</p>
             </div>
             <div className="text-center" data-animate="counter">
               {/* CountUp animates to 10 */}
-              <p className="text-4xl font-bold" style={{ color: '#FFFFFF' }}><CountUp end={10} duration={2} />+</p>
-              <p className="text-sm" style={{ color: '#F0F0F0' }}>Technologies Mastered</p>
+              <p className="text-3xl sm:text-4xl font-bold" style={{ color: '#FFFFFF' }}><CountUp end={10} duration={2} />+</p>
+              <p className="text-xs sm:text-sm" style={{ color: '#F0F0F0' }}>Technologies Mastered</p>
             </div>
           </div>
 
           {/* Flip‑card fun facts with tooltips */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-10">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mt-8 sm:mt-10">
             {funFacts.map((fact, i) => (
               <div
                 key={i} // Stable key for list rendering
@@ -286,14 +286,14 @@ export default function About() {
                 data-tooltip-content={fact.tooltip} // Tooltip text
               >
                 {/* 3D flip container: rotates on hover via group-hover */}
-                <div className="relative w-full h-40 transform-style-preserve-3d transition-transform duration-500 group-hover:rotate-y-180">
+                <div className="relative w-full h-32 sm:h-40 transform-style-preserve-3d transition-transform duration-500 group-hover:rotate-y-180">
                   {/* Front face: emoji */}
-                  <div className="absolute w-full h-full flex items-center justify-center text-5xl rounded-xl shadow border backface-hidden" style={{ backgroundColor: '#1a1a2e', color: '#87CEEB', borderColor: 'rgba(135, 206, 235, 0.4)' }}>
+                  <div className="absolute w-full h-full flex items-center justify-center text-4xl sm:text-5xl rounded-xl shadow border backface-hidden" style={{ backgroundColor: '#1a1a2e', color: '#87CEEB', borderColor: 'rgba(135, 206, 235, 0.4)' }}>
                     {fact.front}
                   </div>
                   {/* Back face: description text (rotated 180°) */}
                   <div className="absolute w-full h-full flex items-center justify-center p-4 rounded-xl shadow transform rotate-y-180 backface-hidden" style={{ background: 'linear-gradient(135deg, #87CEEB, #4682B4)', color: '#FFFFFF' }}>
-                    <p className="text-sm">{fact.back}</p>
+                    <p className="text-xs sm:text-sm">{fact.back}</p>
                   </div>
                 </div>
                 {/* Tooltip component instance for this tile */}
@@ -303,8 +303,8 @@ export default function About() {
           </div>
 
           {/* LeetCode stats block: shows list + bar chart or error/loading states */}
-          <div className="mt-14" data-animate="stats">
-            <h3 className="text-2xl font-bold mb-4" style={{ color: '#FFFFFF' }}>LeetCode Stats</h3>
+          <div className="mt-10 sm:mt-14" data-animate="stats">
+            <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4" style={{ color: '#FFFFFF' }}>LeetCode Stats</h3>
 
             {/* Error state if fetch failed */}
             {error ? (
@@ -314,9 +314,9 @@ export default function About() {
               <p className="text-gray-400">Loading stats...</p>
             ) : (
               // Success state: show numeric list + chart side by side on large screens
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 lg:gap-8">
                 {/* Key stat figures (text list) */}
-                <ul className="text-left space-y-2 text-gray-200 flex-1">
+                <ul className="text-left space-y-2 text-gray-200 flex-1 text-sm sm:text-base">
                   <li data-animate="stats-item">Acceptance Rate: <span className="font-semibold">{stats.acceptanceRate}%</span></li>
                   <li data-animate="stats-item">Global Rank: <span className="font-semibold">#{stats.ranking}</span></li>
                   <li data-animate="stats-item">Total Solved: <span className="font-semibold">{stats.totalSolved}</span></li>
@@ -326,7 +326,7 @@ export default function About() {
                 </ul>
 
                 {/* Bar chart visualization of solved counts */}
-                <div className="w-full lg:w-1/2" data-animate="chart">
+                <div className="w-full lg:w-1/2 max-w-md mx-auto lg:mx-0" data-animate="chart">
                   {/* Bar expects defined data/options; guarded above with stats && chartData */}
                   <Bar data={chartData} options={chartOptions} />
                 </div>
@@ -335,13 +335,13 @@ export default function About() {
           </div>
 
           {/* GitHub Stats Card */}
-          <div className="mt-14" data-animate="github">
-            <h3 className="text-2xl font-bold mb-4" style={{ color: '#FFFFFF' }}>GitHub Stats</h3>
+          <div className="mt-10 sm:mt-14" data-animate="github">
+            <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4" style={{ color: '#FFFFFF' }}>GitHub Stats</h3>
             <div className="flex justify-center md:justify-start">
               <img
                 src="https://github-readme-stats.vercel.app/api?username=AnshulPatil2005&show_icons=true&theme=dark&bg_color=000000&title_color=60a5fa&text_color=ffffff&icon_color=60a5fa&border_color=3b82f6"
                 alt="GitHub Stats"
-                className="rounded-xl shadow-lg"
+                className="rounded-xl shadow-lg w-full max-w-sm"
               />
             </div>
           </div>
