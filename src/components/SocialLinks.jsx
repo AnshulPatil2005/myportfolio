@@ -47,7 +47,7 @@ const SocialLinks = () => {
                      ml-[-100px] hover:ml-[-10px] duration-300 bg-yellow-600"
         >
           <a
-            href="https://codeforces.com/profile/Anshul2102"
+            href="https://leetcode.com/u/Anshulpatil2011/"
             target="_blank"
             rel="noopener noreferrer"
             className="flex justify-between items-center w-full text-white px-4"
@@ -62,7 +62,7 @@ const SocialLinks = () => {
                      ml-[-100px] hover:ml-[-10px] duration-300 bg-orange-600"
         >
           <a
-            href="https://leetcode.com/u/Anshulpatil20/"
+            href="https://leetcode.com/u/Anshulpatil2011/"
             target="_blank"
             rel="noopener noreferrer"
             className="flex justify-between items-center w-full text-white px-4"
