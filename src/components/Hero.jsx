@@ -1,29 +1,26 @@
-// src/components/Hero.jsx
 import React from 'react';
 import { Typewriter } from 'react-simple-typewriter';
 import resume from '../assets/AnshulPatil.pdf';
-import './Hero.css'; // <-- add this
+import './Hero.css';
 
 export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative w-full h-screen flex items-center justify-center text-center overflow-hidden"
+      className="relative flex h-screen w-full items-center justify-center overflow-hidden text-center"
     >
-
-      {/* 💬 Hero Content */}
       <div className="relative z-10 px-4">
-        <h1 className="text-5xl md:text-6xl font-extrabold text-white mb-4">
-          👋 Hi, I'm <span className="text-blue-400">Anshul</span>
+        <h1 className="mb-4 text-5xl font-extrabold text-white md:text-6xl">
+          Anshul <span className="text-blue-400">Patil</span>
         </h1>
 
-        <div className="text-xl md:text-2xl text-cyan-300 font-semibold h-10 mb-2">
+        <div className="mb-2 h-10 text-xl font-semibold text-cyan-300 md:text-2xl">
           <Typewriter
             words={[
               'Full-Stack Developer',
               'System Designer',
-              'React & Node.js Engineer',
-              'AWS Cloud Enthusiast',
+              'React and Node.js Engineer',
+              'Cloud-Focused Builder',
             ]}
             loop
             cursor
@@ -34,21 +31,21 @@ export default function Hero() {
           />
         </div>
 
-        <p className="text-lg text-gray-300 max-w-2xl mx-auto mb-8">
-          A passionate full-stack developer building beautiful, scalable, and impactful applications.
+        <p className="mx-auto mb-8 max-w-2xl text-lg text-gray-300">
+          Full-stack developer building reliable, scalable applications with a focus on performance and clarity.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col justify-center gap-4 sm:flex-row">
           <a
             href="#projects"
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition duration-300"
+            className="rounded-full bg-blue-600 px-6 py-3 text-white transition duration-300 hover:bg-blue-700"
           >
-            View My Work
+            View Work
           </a>
           <a
             href={resume}
             download
-            className="px-6 py-3 border border-white text-white rounded-full hover:bg-white hover:text-black transition duration-300"
+            className="rounded-full border border-white px-6 py-3 text-white transition duration-300 hover:bg-white hover:text-black"
           >
             Download Resume
           </a>

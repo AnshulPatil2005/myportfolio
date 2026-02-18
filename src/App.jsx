@@ -5,13 +5,10 @@ import Hero from './components/Hero';
 import About from './components/About';
 import Projects from './components/Projects';
 import Skills from './components/Skills';
-import Contact from './components/Contact';
 import Testimonials from './components/Testimonials';
 import Footer from './components/Footer';
 import BackToTop from './components/BackToTop';
 import Loader from './components/Loader';
-import SocialLinks from './components/SocialLinks';
-import Dither from './components/Dither';
 import Research from './components/Research';
 import Achievements from './components/Achievements';
 
@@ -52,21 +49,9 @@ export default function App() {
   if (loading) return <Loader />;
 
   return (
-    <div className="relative min-h-screen text-white font-sans scroll-smooth overflow-x-hidden" style={{ backgroundColor: '#0A0F1E' }}>
-      {/* Global dithered wave background */}
-      <div className="fixed inset-0 w-full h-full z-0">
-        <Dither
-          waveSpeed={0.02}
-          waveFrequency={2.5}
-          waveAmplitude={0.35}
-          waveColor={[0.294, 0.0, 0.51]}
-          colorNum={4}
-          pixelSize={2}
-          disableAnimation={false}
-          enableMouseInteraction={false}
-          mouseRadius={0.5}
-        />
-      </div>
+    <div
+      className="relative min-h-screen text-white font-sans scroll-smooth overflow-x-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950"
+    >
 
       {/* Scroll progress bar */}
       <ScrollProgressBar />
@@ -83,11 +68,9 @@ export default function App() {
         <section id="skills"><Skills /></section>
         <section id="research"><Research /></section>
         <section id="testimonials"><Testimonials /></section>
-        <section id="contact"><Contact /></section>
       </main>
 
       {/* Footer and floating actions */}
-      <SocialLinks />
       <Footer />
       <BackToTop />
     </div>
