@@ -1,4 +1,3 @@
-import React from 'react';
 import useScrollReveal from '../hooks/useScrollReveal';
 import { FiAward, FiStar, FiTrendingUp } from 'react-icons/fi';
 
@@ -8,18 +7,21 @@ const achievements = [
     title: 'IIIT Surat',
     description: 'B.Tech in Electronics and Communication Engineering',
     highlight: 'Top Academic Performance',
+    color: 'blue',
   },
   {
     icon: <FiStar />,
     title: 'Open Source Contributor',
     description: 'Contributing to AI and DevTools projects',
     highlight: '10+ Projects',
+    color: 'cyan',
   },
   {
     icon: <FiTrendingUp />,
     title: 'Technical Skills',
     description: 'Full-stack development with AI/ML expertise',
     highlight: '20+ Technologies',
+    color: 'purple',
   },
 ];
 
@@ -30,31 +32,31 @@ export default function Achievements() {
     <section
       id="achievements"
       ref={ref}
-      className={`py-16 px-6 transition-all duration-700 ${
+      className={`px-6 py-16 transition-all duration-700 ${
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       }`}
     >
-      <div className="max-w-6xl mx-auto">
-        <h3 className="text-3xl font-bold mb-12 text-center text-white">
+      <div className="mx-auto max-w-6xl">
+        <h3 className="section-title mb-12 text-center text-3xl font-bold text-white">
           Achievements & Highlights
         </h3>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid gap-6 md:grid-cols-3">
           {achievements.map((achievement, idx) => (
             <div
               key={idx}
-              className="bg-white dark:bg-gray-800 border dark:border-gray-700 p-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 text-center"
+              className="group rounded-2xl border border-slate-700/50 bg-slate-800/50 p-6 text-center shadow-lg backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/30 hover:shadow-[0_0_25px_rgba(59,130,246,0.15)]"
             >
-              <div className="text-blue-600 dark:text-blue-400 text-4xl mb-4 flex justify-center">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-blue-500/20 bg-blue-500/10 text-2xl text-blue-400">
                 {achievement.icon}
               </div>
-              <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              <h4 className="mb-2 text-lg font-semibold text-white">
                 {achievement.title}
               </h4>
-              <p className="text-gray-600 dark:text-gray-400 mb-3">
+              <p className="mb-4 text-sm text-gray-400">
                 {achievement.description}
               </p>
-              <span className="inline-block px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium">
+              <span className="inline-block rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 text-xs font-medium text-blue-300">
                 {achievement.highlight}
               </span>
             </div>
@@ -62,34 +64,34 @@ export default function Achievements() {
         </div>
 
         <div className="mt-12 text-center">
-          <div className="inline-flex items-center gap-8 flex-wrap justify-center">
+          <div className="inline-flex flex-wrap items-center justify-center gap-10">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">8+</span>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-blue-500/30 bg-blue-500/10">
+                <span className="text-lg font-bold text-blue-400">8+</span>
               </div>
               <div className="text-left">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Projects</p>
-                <p className="font-semibold text-gray-900 dark:text-white">Completed</p>
+                <p className="text-xs text-gray-400">Projects</p>
+                <p className="text-sm font-semibold text-white">Completed</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                <span className="text-2xl font-bold text-green-600 dark:text-green-400">20+</span>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-green-500/30 bg-green-500/10">
+                <span className="text-lg font-bold text-green-400">20+</span>
               </div>
               <div className="text-left">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Technologies</p>
-                <p className="font-semibold text-gray-900 dark:text-white">Mastered</p>
+                <p className="text-xs text-gray-400">Technologies</p>
+                <p className="text-sm font-semibold text-white">Mastered</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-                <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">2+</span>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-purple-500/30 bg-purple-500/10">
+                <span className="text-lg font-bold text-purple-400">2+</span>
               </div>
               <div className="text-left">
-                <p className="text-sm text-gray-600 dark:text-gray-400">Research</p>
-                <p className="font-semibold text-gray-900 dark:text-white">In Progress</p>
+                <p className="text-xs text-gray-400">Research</p>
+                <p className="text-sm font-semibold text-white">In Progress</p>
               </div>
             </div>
           </div>

@@ -12,7 +12,7 @@ const StarsBackground = () => {
     // - `fixed top-0 left-0 w-full h-8xl` makes it cover the screen
     // - `-z-10` ensures it stays behind all other elements
     // - `pointer-events-none` prevents blocking clicks on UI elements
-    <div className="fixed top-0 left-0 w-full h-8xl -z-10 pointer-events-none">
+    <div className="fixed inset-0 -z-10 pointer-events-none">
       {/* 3D canvas for rendering */}
       <Canvas>
         <Stars

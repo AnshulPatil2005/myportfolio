@@ -1,4 +1,6 @@
 @import "tailwindcss";
+
+/* ── 3D / card utilities ─────────────────────────────────── */
 .perspective {
   perspective: 1000px;
 }
@@ -11,9 +13,38 @@
 .rotate-y-180 {
   transform: rotateY(180deg);
 }
-.animated-gradient {
-  background: #0f172a;
-}
+
+/* ── Global ──────────────────────────────────────────────── */
 html {
   scroll-behavior: smooth;
+}
+
+/* Subtle dot-grid overlay on the whole page */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -5;
+  background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+}
+
+/* ── Section heading accent underline ───────────────────── */
+.section-title {
+  display: inline-block;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #3b82f6, #a855f7);
 }

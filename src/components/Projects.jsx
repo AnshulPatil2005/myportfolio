@@ -152,18 +152,18 @@ export default function Projects() {
       }`}
     >
       {/* Section heading */}
-      <h3 className="text-3xl font-bold mb-6 text-white">Projects</h3>
+      <h3 className="section-title mb-6 text-3xl font-bold text-white">Projects</h3>
 
       {/* Category filters */}
-      <div className="flex flex-wrap justify-center gap-3 mb-10">
+      <div className="mb-10 flex flex-wrap justify-center gap-3">
         {categories.map((category) => (
           <button
             key={category}
             onClick={() => setSelectedCategory(category)}
-            className={`px-4 py-2 rounded-full font-medium transition-all duration-300 ${
+            className={`rounded-full px-5 py-2 text-sm font-medium transition-all duration-300 ${
               selectedCategory === category
-                ? 'bg-blue-600 text-white shadow-lg'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.4)]'
+                : 'border border-slate-600 bg-slate-800/60 text-slate-300 hover:border-blue-500/50 hover:text-white'
             }`}
           >
             {category}
@@ -172,40 +172,38 @@ export default function Projects() {
       </div>
 
       {/* Project grid */}
-      <div className="grid gap-10 md:grid-cols-2 max-w-6xl mx-auto">
+      <div className="mx-auto grid max-w-6xl gap-8 md:grid-cols-2">
         {filteredProjects.map((project, idx) => (
           <div
             key={idx}
-            ref={(el) => (cardsRef.current[idx] = el)} // Assign card DOM element
-            className="bg-white dark:bg-gray-800 border dark:border-gray-700 p-6 rounded-2xl shadow-lg transform-gpu cursor-pointer hover:shadow-2xl hover:shadow-blue-500/30 transition-transform duration-300 ease-out flex flex-col"
+            ref={(el) => (cardsRef.current[idx] = el)}
+            className="flex cursor-pointer flex-col rounded-2xl border border-slate-700/50 bg-slate-800/50 p-6 shadow-lg backdrop-blur-sm transition-all duration-300 ease-out hover:border-blue-500/40 hover:shadow-[0_0_30px_rgba(59,130,246,0.2)] transform-gpu"
             style={{
-              transformStyle: 'preserve-3d', // Enable 3D transforms
+              transformStyle: 'preserve-3d',
               transformOrigin: 'center center',
-              willChange: 'transform', // Hint for browser optimization
+              willChange: 'transform',
             }}
           >
             {/* Title + short description */}
             <div className="flex flex-col gap-3">
-              <h4 className="text-2xl font-semibold text-blue-600 dark:text-blue-400">
+              <h4 className="text-xl font-semibold text-blue-400">
                 {project.title}
               </h4>
-              <p className="text-gray-700 dark:text-gray-300">{project.desc}</p>
+              <p className="text-sm leading-relaxed text-gray-300">{project.desc}</p>
 
               {/* Action links */}
-              <div className="flex justify-center gap-4 mt-4">
-                {/* External link to GitHub or demo */}
+              <div className="mt-3 flex justify-center gap-5">
                 <a
                   href={project.link}
-                  className="flex items-center gap-1 text-blue-500 dark:text-blue-300 font-medium hover:underline"
+                  className="flex items-center gap-1.5 text-sm font-medium text-blue-400 transition-colors hover:text-blue-300"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  View Project <FiExternalLink />
+                  View Project <FiExternalLink size={14} />
                 </a>
-                {/* Learn More opens modal */}
                 <button
                   onClick={() => setActiveProject(project)}
-                  className="text-gray-600 dark:text-gray-300 underline hover:text-blue-600 dark:hover:text-blue-400"
+                  className="text-sm text-slate-400 underline underline-offset-2 transition-colors hover:text-blue-400"
                 >
                   Learn More
                 </button>
@@ -213,11 +211,11 @@ export default function Projects() {
             </div>
 
             {/* Tech tags */}
-            <div className="flex flex-wrap justify-center gap-2 mt-auto pt-6">
+            <div className="mt-auto flex flex-wrap justify-center gap-2 pt-6">
               {project.tech.map((tag, i) => (
                 <span
                   key={i}
-                  className="px-3 py-1 bg-blue-100 dark:bg-blue-700 text-sm text-blue-700 dark:text-white rounded-full"
+                  className="rounded-full border border-slate-600/60 bg-slate-700/60 px-3 py-1 text-xs text-slate-300"
                 >
                   {tag}
                 </span>
@@ -229,38 +227,38 @@ export default function Projects() {
 
       {/* Modal for active project */}
       {activeProject && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center animate-fadeIn p-4">
-          <div className="bg-white dark:bg-gray-900 p-8 rounded-lg max-w-2xl w-full shadow-2xl relative max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-md">
+          <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-700/60 bg-slate-900/90 p-8 shadow-2xl backdrop-blur-sm">
             {/* Close button */}
             <button
               onClick={() => setActiveProject(null)}
-              className="absolute top-3 right-4 text-gray-500 hover:text-red-500 text-2xl"
+              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-slate-700/60 text-slate-300 transition-colors hover:bg-red-500/80 hover:text-white"
             >
-              X
+              ✕
             </button>
 
             {/* Title */}
-            <h2 className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-4 pr-8">
+            <h2 className="mb-3 pr-8 text-2xl font-bold text-blue-400">
               {activeProject.title}
             </h2>
 
             {/* Category badge */}
-            <span className="inline-block px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium mb-4">
+            <span className="mb-4 inline-block rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-sm font-medium text-blue-300">
               {activeProject.category}
             </span>
 
             {/* Detailed description */}
-            <p className="text-gray-700 dark:text-gray-300 mb-6">
+            <p className="mb-6 text-sm leading-relaxed text-gray-300">
               {activeProject.details}
             </p>
 
             {/* Metrics Section */}
             <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Key Metrics</h3>
+              <h3 className="mb-3 text-base font-semibold text-white">Key Metrics</h3>
               <ul className="space-y-2">
                 {activeProject.metrics.map((metric, i) => (
-                  <li key={i} className="flex items-start gap-2 text-gray-700 dark:text-gray-300">
-                    <span className="text-blue-500 mt-1">•</span>
+                  <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
+                    <span className="mt-1 text-blue-400">▸</span>
                     <span>{metric}</span>
                   </li>
                 ))}
@@ -269,12 +267,12 @@ export default function Projects() {
 
             {/* Tech Stack Section */}
             <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Tech Stack</h3>
+              <h3 className="mb-3 text-base font-semibold text-white">Tech Stack</h3>
               <div className="flex flex-wrap gap-2">
                 {activeProject.tech.map((tech, i) => (
                   <span
                     key={i}
-                    className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-md text-sm font-medium border border-gray-300 dark:border-gray-600"
+                    className="rounded-md border border-slate-600 bg-slate-800 px-3 py-1 text-sm text-slate-300"
                   >
                     {tech}
                   </span>
@@ -287,9 +285,9 @@ export default function Projects() {
               href={activeProject.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-500"
             >
-              View Project <FiExternalLink />
+              View Project <FiExternalLink size={14} />
             </a>
           </div>
         </div>
