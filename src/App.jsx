@@ -11,7 +11,7 @@ import Achievements from './components/Achievements';
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
+    <div className="min-h-screen bg-slate-950 text-slate-100">
       <Navbar />
       <main className="mx-auto max-w-6xl px-4 pb-16 pt-24 sm:px-6 lg:px-8">
         <Hero />
@@ -27,3 +27,4 @@ export default function App() {
     </div>
   );
 }
+

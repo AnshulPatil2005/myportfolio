@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 html {
@@ -10,14 +10,18 @@ html {
 
 body {
   margin: 0;
-  background: #f1f5f9;
-  color: #0f172a;
+  background:
+    radial-gradient(1200px 600px at 10% -20%, rgba(30, 41, 59, 0.55), transparent 60%),
+    radial-gradient(1000px 500px at 100% 0%, rgba(51, 65, 85, 0.35), transparent 55%),
+    #020617;
+  color: #e2e8f0;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .section-title {
   display: inline-block;
-  border-bottom: 2px solid #cbd5e1;
+  border-bottom: 2px solid #334155;
   padding-bottom: 0.5rem;
-  color: #0f172a;
+  color: #e2e8f0;
 }
+

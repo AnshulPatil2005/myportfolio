@@ -74,7 +74,7 @@ export default function Projects() {
       : projects.filter((project) => project.category === selectedCategory);
 
   return (
-    <section id="projects" className="mb-10 rounded-lg border border-slate-300 bg-white px-6 py-10 sm:px-8">
+    <section id="projects" className="mb-10 rounded-lg border border-slate-700 bg-slate-900/85 shadow-xl shadow-black/25 backdrop-blur-sm px-6 py-10 sm:px-8">
       <h3 className="section-title mb-6 text-2xl font-semibold">Projects</h3>
 
       <div className="mb-8 flex flex-wrap gap-2">
@@ -84,8 +84,8 @@ export default function Projects() {
             onClick={() => setSelectedCategory(category)}
             className={`rounded border px-3 py-1.5 text-sm ${
               selectedCategory === category
-                ? 'border-slate-900 bg-slate-900 text-white'
-                : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
+                ? 'border-slate-500 bg-slate-100 text-slate-900'
+                : 'border-slate-700 bg-slate-950 text-slate-300 hover:border-slate-600 hover:bg-slate-900'
             }`}
           >
             {category}
@@ -95,17 +95,17 @@ export default function Projects() {
 
       <div className="grid gap-4 md:grid-cols-2">
         {filteredProjects.map((project) => (
-          <article key={project.title} className="rounded border border-slate-200 bg-slate-50 p-5">
+          <article key={project.title} className="rounded border border-slate-800 bg-slate-950/90 p-5 shadow-lg shadow-black/20">
             <div className="mb-3 flex items-start justify-between gap-3">
-              <h4 className="text-lg font-semibold text-slate-900">{project.title}</h4>
-              <span className="rounded bg-white px-2 py-1 text-xs text-slate-600 ring-1 ring-slate-300">
+              <h4 className="text-lg font-semibold text-slate-100">{project.title}</h4>
+              <span className="rounded bg-slate-900 px-2 py-1 text-xs text-slate-400 ring-1 ring-slate-700">
                 {project.category}
               </span>
             </div>
 
-            <p className="mb-4 text-sm leading-6 text-slate-700">{project.description}</p>
+            <p className="mb-4 text-sm leading-6 text-slate-300">{project.description}</p>
 
-            <ul className="mb-4 list-disc space-y-1 pl-5 text-sm text-slate-700">
+            <ul className="mb-4 list-disc space-y-1 pl-5 text-sm text-slate-300">
               {project.metrics.map((metric) => (
                 <li key={metric}>{metric}</li>
               ))}
@@ -113,7 +113,7 @@ export default function Projects() {
 
             <div className="mb-4 flex flex-wrap gap-2">
               {project.tech.map((tech) => (
-                <span key={tech} className="rounded border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-700">
+                <span key={tech} className="rounded border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs text-slate-300">
                   {tech}
                 </span>
               ))}
@@ -123,7 +123,7 @@ export default function Projects() {
               href={project.link}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-sm font-medium text-slate-800 underline underline-offset-2 hover:text-slate-900"
+              className="inline-flex items-center gap-1 text-sm font-medium text-slate-200 underline underline-offset-2 hover:text-slate-100"
             >
               View Project <FiExternalLink size={14} />
             </a>
@@ -133,3 +133,5 @@ export default function Projects() {
     </section>
   );
 }
+
+

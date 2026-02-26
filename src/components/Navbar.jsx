@@ -36,21 +36,21 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="fixed left-0 right-0 top-0 z-50 border-b border-slate-300 bg-white">
+    <nav className="fixed left-0 right-0 top-0 z-50 border-b border-slate-700 bg-slate-950/85 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-        <h1 className="text-lg font-semibold tracking-wide text-slate-900">
+        <h1 className="text-lg font-semibold tracking-wide text-slate-100">
           Anshul Patil
         </h1>
 
-        <ul className="flex max-w-[70%] items-center gap-2 overflow-x-auto text-sm text-slate-600 md:max-w-none md:gap-4">
+        <ul className="flex max-w-[70%] items-center gap-2 overflow-x-auto text-sm text-slate-400 md:max-w-none md:gap-4">
           {sections.map((section) => (
             <li key={section.id}>
               <a
                 href={`#${section.id}`}
                 className={`rounded px-2 py-1 transition-colors ${
                   activeSection === section.id
-                    ? 'bg-slate-200 text-slate-900'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-slate-800 text-slate-100'
+                    : 'text-slate-400 hover:text-slate-100'
                 }`}
               >
                 {section.label}
@@ -62,3 +62,5 @@ export default function Navbar() {
     </nav>
   );
 }
+
+
