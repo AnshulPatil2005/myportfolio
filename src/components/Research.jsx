@@ -1,96 +1,64 @@
-import useScrollReveal from '../hooks/useScrollReveal';
 import { FiFileText } from 'react-icons/fi';
 
 const publications = [
   {
-    title: 'Coming Soon',
-    status: 'Coming Soon',
+    title: 'Publication in Progress',
+    status: 'In Preparation',
     authors: 'Anshul Patil',
-    venue: 'Coming Soon',
-    year: '2025',
-    description: 'Exciting research projects are in the pipeline. Check back soon for updates on my latest work.',
-    topics: ['AI & ML', 'Software Engineering', 'Research'],
+    venue: 'To be announced',
+    year: '2026',
+    description: 'Current work focuses on practical software engineering outcomes and scalable system design.',
+    topics: ['Software Engineering', 'Scalable Systems', 'Product Development'],
   },
   {
-    title: 'Coming Soon',
-    status: 'Coming Soon',
+    title: 'Technical Note in Progress',
+    status: 'Draft',
     authors: 'Anshul Patil',
-    venue: 'Coming Soon',
-    year: '2025',
-    description: 'More research publications and projects will be shared here. Stay tuned for upcoming announcements.',
-    topics: ['Innovation', 'Technology', 'Development'],
+    venue: 'To be announced',
+    year: '2026',
+    description: 'Additional write-ups are being prepared around architecture decisions and implementation tradeoffs.',
+    topics: ['Architecture', 'Reliability', 'Engineering Practice'],
   },
 ];
 
 export default function Research() {
-  const [ref, visible] = useScrollReveal();
-
   return (
-    <section
-      id="research"
-      ref={ref}
-      className={`px-6 py-20 transition-all duration-700 ${
-        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-      }`}
-    >
-      <div className="mx-auto max-w-6xl">
-        <h3 className="section-title mb-6 text-center text-3xl font-bold text-white">
-          Research & Publications
-        </h3>
+    <section id="research" className="mb-10 rounded-lg border border-slate-300 bg-white px-6 py-10 sm:px-8">
+      <h3 className="section-title mb-6 text-2xl font-semibold">Research and Publications</h3>
+      <p className="mb-8 text-slate-700">
+        Ongoing work and technical writing focused on software systems, delivery quality,
+        and maintainable engineering practices.
+      </p>
 
-        <p className="mx-auto mb-12 max-w-2xl text-center text-gray-400">
-          Current research interests and ongoing work in AI, machine learning, and software engineering.
-        </p>
-
-        <div className="space-y-6">
-          {publications.map((pub, idx) => (
-            <div
-              key={idx}
-              className="rounded-xl border border-slate-700/50 bg-slate-800/50 p-6 shadow-lg backdrop-blur-sm transition-all duration-300 hover:border-blue-500/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.1)]"
-            >
-              <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div className="flex-1">
-                  <div className="mb-2 flex items-center gap-3">
-                    <FiFileText className="flex-shrink-0 text-xl text-blue-400" />
-                    <h4 className="text-lg font-semibold text-white">
-                      {pub.title}
-                    </h4>
-                  </div>
-                  <p className="mb-2 text-sm text-gray-400">{pub.authors}</p>
-                  <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
-                    <span>{pub.venue}</span>
-                    <span>·</span>
-                    <span>{pub.year}</span>
-                  </div>
-                </div>
-                <span className="inline-block self-start whitespace-nowrap rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1 text-xs font-medium text-purple-300">
-                  {pub.status}
-                </span>
+      <div className="space-y-4">
+        {publications.map((publication) => (
+          <article key={publication.title} className="rounded border border-slate-200 bg-slate-50 p-5">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <FiFileText className="text-slate-700" />
+                <h4 className="text-lg font-semibold text-slate-900">{publication.title}</h4>
               </div>
-
-              <p className="mb-4 text-sm leading-relaxed text-gray-300">
-                {pub.description}
-              </p>
-
-              <div className="flex flex-wrap gap-2">
-                {pub.topics.map((topic, i) => (
-                  <span
-                    key={i}
-                    className="rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1 text-xs text-blue-400"
-                  >
-                    {topic}
-                  </span>
-                ))}
-              </div>
+              <span className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700">
+                {publication.status}
+              </span>
             </div>
-          ))}
-        </div>
 
-        <div className="mt-10 text-center">
-          <p className="text-sm text-gray-500">
-            More publications and research papers coming soon. Stay tuned for updates on my work in AI and software engineering.
-          </p>
-        </div>
+            <p className="mb-1 text-sm text-slate-700">{publication.authors}</p>
+            <p className="mb-3 text-sm text-slate-600">{publication.venue} | {publication.year}</p>
+            <p className="mb-3 text-sm text-slate-700">{publication.description}</p>
+
+            <div className="flex flex-wrap gap-2">
+              {publication.topics.map((topic) => (
+                <span
+                  key={topic}
+                  className="rounded border border-slate-300 bg-white px-2.5 py-1 text-xs text-slate-700"
+                >
+                  {topic}
+                </span>
+              ))}
+            </div>
+          </article>
+        ))}
       </div>
     </section>
   );

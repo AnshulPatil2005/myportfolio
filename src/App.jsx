@@ -1,5 +1,3 @@
-// src/App.jsx
-import { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import About from './components/About';
@@ -8,77 +6,22 @@ import Skills from './components/Skills';
 import Testimonials from './components/Testimonials';
 import Footer from './components/Footer';
 import BackToTop from './components/BackToTop';
-import Loader from './components/Loader';
 import Research from './components/Research';
 import Achievements from './components/Achievements';
-import StarsBackground from './components/StarsBackground';
-import SocialLinks from './components/SocialLinks';
-import ThemeToggle from './components/ThemeToggle';
-
-// Scroll progress bar at the top
-function ScrollProgressBar() {
-  const [scrollTop, setScrollTop] = useState(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const winScroll = document.documentElement.scrollTop;
-      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-      const scrolled = (winScroll / height) * 100;
-      setScrollTop(scrolled);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  return (
-    <div className="fixed top-0 left-0 w-full h-1 z-50 bg-transparent">
-      <div
-        className="h-full bg-gradient-to-r from-blue-500 via-cyan-400 to-purple-500"
-        style={{ width: `${scrollTop}%`, transition: 'width 0.2s ease-out' }}
-      ></div>
-    </div>
-  );
-}
 
 export default function App() {
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (loading) return <Loader />;
-
   return (
-    <div className="relative min-h-screen text-white font-sans scroll-smooth overflow-x-hidden">
-
-      {/* Layer 1: Static gradient background (furthest back) */}
-      <div className="fixed inset-0 -z-20 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950" />
-
-      {/* Layer 2: Animated stars (above gradient) */}
-      <StarsBackground />
-
-      {/* Scroll progress bar */}
-      <ScrollProgressBar />
-
-      {/* Fixed UI elements */}
+    <div className="min-h-screen bg-slate-100 text-slate-900">
       <Navbar />
-      <SocialLinks />
-      <ThemeToggle />
-
-      {/* Main content */}
-      <main className="relative z-10 pt-16">
-        <section id="hero"><Hero /></section>
-        <section id="about"><About /></section>
-        <section id="achievements"><Achievements /></section>
-        <section id="projects"><Projects /></section>
-        <section id="skills"><Skills /></section>
-        <section id="research"><Research /></section>
-        <section id="testimonials"><Testimonials /></section>
+      <main className="mx-auto max-w-6xl px-4 pb-16 pt-24 sm:px-6 lg:px-8">
+        <Hero />
+        <About />
+        <Achievements />
+        <Projects />
+        <Skills />
+        <Research />
+        <Testimonials />
       </main>
-
       <Footer />
       <BackToTop />
     </div>

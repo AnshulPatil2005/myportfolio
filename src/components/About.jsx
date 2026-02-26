@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import CountUp from 'react-countup';
 import axios from 'axios';
 import { Bar } from 'react-chartjs-2';
 import {
@@ -11,20 +10,18 @@ import {
   Legend,
 } from 'chart.js';
 import profile from '../assets/profile.jpg';
-import useScrollReveal from '../hooks/useScrollReveal';
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, ChartTooltip, Legend);
 
 export default function About() {
-  const [ref, visible] = useScrollReveal();
   const [stats, setStats] = useState(null);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     async function fetchLeetCodeStats() {
       try {
-        const res = await axios.get('https://leetcode-stats.tashif.codes/Anshulpatil20');
-        setStats(res.data);
+        const response = await axios.get('https://leetcode-stats.tashif.codes/Anshulpatil20');
+        setStats(response.data);
       } catch (err) {
         console.error('LeetCode stats fetch failed:', err);
         setError(true);
@@ -34,117 +31,103 @@ export default function About() {
     fetchLeetCodeStats();
   }, []);
 
-  const chartData = stats && {
-    labels: ['Easy', 'Medium', 'Hard'],
-    datasets: [
-      {
-        label: 'Solved',
-        data: [stats.easySolved, stats.mediumSolved, stats.hardSolved],
-        backgroundColor: ['#4ade80', '#facc15', '#f87171'],
-        borderRadius: 6,
-      },
-    ],
-  };
+  const chartData = stats
+    ? {
+        labels: ['Easy', 'Medium', 'Hard'],
+        datasets: [
+          {
+            label: 'Solved',
+            data: [stats.easySolved, stats.mediumSolved, stats.hardSolved],
+            backgroundColor: ['#16a34a', '#ca8a04', '#dc2626'],
+          },
+        ],
+      }
+    : null;
 
   const chartOptions = {
     responsive: true,
     plugins: { legend: { display: false } },
-    scales: { y: { beginAtZero: true, ticks: { stepSize: 10 } } },
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
   };
 
   return (
-    <section
-      id="about"
-      ref={ref}
-      className={`relative overflow-hidden px-4 py-16 text-white transition-all duration-700 sm:px-6 sm:py-20 ${
-        visible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
-      }`}
-      style={{ minHeight: '100vh' }}
-    >
-      <div className="relative z-10 mx-auto flex max-w-6xl flex-col items-center gap-10 md:flex-row md:gap-12">
-        <div className="w-full md:w-1/3">
-          <img
-            src={profile}
-            alt="Profile"
-            className="mx-auto h-40 w-40 rounded-xl border-2 border-blue-500 object-cover shadow-lg sm:h-56 sm:w-56 md:h-64 md:w-64"
-          />
-        </div>
+    <section id="about" className="mb-10 rounded-lg border border-slate-300 bg-white px-6 py-10 sm:px-8">
+      <h3 className="section-title mb-8 text-2xl font-semibold">About</h3>
 
-        <div className="w-full text-center md:w-2/3 md:text-left">
-          <h3 className="mb-4 text-2xl font-bold text-white sm:text-3xl">About</h3>
+      <div className="grid gap-8 md:grid-cols-[220px_1fr] md:items-start">
+        <img
+          src={profile}
+          alt="Anshul Patil"
+          className="mx-auto h-52 w-52 rounded border border-slate-300 object-cover"
+        />
 
-          <p className="mb-4 text-base text-gray-200 sm:text-lg">
-            I am a full-stack developer focused on building maintainable systems and production-ready applications.
+        <div>
+          <p className="mb-4 text-slate-700">
+            I am a full-stack developer focused on production-ready products, dependable
+            APIs, and straightforward user experiences.
+          </p>
+          <p className="mb-6 text-slate-700">
+            My approach emphasizes code quality, clear requirements, and practical
+            engineering outcomes that scale in real environments.
           </p>
 
-          <p className="mb-6 text-sm text-gray-300 sm:text-base">
-            My work centers on clean architecture, practical user experience, and measurable performance improvements.
-          </p>
-
-          <div className="mt-8 grid grid-cols-1 justify-items-center gap-4 sm:grid-cols-3 sm:gap-6 md:justify-items-start">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-white sm:text-4xl">
-                <CountUp end={8} duration={2} />+
-              </p>
-              <p className="text-xs text-gray-300 sm:text-sm">Projects Delivered</p>
+          <div className="mb-8 grid gap-4 sm:grid-cols-3">
+            <div className="rounded border border-slate-200 bg-slate-50 p-4 text-center">
+              <p className="text-2xl font-semibold text-slate-900">8+</p>
+              <p className="text-sm text-slate-600">Projects Delivered</p>
             </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-sky-300 sm:text-4xl">
-                <CountUp end={200} duration={2} />+
-              </p>
-              <p className="text-xs text-gray-300 sm:text-sm">GitHub Contributions</p>
+            <div className="rounded border border-slate-200 bg-slate-50 p-4 text-center">
+              <p className="text-2xl font-semibold text-slate-900">200+</p>
+              <p className="text-sm text-slate-600">GitHub Contributions</p>
             </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-white sm:text-4xl">
-                <CountUp end={20} duration={2} />+
-              </p>
-              <p className="text-xs text-gray-300 sm:text-sm">Technologies Used</p>
+            <div className="rounded border border-slate-200 bg-slate-50 p-4 text-center">
+              <p className="text-2xl font-semibold text-slate-900">20+</p>
+              <p className="text-sm text-slate-600">Technologies Used</p>
             </div>
           </div>
 
-          <div className="mt-10 rounded-xl border border-slate-700/70 bg-slate-900/70 p-5 sm:p-6">
-            <h4 className="mb-3 text-lg font-semibold text-white sm:text-xl">Core Focus Areas</h4>
-            <ul className="space-y-2 text-sm text-gray-200 sm:text-base">
-              <li>Backend API design and optimization for high-throughput applications.</li>
-              <li>Frontend engineering with React for responsive, accessible interfaces.</li>
-              <li>Cloud-native deployment workflows and observability-driven improvements.</li>
+          <div className="mb-8 rounded border border-slate-200 bg-slate-50 p-5">
+            <h4 className="mb-3 text-lg font-semibold text-slate-900">Core Focus Areas</h4>
+            <ul className="list-disc space-y-2 pl-5 text-slate-700">
+              <li>Backend API design and optimization for scalable systems.</li>
+              <li>Frontend engineering with React for accessible interfaces.</li>
+              <li>Cloud deployment and observability for reliable operations.</li>
             </ul>
           </div>
 
-          <div className="mt-10 sm:mt-14">
-            <h3 className="mb-3 text-xl font-bold text-white sm:mb-4 sm:text-2xl">LeetCode Stats</h3>
-
-            {error ? (
-              <p className="text-red-400">Failed to load stats.</p>
-            ) : !stats ? (
-              <p className="text-gray-400">Loading stats...</p>
-            ) : (
-              <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
-                <ul className="flex-1 space-y-2 text-left text-sm text-gray-200 sm:text-base">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded border border-slate-200 bg-slate-50 p-5">
+              <h4 className="mb-3 text-lg font-semibold text-slate-900">LeetCode Stats</h4>
+              {error ? (
+                <p className="text-sm text-red-700">Unable to load LeetCode stats.</p>
+              ) : !stats ? (
+                <p className="text-sm text-slate-600">Loading stats...</p>
+              ) : (
+                <ul className="space-y-1 text-sm text-slate-700">
                   <li>Acceptance Rate: <span className="font-semibold">{stats.acceptanceRate}%</span></li>
                   <li>Global Rank: <span className="font-semibold">#{stats.ranking}</span></li>
                   <li>Total Solved: <span className="font-semibold">{stats.totalSolved}</span></li>
-                  <li>Easy: <span className="font-semibold text-green-400">{stats.easySolved}</span></li>
-                  <li>Medium: <span className="font-semibold text-yellow-400">{stats.mediumSolved}</span></li>
-                  <li>Hard: <span className="font-semibold text-red-400">{stats.hardSolved}</span></li>
                 </ul>
+              )}
+            </div>
 
-                <div className="mx-auto w-full max-w-md lg:mx-0 lg:w-1/2">
-                  <Bar data={chartData} options={chartOptions} />
-                </div>
-              </div>
-            )}
+            <div className="rounded border border-slate-200 bg-slate-50 p-5">
+              <h4 className="mb-3 text-lg font-semibold text-slate-900">Solved Distribution</h4>
+              {chartData ? <Bar data={chartData} options={chartOptions} /> : <p className="text-sm text-slate-600">Waiting for data...</p>}
+            </div>
           </div>
 
-          <div className="mt-10 sm:mt-14">
-            <h3 className="mb-3 text-xl font-bold text-white sm:mb-4 sm:text-2xl">GitHub Stats</h3>
-            <div className="flex justify-center md:justify-start">
-              <img
-                src="https://github-readme-stats.vercel.app/api?username=AnshulPatil2005&show_icons=true&theme=dark&bg_color=000000&title_color=60a5fa&text_color=ffffff&icon_color=60a5fa&border_color=3b82f6"
-                alt="GitHub Stats"
-                className="w-full max-w-sm rounded-xl shadow-lg"
-              />
-            </div>
+          <div className="mt-6 rounded border border-slate-200 bg-slate-50 p-5">
+            <h4 className="mb-3 text-lg font-semibold text-slate-900">GitHub Summary</h4>
+            <img
+              src="https://github-readme-stats.vercel.app/api?username=AnshulPatil2005&show_icons=true&theme=default"
+              alt="GitHub stats"
+              className="w-full max-w-md"
+            />
           </div>
         </div>
       </div>
