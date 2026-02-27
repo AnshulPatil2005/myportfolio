@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -13,32 +12,46 @@ import profile from '../assets/profile.jpg';
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, ChartTooltip, Legend);
 
-export default function About() {
-  const [stats, setStats] = useState(null);
-  const [error, setError] = useState(false);
+function contributionTone(count, maxCount) {
+  if (!count) {
+    return 'bg-stone-200';
+  }
 
-  useEffect(() => {
-    async function fetchLeetCodeStats() {
-      try {
-        const response = await axios.get('https://leetcode-stats.tashif.codes/Anshulpatil20');
-        setStats(response.data);
-      } catch (err) {
-        console.error('LeetCode stats fetch failed:', err);
-        setError(true);
-      }
-    }
+  const ratio = maxCount ? count / maxCount : 0;
 
-    fetchLeetCodeStats();
-  }, []);
+  if (ratio >= 0.75) {
+    return 'bg-amber-700';
+  }
 
-  const chartData = stats
+  if (ratio >= 0.5) {
+    return 'bg-amber-600';
+  }
+
+  if (ratio >= 0.25) {
+    return 'bg-amber-500';
+  }
+
+  return 'bg-amber-400';
+}
+
+export default function About({
+  leetcodeUsername,
+  repoCount,
+  contributionSummary,
+  contributionLoading,
+  contributionError,
+  leetcode,
+  leetcodeLoading,
+  leetcodeError,
+}) {
+  const chartData = leetcode
     ? {
         labels: ['Easy', 'Medium', 'Hard'],
         datasets: [
           {
             label: 'Solved',
-            data: [stats.easySolved, stats.mediumSolved, stats.hardSolved],
-            backgroundColor: ['#16a34a', '#ca8a04', '#dc2626'],
+            data: [leetcode.easySolved, leetcode.mediumSolved, leetcode.hardSolved],
+            backgroundColor: ['#166534', '#b45309', '#9a3412'],
           },
         ],
       }
@@ -49,96 +62,147 @@ export default function About() {
     plugins: { legend: { display: false } },
     scales: {
       x: {
-        ticks: { color: '#cbd5e1' },
-        grid: { color: 'rgba(148, 163, 184, 0.15)' },
+        ticks: { color: '#57534e' },
+        grid: { color: 'rgba(120, 113, 108, 0.2)' },
       },
       y: {
         beginAtZero: true,
-        ticks: { color: '#cbd5e1' },
-        grid: { color: 'rgba(148, 163, 184, 0.15)' },
+        ticks: { color: '#57534e' },
+        grid: { color: 'rgba(120, 113, 108, 0.2)' },
       },
     },
   };
 
+  const contributionDays = useMemo(() => {
+    if (!contributionSummary?.weeks?.length) {
+      return [];
+    }
+
+    return contributionSummary.weeks
+      .flatMap((week) => week.contributionDays)
+      .slice(-140);
+  }, [contributionSummary]);
+
+  const maxContributionCount = useMemo(() => {
+    if (!contributionDays.length) {
+      return 0;
+    }
+
+    return Math.max(...contributionDays.map((day) => day.contributionCount));
+  }, [contributionDays]);
+
   return (
-    <section id="about" className="mb-10 rounded-lg border border-slate-700 bg-slate-900/85 shadow-xl shadow-black/25 backdrop-blur-sm px-6 py-10 sm:px-8">
+    <section id="about" className="classic-section mb-10 px-6 py-10 sm:px-8">
       <h3 className="section-title mb-8 text-2xl font-semibold">About</h3>
 
       <div className="grid gap-8 md:grid-cols-[220px_1fr] md:items-start">
         <img
           src={profile}
           alt="Anshul Patil"
-          className="mx-auto h-52 w-52 rounded border border-slate-700 object-cover"
+          className="mx-auto h-52 w-52 rounded border border-amber-200 object-cover"
         />
 
         <div>
-          <p className="mb-4 text-slate-300">
-            I am a full-stack developer focused on production-ready products, dependable
-            APIs, and straightforward user experiences.
+          <p className="classic-muted mb-4">
+            I build production-grade web applications with a focus on quality engineering,
+            maintainability, and measurable outcomes.
           </p>
-          <p className="mb-6 text-slate-300">
-            My approach emphasizes code quality, clear requirements, and practical
-            engineering outcomes that scale in real environments.
+          <p className="classic-muted mb-6">
+            This portfolio now pulls live coding activity from GitHub and LeetCode so the data
+            stays current without manual updates.
           </p>
 
           <div className="mb-8 grid gap-4 sm:grid-cols-3">
-            <div className="rounded border border-slate-800 bg-slate-950 p-4 text-center">
-              <p className="text-2xl font-semibold text-slate-100">8+</p>
-              <p className="text-sm text-slate-400">Projects Delivered</p>
+            <div className="classic-card p-4 text-center">
+              <p className="text-2xl font-semibold text-stone-900">{repoCount}</p>
+              <p className="classic-muted text-sm">GitHub Repositories</p>
             </div>
-            <div className="rounded border border-slate-800 bg-slate-950 p-4 text-center">
-              <p className="text-2xl font-semibold text-slate-100">200+</p>
-              <p className="text-sm text-slate-400">GitHub Contributions</p>
+            <div className="classic-card p-4 text-center">
+              <p className="text-2xl font-semibold text-stone-900">{contributionSummary?.total || 0}</p>
+              <p className="classic-muted text-sm">Yearly Contributions</p>
             </div>
-            <div className="rounded border border-slate-800 bg-slate-950 p-4 text-center">
-              <p className="text-2xl font-semibold text-slate-100">20+</p>
-              <p className="text-sm text-slate-400">Technologies Used</p>
+            <div className="classic-card p-4 text-center">
+              <p className="text-2xl font-semibold text-stone-900">{leetcode?.totalSolved || 0}</p>
+              <p className="classic-muted text-sm">LeetCode Solved</p>
             </div>
           </div>
 
-          <div className="mb-8 rounded border border-slate-800 bg-slate-950/90 p-5 shadow-lg shadow-black/20">
-            <h4 className="mb-3 text-lg font-semibold text-slate-100">Core Focus Areas</h4>
-            <ul className="list-disc space-y-2 pl-5 text-slate-300">
-              <li>Backend API design and optimization for scalable systems.</li>
-              <li>Frontend engineering with React for accessible interfaces.</li>
-              <li>Cloud deployment and observability for reliable operations.</li>
+          <div className="mb-8 classic-card p-5">
+            <h4 className="mb-3 text-lg font-semibold text-stone-900">Core Focus Areas</h4>
+            <ul className="list-disc space-y-2 pl-5 text-stone-700">
+              <li>Backend API architecture for scalable applications.</li>
+              <li>React frontend systems with clear interaction and accessibility.</li>
+              <li>Reliable delivery workflows with cloud deployment and observability.</li>
             </ul>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <div className="rounded border border-slate-800 bg-slate-950/90 p-5 shadow-lg shadow-black/20">
-              <h4 className="mb-3 text-lg font-semibold text-slate-100">LeetCode Stats</h4>
-              {error ? (
-                <p className="text-sm text-red-700">Unable to load LeetCode stats.</p>
-              ) : !stats ? (
-                <p className="text-sm text-slate-400">Loading stats...</p>
+            <div className="classic-card p-5">
+              <h4 className="mb-3 text-lg font-semibold text-stone-900">LeetCode Stats</h4>
+              {leetcodeLoading ? (
+                <p className="classic-muted text-sm">Loading LeetCode stats...</p>
+              ) : leetcodeError ? (
+                <p className="text-sm text-red-700">{leetcodeError}</p>
               ) : (
-                <ul className="space-y-1 text-sm text-slate-300">
-                  <li>Acceptance Rate: <span className="font-semibold">{stats.acceptanceRate}%</span></li>
-                  <li>Global Rank: <span className="font-semibold">#{stats.ranking}</span></li>
-                  <li>Total Solved: <span className="font-semibold">{stats.totalSolved}</span></li>
+                <ul className="space-y-1 text-sm text-stone-700">
+                  <li>
+                    Username: <span className="font-semibold text-stone-900">{leetcodeUsername || 'Configured in .env'}</span>
+                  </li>
+                  <li>
+                    Acceptance Rate: <span className="font-semibold text-stone-900">{leetcode.acceptanceRate}%</span>
+                  </li>
+                  <li>
+                    Global Rank: <span className="font-semibold text-stone-900">#{leetcode.ranking}</span>
+                  </li>
+                  <li>
+                    Total Solved: <span className="font-semibold text-stone-900">{leetcode.totalSolved}</span>
+                  </li>
                 </ul>
               )}
             </div>
 
-            <div className="rounded border border-slate-800 bg-slate-950/90 p-5 shadow-lg shadow-black/20">
-              <h4 className="mb-3 text-lg font-semibold text-slate-100">Solved Distribution</h4>
-              {chartData ? <Bar data={chartData} options={chartOptions} /> : <p className="text-sm text-slate-400">Waiting for data...</p>}
+            <div className="classic-card p-5">
+              <h4 className="mb-3 text-lg font-semibold text-stone-900">Solved Distribution</h4>
+              {chartData ? (
+                <Bar data={chartData} options={chartOptions} />
+              ) : (
+                <p className="classic-muted text-sm">Waiting for LeetCode data...</p>
+              )}
             </div>
           </div>
 
-          <div className="mt-6 rounded border border-slate-800 bg-slate-950/90 p-5 shadow-lg shadow-black/20">
-            <h4 className="mb-3 text-lg font-semibold text-slate-100">GitHub Summary</h4>
-            <img
-              src="https://github-readme-stats.vercel.app/api?username=AnshulPatil2005&show_icons=true&theme=transparent&bg_color=00000000&title_color=e2e8f0&text_color=cbd5e1&icon_color=93c5fd&border_color=334155"
-              alt="GitHub stats"
-              className="w-full max-w-md"
-            />
+          <div className="mt-6 classic-card p-5">
+            <h4 className="mb-3 text-lg font-semibold text-stone-900">Live GitHub Contributions</h4>
+            {contributionLoading ? (
+              <p className="classic-muted text-sm">Loading contribution calendar...</p>
+            ) : contributionError ? (
+              <p className="text-sm text-red-700">{contributionError}</p>
+            ) : (
+              <>
+                <div className="mb-4 flex flex-wrap gap-2 text-xs text-stone-700">
+                  <span className="classic-pill">{contributionSummary.total} total</span>
+                  <span className="classic-pill">{contributionSummary.commits} commits</span>
+                  <span className="classic-pill">{contributionSummary.pullRequests} PRs</span>
+                  <span className="classic-pill">{contributionSummary.issues} issues</span>
+                  <span className="classic-pill">{contributionSummary.reviews} reviews</span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <div className="grid min-w-[560px] grid-cols-20 gap-1">
+                    {contributionDays.map((day) => (
+                      <div
+                        key={day.date}
+                        className={`h-3 rounded-sm ${contributionTone(day.contributionCount, maxContributionCount)}`}
+                        title={`${day.date}: ${day.contributionCount} contributions`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
     </section>
   );
 }
-
-
