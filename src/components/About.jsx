@@ -8,7 +8,7 @@ import {
   Tooltip as ChartTooltip,
   Legend,
 } from 'chart.js';
-import profile from '../assets/profile.jpg';
+import profile from '../assets/profile-placeholder.svg';
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, ChartTooltip, Legend);
 
