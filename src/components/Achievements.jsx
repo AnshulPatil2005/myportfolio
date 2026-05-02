@@ -1,4 +1,5 @@
 import { FiAward, FiGitPullRequest, FiTrendingUp } from 'react-icons/fi';
+import { FadeIn, StaggerContainer, StaggerItem } from './ScrollReveal';
 
 export default function Achievements({ repoCount, totalContributions, openSourceCount }) {
   const achievements = [
@@ -23,21 +24,27 @@ export default function Achievements({ repoCount, totalContributions, openSource
   ];
 
   return (
-    <section id="achievements" className="classic-section mb-10 px-6 py-10 sm:px-8">
-      <h3 className="section-title mb-8 text-2xl font-semibold">Achievements and Highlights</h3>
+    <section id="achievements" className="apple-section mx-auto max-w-7xl">
+      <FadeIn>
+        <h3 className="section-title">Highlights</h3>
+      </FadeIn>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        {achievements.map((achievement) => (
-          <article key={achievement.title} className="classic-card p-5">
-            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded border border-amber-300 bg-amber-100 text-stone-700">
-              {achievement.icon}
-            </div>
-            <h4 className="mb-2 text-lg font-semibold text-stone-900">{achievement.title}</h4>
-            <p className="mb-3 text-sm text-stone-700">{achievement.description}</p>
-            <p className="text-sm font-medium text-stone-900">{achievement.highlight}</p>
-          </article>
-        ))}
-      </div>
+      <StaggerContainer>
+        <div className="grid gap-8 md:grid-cols-3">
+          {achievements.map((achievement) => (
+            <StaggerItem key={achievement.title}>
+              <article className="apple-card group h-full p-8 transition-all duration-300 hover:bg-white">
+                <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0066cc]/10 text-[#0066cc] group-hover:scale-110 transition-transform duration-500">
+                  {achievement.icon}
+                </div>
+                <h4 className="mb-3 text-xl font-bold text-[#1d1d1f]">{achievement.title}</h4>
+                <p className="mb-6 text-sm leading-relaxed text-[#424245]">{achievement.description}</p>
+                <p className="text-lg font-bold text-[#0066cc]">{achievement.highlight}</p>
+              </article>
+            </StaggerItem>
+          ))}
+        </div>
+      </StaggerContainer>
     </section>
   );
 }

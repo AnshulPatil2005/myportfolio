@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { FiExternalLink, FiGithub } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FadeIn } from './ScrollReveal';
 
 function formatDate(dateString) {
   return new Date(dateString).toLocaleDateString(undefined, {
@@ -29,81 +31,123 @@ export default function Projects({ repos, loading, error }) {
   }, [repos, selectedCategory]);
 
   return (
-    <section id="projects" className="classic-section mb-10 px-6 py-10 sm:px-8">
-      <h3 className="section-title mb-2 text-2xl font-semibold">GitHub Projects</h3>
-      <p className="classic-muted mb-6 text-sm">
-        Fetched live from the GitHub API and sorted by latest updates.
-      </p>
+    <section id="projects" className="apple-section mx-auto max-w-7xl">
+      <FadeIn>
+        <h3 className="section-title">Projects</h3>
+        <p className="mx-auto mb-12 max-w-2xl text-center text-lg text-[#86868b]">
+          A collection of my work, ranging from small utilities to full-scale applications,
+          synced live from GitHub.
+        </p>
+      </FadeIn>
 
-      {loading ? <p className="classic-muted text-sm">Loading repositories...</p> : null}
-      {!loading && error ? <p className="text-sm text-red-700">{error}</p> : null}
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#0066cc] border-t-transparent"></div>
+        </div>
+      ) : null}
+
+      {!loading && error ? (
+        <p className="text-center text-red-500">{error}</p>
+      ) : null}
 
       {!loading && !error && (
         <>
-          <div className="mb-8 flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`rounded border px-3 py-1.5 text-sm transition-colors ${
-                  selectedCategory === category
-                    ? 'border-amber-700 bg-amber-100 text-stone-900'
-                    : 'border-amber-200 bg-amber-50 text-stone-700 hover:border-amber-300 hover:bg-amber-100'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-
-          {filteredProjects.length === 0 ? (
-            <p className="classic-muted text-sm">No repositories found for this filter.</p>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              {filteredProjects.map((repo) => (
-                <article key={repo.id} className="classic-card p-5">
-                  <div className="mb-3 flex items-start justify-between gap-3">
-                    <h4 className="text-lg font-semibold text-stone-900">{repo.name}</h4>
-                    <span className="classic-pill text-xs">{repo.language || 'Other'}</span>
-                  </div>
-
-                  <p className="classic-muted mb-4 text-sm leading-6">
-                    {repo.description || 'No description provided.'}
-                  </p>
-
-                  <div className="mb-4 flex flex-wrap gap-2 text-xs text-stone-700">
-                    <span className="classic-pill">{repo.stars} stars</span>
-                    <span className="classic-pill">{repo.forks} forks</span>
-                    <span className="classic-pill">Updated {formatDate(repo.updatedAt)}</span>
-                    {repo.private ? <span className="classic-pill">Private</span> : null}
-                    {repo.isFork ? <span className="classic-pill">Fork</span> : null}
-                    {repo.archived ? <span className="classic-pill">Archived</span> : null}
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-4">
-                    <a
-                      href={repo.htmlUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-sm font-medium text-stone-900 underline underline-offset-2 hover:text-amber-900"
-                    >
-                      <FiGithub size={14} /> Repository
-                    </a>
-
-                    {repo.homepage ? (
-                      <a
-                        href={repo.homepage}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-sm font-medium text-stone-900 underline underline-offset-2 hover:text-amber-900"
-                      >
-                        Live Demo <FiExternalLink size={14} />
-                      </a>
-                    ) : null}
-                  </div>
-                </article>
+          <FadeIn delay={0.2}>
+            <div className="mb-12 flex flex-wrap justify-center gap-3">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`rounded-full px-6 py-2 text-sm font-medium transition-all duration-300 ${
+                    selectedCategory === category
+                      ? 'bg-[#1d1d1f] text-white'
+                      : 'bg-[#f5f5f7] text-[#1d1d1f] hover:bg-[#e8e8ed]'
+                  }`}
+                >
+                  {category}
+                </button>
               ))}
             </div>
+          </FadeIn>
+
+          <AnimatePresence mode="popLayout">
+            <motion.div
+              layout
+              className="grid gap-8 md:grid-cols-2"
+            >
+              {filteredProjects.map((repo) => (
+                <motion.article
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  whileHover={{ y: -8 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  key={repo.id}
+                  className="apple-card group flex flex-col overflow-hidden"
+                >
+                  {/* Image Preview Area */}
+                  <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
+                    <img
+                      src={`https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=1000&auto=format&fit=crop`}
+                      alt={repo.name}
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-black/0 transition-colors duration-300 group-hover:bg-black/10" />
+                    <div className="absolute right-4 top-4 flex gap-2">
+                       <a
+                        href={repo.htmlUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-[#1d1d1f] backdrop-blur transition-all hover:bg-white hover:text-[#0066cc]"
+                        title="GitHub Repository"
+                      >
+                        <FiGithub size={18} />
+                      </a>
+                      {repo.homepage && (
+                        <a
+                          href={repo.homepage}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-[#1d1d1f] backdrop-blur transition-all hover:bg-white hover:text-[#0066cc]"
+                          title="Live Demo"
+                        >
+                          <FiExternalLink size={18} />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-1 flex-col p-8">
+                    <div className="mb-4">
+                      <span className="mb-2 inline-block text-xs font-semibold uppercase tracking-widest text-[#0066cc]">
+                        {repo.language || 'Software'}
+                      </span>
+                      <h4 className="text-2xl font-bold text-[#1d1d1f]">{repo.name}</h4>
+                    </div>
+
+                    <p className="mb-8 line-clamp-2 text-lg leading-relaxed text-[#424245]">
+                      {repo.description || 'Focusing on clean code and robust architecture.'}
+                    </p>
+
+                    <div className="mt-auto flex flex-wrap gap-4 text-xs font-semibold uppercase tracking-wider text-[#86868b]">
+                      <div className="flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-yellow-400"></span>
+                        {repo.stars} Stars
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-blue-400"></span>
+                        {repo.forks} Forks
+                      </div>
+                      <div>Updated {formatDate(repo.updatedAt)}</div>
+                    </div>
+                  </div>
+                </motion.article>
+              ))}
+            </motion.div>
+          </AnimatePresence>
+
+          {filteredProjects.length === 0 && (
+            <p className="py-20 text-center text-[#86868b]">No repositories found for this filter.</p>
           )}
         </>
       )}
