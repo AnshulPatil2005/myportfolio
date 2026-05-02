@@ -1,4 +1,5 @@
 import { FaBriefcase, FaGraduationCap } from 'react-icons/fa';
+import { FadeIn, StaggerContainer, StaggerItem } from './ScrollReveal';
 
 const timelineData = [
   {
@@ -19,20 +20,46 @@ const timelineData = [
 
 export default function Testimonials() {
   return (
-    <section id="testimonials" className="classic-section px-6 py-10 sm:px-8">
-      <h3 className="section-title mb-6 text-2xl font-semibold">Experience Timeline</h3>
+    <section id="experience" className="apple-section mx-auto max-w-7xl">
+      <FadeIn>
+        <h3 className="section-title">Experience</h3>
+        <p className="mx-auto mb-16 max-w-2xl text-center text-lg text-[#86868b]">
+          My professional journey and academic milestones in the world of software
+          engineering and product development.
+        </p>
+      </FadeIn>
 
-      <div className="space-y-4">
-        {timelineData.map((item) => (
-          <article key={item.id} className="classic-card p-5">
-            <p className="mb-2 text-sm font-medium text-stone-600">{item.period}</p>
-            <h4 className="mb-2 flex items-center gap-2 text-lg font-semibold text-stone-900">
-              {item.icon}
-              {item.title}
-            </h4>
-            <p className="text-sm text-stone-700">{item.description}</p>
-          </article>
-        ))}
+      <div className="relative mx-auto max-w-4xl px-6">
+        {/* Vertical Line */}
+        <div className="absolute left-6 top-0 h-full w-px bg-[#e8e8ed] md:left-1/2"></div>
+
+        <StaggerContainer>
+          <div className="space-y-12">
+            {timelineData.map((item, i) => (
+              <StaggerItem key={item.id}>
+                <div className={`relative flex flex-col md:flex-row ${i % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
+                  {/* Dot */}
+                  <div className="absolute left-0 top-1/2 z-10 flex h-4 w-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white border-2 border-[#0066cc] md:left-1/2"></div>
+
+                  {/* Content */}
+                  <div className="w-full pl-12 md:w-1/2 md:pl-0 md:px-12">
+                    <div className="apple-card p-8 hover:bg-white">
+                      <p className="mb-2 text-sm font-bold text-[#0066cc] uppercase tracking-wider">{item.period}</p>
+                      <h4 className="mb-4 flex items-center gap-3 text-xl font-bold text-[#1d1d1f]">
+                        <span className="text-[#86868b]">{item.icon}</span>
+                        {item.title}
+                      </h4>
+                      <p className="leading-relaxed text-[#424245]">{item.description}</p>
+                    </div>
+                  </div>
+
+                  {/* Empty space for md screens */}
+                  <div className="hidden md:block md:w-1/2"></div>
+                </div>
+              </StaggerItem>
+            ))}
+          </div>
+        </StaggerContainer>
       </div>
     </section>
   );

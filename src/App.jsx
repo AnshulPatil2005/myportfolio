@@ -9,7 +9,9 @@ import BackToTop from './components/BackToTop';
 import Research from './components/Research';
 import Achievements from './components/Achievements';
 import OpenSource from './components/OpenSource';
+import Contact from './components/Contact';
 import usePortfolioData from './hooks/usePortfolioData';
+import { motion, useScroll, useSpring } from 'framer-motion';
 
 export default function App() {
   const {
@@ -28,10 +30,24 @@ export default function App() {
     leetcodeUsername,
   } = usePortfolioData();
 
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
   return (
-    <div className="classic-page min-h-screen text-stone-900">
+    <div className="min-h-screen bg-white font-sans text-[#1d1d1f] selection:bg-[#0066cc]/20 selection:text-[#0066cc]">
+      {/* Scroll Progress Bar */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 z-[60] h-1 bg-[#0066cc] origin-left"
+        style={{ scaleX }}
+      />
+
       <Navbar />
-      <main className="mx-auto max-w-6xl px-4 pb-16 pt-24 sm:px-6 lg:px-8">
+
+      <main>
         <Hero />
         <About
           repoCount={repos.length}
@@ -58,7 +74,9 @@ export default function App() {
         <Skills />
         <Research />
         <Testimonials />
+        <Contact />
       </main>
+
       <Footer />
       <BackToTop />
     </div>

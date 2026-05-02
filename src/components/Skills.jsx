@@ -1,3 +1,5 @@
+import { FadeIn, StaggerContainer, StaggerItem } from './ScrollReveal';
+
 const skillCategories = [
   {
     label: 'Frontend',
@@ -23,30 +25,38 @@ const skillCategories = [
 
 export default function Skills() {
   return (
-    <section id="skills" className="classic-section mb-10 px-6 py-10 sm:px-8">
-      <h3 className="section-title mb-6 text-2xl font-semibold">Skills</h3>
-      <p className="classic-muted mb-8">
-        Technologies and tools I use across product development, deployment,
-        and maintenance.
-      </p>
+    <section id="skills" className="apple-section mx-auto max-w-7xl">
+      <FadeIn>
+        <h3 className="section-title">Skills</h3>
+        <p className="mx-auto mb-16 max-w-2xl text-center text-lg text-[#86868b]">
+          Technologies and tools I use across product development, deployment,
+          and maintenance.
+        </p>
+      </FadeIn>
 
-      <div className="space-y-6">
-        {skillCategories.map(({ label, skills }) => (
-          <div key={label}>
-            <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-stone-600">{label}</p>
-            <div className="flex flex-wrap gap-2">
-              {skills.map((skill) => (
-                <span
-                  key={skill}
-                  className="classic-pill px-3 py-1.5 text-sm"
-                >
-                  {skill}
-                </span>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+      <StaggerContainer>
+        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-3">
+          {skillCategories.map(({ label, skills }) => (
+            <StaggerItem key={label}>
+              <div className="apple-card h-full p-8">
+                <p className="mb-6 text-sm font-bold uppercase tracking-[0.2em] text-[#86868b]">
+                  {label}
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  {skills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="rounded-full bg-white px-4 py-2 text-sm font-medium text-[#1d1d1f] shadow-sm transition-transform hover:scale-110"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </StaggerItem>
+          ))}
+        </div>
+      </StaggerContainer>
     </section>
   );
 }
