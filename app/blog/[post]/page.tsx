@@ -22,6 +22,10 @@ type Props = {
 const fallbackImage: string =
   "https://res.cloudinary.com/victoreke/image/upload/v1692636087/victoreke/blog.png";
 
+export function generateStaticParams() {
+  return posts.map((post) => ({ post: post.slug }));
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const post = posts.find((p) => p.slug === params.post);
   if (!post) return { title: "Post Not Found" };

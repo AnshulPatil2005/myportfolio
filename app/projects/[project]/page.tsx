@@ -15,6 +15,10 @@ type Props = {
 const fallbackImage: string =
   "https://res.cloudinary.com/victoreke/image/upload/v1692636087/victoreke/projects.png";
 
+export function generateStaticParams() {
+  return projects.map((project) => ({ project: project.slug }));
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const project = projects.find((p) => p.slug === params.project);
   if (!project) return { title: "Project Not Found" };
