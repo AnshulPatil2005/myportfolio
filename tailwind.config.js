@@ -1,34 +1,43 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
+  darkMode: "class",
   content: [
-    './index.html',
-    './src/**/*.{js,jsx,ts,tsx}',
-  ],
-  darkMode: 'class',
-  safelist: [
-    'z-[-1]', // required to render Particles background behind content
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
-      transformOrigin: {
-        center: 'center',
+      fontFamily: {
+        incognito: ["var(--incognito)"],
+        inter: ["var(--inter)"],
       },
-      rotate: {
-        y180: '180deg',
+      colors: {
+        "primary-color": "#33E092",
+        "secondary-color": "#0CCE6B",
+        "tertiary-color": "#16a34a",
+        "primary-bg": "rgba(39, 39, 43, 0.4)",
+        "secondary-bg": "rgba(250, 250, 250, 0.4)",
       },
-      scale: {
-        102: '1.02',
+      boxShadow: {
+        "line-light": "rgba(17, 17, 26, 0.1) 0px 1px 0px",
+        "line-dark": "rgb(29, 29, 32) 0px 1px 0px",
       },
-      keyframes: {
-        fadeInUp: {
-          '0%': { opacity: '0', transform: 'translateY(20px)' },
-          '100%': { opacity: '1', transform: 'translateY(0)' },
-        },
+      gridTemplateColumns: {
+        custom: "1.2fr 1fr",
       },
-      animation: {
-        fadeInUp: 'fadeInUp 0.8s ease-out forwards',
+      gridTemplateRows: {
+        fit: "min-content 0fr",
+        full: "min-content 1fr",
+      },
+      backgroundImage: {
+        noise:
+          "url('https://res.cloudinary.com/victoreke/image/upload/v1691779257/victoreke/noise.png')",
+      },
+      backgroundPosition: {
+        zero: "0 0",
       },
     },
   },
   plugins: [],
-}
+};
