@@ -23,7 +23,7 @@ export const socialLinks = [
   {
     id: 3,
     name: "LeetCode",
-    url: "https://leetcode.com/AnshulPatil2005",
+    url: `https://leetcode.com/u/${process.env.NEXT_PUBLIC_LEETCODE_USERNAME ?? "Anshulpatil2011"}`,
     icon: SiLeetcode,
     status: "social",
   },

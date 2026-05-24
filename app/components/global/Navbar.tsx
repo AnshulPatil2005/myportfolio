@@ -7,15 +7,15 @@ export default function Navbar() {
   const data = [
     {
       title: "About",
-      href: "/about",
+      href: "/#about",
     },
     {
       title: "Projects",
-      href: "/projects",
+      href: "/#projects",
     },
     {
       title: "Blog",
-      href: "/blog",
+      href: "/#blog",
     },
   ];
 
