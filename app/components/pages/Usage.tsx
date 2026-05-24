@@ -2,24 +2,28 @@ import { Slide } from "../../animation/Slide";
 
 const skillGroups = [
   {
-    category: "Frontend",
-    items: ["React", "Next.js", "TypeScript", "JavaScript", "Tailwind CSS", "HTML5", "CSS3"],
+    category: "Languages",
+    items: ["Python", "C++", "Golang", "SQL", "Bash", "JavaScript"],
   },
   {
     category: "Backend",
-    items: ["Node.js", "Express.js", "Python", "FastAPI"],
+    items: ["FastAPI", "Django REST Framework", "REST APIs", "Microservices", "API Design", "Authentication", "Caching"],
   },
   {
-    category: "Databases",
-    items: ["MongoDB", "PostgreSQL", "MySQL", "Firebase"],
+    category: "Databases & Queues",
+    items: ["PostgreSQL", "Redis", "Celery", "Vector Databases", "Query Optimization"],
   },
   {
-    category: "DevOps & Cloud",
-    items: ["AWS", "Docker", "Kubernetes", "GitHub Actions"],
+    category: "Cloud & DevOps",
+    items: ["AWS EC2", "AWS S3", "Docker", "GitHub Actions", "CI/CD", "Linux", "Git"],
   },
   {
-    category: "Tools",
-    items: ["Git", "GitHub", "VS Code", "Figma", "Postman"],
+    category: "AI & Data",
+    items: ["PyTorch", "TensorFlow", "Transformers", "OpenCV", "NumPy", "Pandas", "OCR", "LLM APIs"],
+  },
+  {
+    category: "Core CS",
+    items: ["Data Structures", "Algorithms", "OOP", "Distributed Systems", "System Design", "Operating Systems"],
   },
 ];
 

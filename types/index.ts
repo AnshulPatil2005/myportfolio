@@ -31,9 +31,10 @@ export type JobType = {
   _id: string;
   name: string;
   jobTitle: string;
-  logo: string;
+  logo?: string;
   url: string;
   description: string;
+  bullets?: string[];
   startDate: string;
   endDate: string;
 };

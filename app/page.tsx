@@ -4,6 +4,7 @@ import Job from "./components/pages/Job";
 import Social from "./components/shared/Social";
 import { Slide } from "./animation/Slide";
 import ContributionGraph from "./components/pages/GithubCalendarComponent";
+import LeetCodeStats from "./components/pages/LeetCodeStats";
 
 export default function Home() {
   return (
@@ -27,6 +28,7 @@ export default function Home() {
         </Slide>
       </section>
       <ContributionGraph />
+      <LeetCodeStats />
       <Job />
     </main>
   );

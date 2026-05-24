@@ -3,6 +3,7 @@ import {
   BiLogoLinkedinSquare,
 } from "react-icons/bi";
 import { BiEnvelope } from "react-icons/bi";
+import { SiLeetcode } from "react-icons/si";
 
 export const socialLinks = [
   {
@@ -21,6 +22,13 @@ export const socialLinks = [
   },
   {
     id: 3,
+    name: "LeetCode",
+    url: "https://leetcode.com/AnshulPatil2005",
+    icon: SiLeetcode,
+    status: "social",
+  },
+  {
+    id: 4,
     name: "Email",
     url: "mailto:anshulpatil1022@gmail.com",
     icon: BiEnvelope,

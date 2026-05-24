@@ -4,6 +4,7 @@ import type { ProfileType } from "@/types";
 import { BiEnvelope, BiSolidDownload } from "react-icons/bi";
 import Heroes from "../components/pages/Heroes";
 import Usage from "../components/pages/Usage";
+import Achievements from "../components/pages/Achievements";
 import { Slide } from "../animation/Slide";
 import { profile } from "@/lib/data";
 
@@ -81,6 +82,7 @@ export default function About() {
         <Slide delay={0.14}>
           <Usage />
         </Slide>
+        <Achievements />
         <Heroes />
       </div>
     </main>
