@@ -5,8 +5,6 @@ import { github } from "@/app/data/contribution-graph-theme";
 import { useState, useEffect } from "react";
 import YearButton from "../shared/YearButton";
 import { getGitHubYears } from "@/app/utils/calculate-years";
-import EmptyState from "../shared/EmptyState";
-import { IoIosAnalytics } from "react-icons/io";
 
 export default function ContributionGraph() {
   const [calendarYear, setCalendarYear] = useState<number | undefined>(
@@ -26,18 +24,9 @@ export default function ContributionGraph() {
   }, [scheme]);
 
   const today = new Date().getFullYear();
-  const username = process.env.NEXT_PUBLIC_GITHUB_USERNAME;
-  const joinYear = Number(process.env.NEXT_PUBLIC_GITHUB_JOIN_YEAR);
+  const username = process.env.NEXT_PUBLIC_GITHUB_USERNAME || "AnshulPatil2005";
+  const joinYear = Number(process.env.NEXT_PUBLIC_GITHUB_JOIN_YEAR) || 2024;
   const years = getGitHubYears(joinYear);
-
-  if (!username || !joinYear)
-    return (
-      <EmptyState
-        icon={<IoIosAnalytics />}
-        title="Unable to load Contribution Graph"
-        message="We could not find any GitHub credentials added to the .env file. To display the graph, provide your username and the year you joined GitHub"
-      />
-    );
 
   return (
     <div className="flex xl:flex-row flex-col gap-4">

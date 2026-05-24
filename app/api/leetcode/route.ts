@@ -14,6 +14,11 @@ const query = `
       profile {
         ranking
       }
+      userCalendar {
+        streak
+        totalActiveDays
+        submissionCalendar
+      }
     }
   }
 `;
@@ -53,12 +58,17 @@ export async function GET() {
     const medium = stats.find((s) => s.difficulty === "Medium")?.count ?? 0;
     const hard = stats.find((s) => s.difficulty === "Hard")?.count ?? 0;
 
+    const calendar = user.userCalendar ?? {};
+
     return NextResponse.json({
       total,
       easy,
       medium,
       hard,
       ranking: user.profile.ranking ?? 0,
+      streak: calendar.streak ?? 0,
+      totalActiveDays: calendar.totalActiveDays ?? 0,
+      submissionCalendar: calendar.submissionCalendar ?? "",
     });
   } catch {
     return NextResponse.json({ error: "Failed to fetch LeetCode stats" }, { status: 500 });
