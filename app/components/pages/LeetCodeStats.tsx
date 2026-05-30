@@ -20,8 +20,11 @@ type LeetCodeData = {
 function parseCalendar(raw: string): Record<string, number> {
   const map: Record<string, number> = {};
   try {
-    const parsed = JSON.parse(raw);
-    for (const [ts, cnt] of Object.entries(parsed)) {
+    // The API returns submissionCalendar as a JSON string — parse once.
+    // Guard against double-encoding: if parse gives another string, parse again.
+    let data: unknown = JSON.parse(raw);
+    if (typeof data === "string") data = JSON.parse(data);
+    for (const [ts, cnt] of Object.entries(data as Record<string, number>)) {
       const d = new Date(Number(ts) * 1000);
       const key = d.toISOString().split("T")[0];
       map[key] = (map[key] || 0) + (cnt as number);
@@ -64,9 +67,9 @@ function getMonthLabels(weeks: { date: string; count: number }[][]): (string | n
 function cellClass(count: number): string {
   if (count < 0)   return "dark:bg-zinc-900 bg-zinc-50";
   if (count === 0)  return "dark:bg-zinc-800 bg-zinc-200";
-  if (count <= 2)   return "bg-orange-900";
-  if (count <= 5)   return "bg-orange-600";
-  return "bg-orange-400";
+  if (count <= 2)   return "bg-orange-700";
+  if (count <= 5)   return "bg-orange-500";
+  return "bg-orange-300";
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -146,7 +149,11 @@ export default function LeetCodeStats() {
           ranking: profile?.ranking ?? 0,
           streak: calendar?.streak ?? 0,
           totalActiveDays: calendar?.totalActiveDays ?? 0,
-          submissionCalendar: JSON.stringify(calendar?.submissionCalendar ?? {}),
+          // submissionCalendar comes from the API already as a JSON string — don't re-encode
+          submissionCalendar:
+            typeof calendar?.submissionCalendar === "string"
+              ? calendar.submissionCalendar
+              : JSON.stringify(calendar?.submissionCalendar ?? {}),
         });
       })
       .catch(() => null)
