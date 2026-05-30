@@ -1,27 +1,6 @@
 import { NextResponse } from "next/server";
 
-const LEETCODE_GRAPHQL = "https://leetcode.com/graphql/";
-
-const query = `
-  query getUserProfile($username: String!) {
-    matchedUser(username: $username) {
-      submitStats {
-        acSubmissionNum {
-          difficulty
-          count
-        }
-      }
-      profile {
-        ranking
-      }
-      userCalendar {
-        streak
-        totalActiveDays
-        submissionCalendar
-      }
-    }
-  }
-`;
+const BASE = "https://alfa-leetcode-api.onrender.com";
 
 export async function GET() {
   const username = process.env.NEXT_PUBLIC_LEETCODE_USERNAME;
@@ -30,45 +9,30 @@ export async function GET() {
   }
 
   try {
-    const res = await fetch(LEETCODE_GRAPHQL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Referer: "https://leetcode.com",
-        "User-Agent": "Mozilla/5.0 (compatible)",
-      },
-      body: JSON.stringify({ query, variables: { username } }),
-      next: { revalidate: 3600 },
-    });
+    const [profileRes, solvedRes, calendarRes] = await Promise.all([
+      fetch(`${BASE}/${username}`, { next: { revalidate: 3600 } }),
+      fetch(`${BASE}/${username}/solved`, { next: { revalidate: 3600 } }),
+      fetch(`${BASE}/${username}/calendar`, { next: { revalidate: 3600 } }),
+    ]);
 
-    if (!res.ok) {
-      return NextResponse.json({ error: "LeetCode API error" }, { status: 500 });
-    }
-
-    const data = await res.json();
-    const user = data?.data?.matchedUser;
-
-    if (!user) {
+    if (!solvedRes.ok) {
       return NextResponse.json({ error: "LeetCode user not found" }, { status: 404 });
     }
 
-    const stats = user.submitStats.acSubmissionNum as { difficulty: string; count: number }[];
-    const total = stats.find((s) => s.difficulty === "All")?.count ?? 0;
-    const easy = stats.find((s) => s.difficulty === "Easy")?.count ?? 0;
-    const medium = stats.find((s) => s.difficulty === "Medium")?.count ?? 0;
-    const hard = stats.find((s) => s.difficulty === "Hard")?.count ?? 0;
-
-    const calendar = user.userCalendar ?? {};
+    const profile = profileRes.ok ? await profileRes.json() : {};
+    const solved = await solvedRes.json();
+    const calendar = calendarRes.ok ? await calendarRes.json() : {};
 
     return NextResponse.json({
-      total,
-      easy,
-      medium,
-      hard,
-      ranking: user.profile.ranking ?? 0,
+      total: solved.solvedProblem ?? 0,
+      easy: solved.easySolved ?? 0,
+      medium: solved.mediumSolved ?? 0,
+      hard: solved.hardSolved ?? 0,
+      ranking: profile.ranking ?? 0,
       streak: calendar.streak ?? 0,
       totalActiveDays: calendar.totalActiveDays ?? 0,
-      submissionCalendar: calendar.submissionCalendar ?? "",
+      // Serialize as string so the client-side heatmap parser stays unchanged
+      submissionCalendar: JSON.stringify(calendar.submissionCalendar ?? {}),
     });
   } catch {
     return NextResponse.json({ error: "Failed to fetch LeetCode stats" }, { status: 500 });
