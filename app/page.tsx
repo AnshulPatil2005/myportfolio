@@ -10,6 +10,7 @@ import LeetCodeStats from "./components/pages/LeetCodeStats";
 import Usage from "./components/pages/Usage";
 import Achievements from "./components/pages/Achievements";
 import Posts from "./components/pages/Posts";
+import ResearchSection from "./components/pages/ResearchSection";
 import EmptyState from "./components/shared/EmptyState";
 import { BiSolidDownload, BiEnvelope } from "react-icons/bi";
 
@@ -121,6 +122,9 @@ export default function Home() {
           )}
         </Slide>
       </section>
+
+      {/* Research */}
+      <ResearchSection />
 
       {/* Blog */}
       <section id="blog" className="scroll-mt-28 mt-32 mb-16">

@@ -14,6 +14,10 @@ export default function Navbar() {
       href: "/#projects",
     },
     {
+      title: "Research",
+      href: "/#research",
+    },
+    {
       title: "Blog",
       href: "/#blog",
     },

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { RxHamburgerMenu } from "react-icons/rx";
 import {
+  HiAcademicCap,
   HiBeaker,
   HiBookmarkAlt,
   HiOutlineX,
@@ -21,6 +22,11 @@ export default function MobileMenu() {
       title: "Projects",
       href: "/#projects",
       icon: HiBeaker,
+    },
+    {
+      title: "Research",
+      href: "/#research",
+      icon: HiAcademicCap,
     },
     {
       title: "Blog",

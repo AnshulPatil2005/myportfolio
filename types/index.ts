@@ -83,6 +83,16 @@ export type PostType = {
   isPublished: boolean;
 };
 
+export type ResearchProjectType = {
+  _id: string;
+  title: string;
+  status: "Ongoing" | "Completed";
+  shortDescription: string;
+  fullDescription: string[];
+  tags: string[];
+  links?: { label: string; url: string }[];
+};
+
 export type HeroeType = {
   _id: string;
   _createdAt: string;

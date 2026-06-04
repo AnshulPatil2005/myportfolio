@@ -1,4 +1,4 @@
-import { ProfileType, JobType, ProjectType, PostType, HeroeType } from "@/types";
+import { ProfileType, JobType, ProjectType, PostType, HeroeType, ResearchProjectType } from "@/types";
 
 export const profile: ProfileType = {
   _id: "anshul-patil",
@@ -122,3 +122,32 @@ export const projects: ProjectType[] = [
 export const posts: PostType[] = [];
 
 export const heroes: HeroeType[] = [];
+
+export const researchProjects: ResearchProjectType[] = [
+  {
+    _id: "gujarati-legal-nlp",
+    title: "Gujarati Legal Document Corpus and NLP Pipeline for Court Case Understanding",
+    status: "Ongoing",
+    shortDescription:
+      "Building a machine learning-ready Gujarati legal corpus from Gujarat eCourts data, with NLP pipelines for classification, named entity recognition, summarization, and retrieval-augmented QA over district court judgments.",
+    fullDescription: [
+      "This project constructs a low-resource Gujarati legal NLP pipeline using scraped Gujarat eCourt PDFs. The core challenge is that court documents use inconsistent encodings — valid Unicode, legacy fonts (LMG-Arun, TERAFONT-VARUN), and corrupted ToUnicode mappings — so the pipeline evaluates multiple extraction strategies including Tesseract OCR, SuryaOCR, Google Cloud Vision, and deterministic glyph-to-Unicode mapping before any model training.",
+      "Once text is extracted and normalized, each case is converted into a structured JSONL record with metadata (district, court, year, CNR number, section) and task-specific labels. Supervised fine-tuning targets include legal text classification (bail granted/rejected, document category), named entity recognition (judge, advocate, petitioner, section, FIR number), and legal summarization using mT5/IndicBART.",
+      "The retrieval layer uses multilingual sentence embeddings (LaBSE, BGE-M3, multilingual-e5) to enable semantic search over the corpus, supporting queries like 'which courts granted anticipatory bail under CrPC 438 in 2024.' The ML contribution is studying how OCR noise propagates into downstream NLP model performance on real district court data.",
+    ],
+    tags: ["NLP", "OCR", "Transformers", "IndicBERT", "MuRIL", "Python", "Low-resource NLP", "RAG"],
+  },
+  {
+    _id: "cxr-generalization",
+    title: "Robust and Explainable CNN-Based Chest X-Ray Classification Across Unseen Clinical Datasets",
+    status: "Ongoing",
+    shortDescription:
+      "A cross-dataset generalization study training CNN models on CheXpert and evaluating them zero-shot on MIMIC-CXR, NIH ChestX-ray14, PadChest, VinDr-CXR, and BRAX to measure architecture robustness and detect dataset-specific shortcuts.",
+    fullDescription: [
+      "This project implements a strict external validation framework for multi-label chest X-ray classification. Models are trained solely on CheXpert (224K images, 14 labels) and then evaluated — without any fine-tuning — on five external datasets: MIMIC-CXR-JPG, ChestX-ray14, PadChest, VinDr-CXR, and BRAX. A label harmonization module maps all datasets to a shared disease space (Cardiomegaly, Atelectasis, Pleural Effusion, Pneumothorax, Edema, and others).",
+      "The backbone comparison spans 15+ CNN architectures: DenseNet-121/161, ResNet-18/50/101, ConvNeXt-S, EfficientNetV2-S, EfficientNet-B0/B4, TResNet-50, SE-ResNet-50, MobileNetV3-Large, and RepVGG-B0. Each model is evaluated on per-class AUROC, macro-AUROC, macro-F1, sensitivity, and calibration metrics. The generalization gap (internal CheXpert performance minus external performance) is the primary measure of architectural robustness.",
+      "Secondary experiments ablate optimizer choice (AdamW, Lion, SOAP, SAM variants), loss functions (BCE, focal, AUC-surrogate), uncertainty-label strategies (U-Ones, U-Zeros, U-Ignore), and preprocessing pipelines (histogram standardization, CLAHE, adaptive ROI crop). A dataset-source classifier is trained to detect shortcut features, and Grad-CAM heatmaps are used to verify whether models attend to clinically meaningful lung regions or to acquisition artifacts.",
+    ],
+    tags: ["Medical Imaging", "CNN", "PyTorch", "XAI", "Grad-CAM", "Multi-label Classification", "CheXpert", "Generalization"],
+  },
+];
