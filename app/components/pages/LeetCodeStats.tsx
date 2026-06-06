@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Slide } from "@/app/animation/Slide";
 
 const BASE = "https://alfa-leetcode-api.onrender.com";
+const CACHE_TTL = 2 * 60 * 60 * 1000; // 2 hours
 
 type LeetCodeData = {
   total: number;
@@ -20,8 +21,6 @@ type LeetCodeData = {
 function parseCalendar(raw: string): Record<string, number> {
   const map: Record<string, number> = {};
   try {
-    // The API returns submissionCalendar as a JSON string — parse once.
-    // Guard against double-encoding: if parse gives another string, parse again.
     let data: unknown = JSON.parse(raw);
     if (typeof data === "string") data = JSON.parse(data);
     for (const [ts, cnt] of Object.entries(data as Record<string, number>)) {
@@ -65,10 +64,10 @@ function getMonthLabels(weeks: { date: string; count: number }[][]): (string | n
 }
 
 function cellClass(count: number): string {
-  if (count < 0)   return "dark:bg-zinc-900 bg-zinc-50";
-  if (count === 0)  return "dark:bg-zinc-800 bg-zinc-200";
-  if (count <= 2)   return "bg-orange-700";
-  if (count <= 5)   return "bg-orange-500";
+  if (count < 0)  return "dark:bg-zinc-900 bg-zinc-50";
+  if (count === 0) return "dark:bg-zinc-800 bg-zinc-200";
+  if (count <= 2)  return "bg-orange-700";
+  if (count <= 5)  return "bg-orange-500";
   return "bg-orange-300";
 }
 
@@ -131,17 +130,41 @@ export default function LeetCodeStats() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const username =
-      process.env.NEXT_PUBLIC_LEETCODE_USERNAME || "Anshulpatil2011";
+    const username = process.env.NEXT_PUBLIC_LEETCODE_USERNAME || "Anshulpatil2011";
+    const CACHE_KEY = `lc_stats_${username}`;
+
+    // ── 1. Serve from localStorage cache immediately ──────────────────────────
+    let hasCache = false;
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (raw) {
+        const { data, ts } = JSON.parse(raw) as { data: LeetCodeData; ts: number };
+        setStats(data);
+        setLoading(false);
+        hasCache = true;
+        // Cache is fresh — skip the network call entirely
+        if (Date.now() - ts < CACHE_TTL) return;
+        // Cache is stale — show it now, refresh in background (no loading spinner)
+      }
+    } catch {}
+
+    // ── 2. Fetch fresh data with a 20s timeout ────────────────────────────────
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20_000);
+
+    const safeFetch = (url: string) =>
+      fetch(url, { signal: controller.signal })
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null);
 
     Promise.all([
-      fetch(`${BASE}/${username}`).then((r) => (r.ok ? r.json() : null)),
-      fetch(`${BASE}/${username}/solved`).then((r) => (r.ok ? r.json() : null)),
-      fetch(`${BASE}/${username}/calendar`).then((r) => (r.ok ? r.json() : null)),
+      safeFetch(`${BASE}/${username}`),
+      safeFetch(`${BASE}/${username}/solved`),
+      safeFetch(`${BASE}/${username}/calendar`),
     ])
       .then(([profile, solved, calendar]) => {
         if (!solved) return;
-        setStats({
+        const fresh: LeetCodeData = {
           total: solved.solvedProblem ?? 0,
           easy: solved.easySolved ?? 0,
           medium: solved.mediumSolved ?? 0,
@@ -149,25 +172,36 @@ export default function LeetCodeStats() {
           ranking: profile?.ranking ?? 0,
           streak: calendar?.streak ?? 0,
           totalActiveDays: calendar?.totalActiveDays ?? 0,
-          // submissionCalendar comes from the API already as a JSON string — don't re-encode
           submissionCalendar:
             typeof calendar?.submissionCalendar === "string"
               ? calendar.submissionCalendar
               : JSON.stringify(calendar?.submissionCalendar ?? {}),
-        });
+        };
+        setStats(fresh);
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify({ data: fresh, ts: Date.now() }));
+        } catch {}
       })
-      .catch(() => null)
-      .finally(() => setLoading(false));
+      .catch(() => {})
+      .finally(() => {
+        clearTimeout(timeoutId);
+        // Only update loading state if we didn't already resolve from cache
+        if (!hasCache) setLoading(false);
+      });
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeoutId);
+    };
   }, []);
 
-  const username =
-    process.env.NEXT_PUBLIC_LEETCODE_USERNAME || "Anshulpatil2011";
+  const username = process.env.NEXT_PUBLIC_LEETCODE_USERNAME || "Anshulpatil2011";
   const profileUrl = `https://leetcode.com/u/${username}`;
 
   return (
     <section className="mt-16">
       <Slide delay={0.16}>
-        {/* Heading row — matches GitHub Activity heading */}
+        {/* Heading row */}
         <div className="flex items-center justify-between mb-8">
           <h2 className="font-incognito text-4xl font-bold tracking-tight">
             LeetCode
@@ -182,12 +216,10 @@ export default function LeetCodeStats() {
           </a>
         </div>
 
-        {/* Card + stat pills — mirrors GitHub calendar layout */}
+        {/* Card + stat pills */}
         <div className="flex xl:flex-row flex-col gap-4">
-          {/* Heatmap card — same style as GitHub calendar card */}
           <div className="dark:bg-primary-bg bg-secondary-bg border dark:border-zinc-800 border-zinc-200 p-8 rounded-lg max-w-fit max-h-fit">
             {loading ? (
-              /* Skeleton matching heatmap dimensions */
               <div className="flex gap-[3px]">
                 {Array.from({ length: 52 }).map((_, wi) => (
                   <div key={wi} className="flex flex-col gap-[3px]">
@@ -208,7 +240,6 @@ export default function LeetCodeStats() {
               </p>
             )}
 
-            {/* Footer — mirrors "X contributions in the last year  Less ■■■■ More" */}
             <div className="flex items-center justify-between mt-3 gap-8">
               <p className="text-sm dark:text-zinc-400 text-zinc-500">
                 {stats
@@ -227,7 +258,6 @@ export default function LeetCodeStats() {
             </div>
           </div>
 
-          {/* Stat pills — mirrors year buttons column */}
           <div className="flex justify-start xl:flex-col flex-row flex-wrap gap-2">
             {stats ? (
               <>
@@ -240,7 +270,6 @@ export default function LeetCodeStats() {
                 )}
               </>
             ) : loading ? (
-              /* Skeleton pills */
               Array.from({ length: 4 }).map((_, i) => (
                 <div
                   key={i}

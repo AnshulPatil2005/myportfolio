@@ -46,38 +46,6 @@ export default function Home() {
       {/* Work Experience */}
       <Job />
 
-      {/* About */}
-      <section id="about" className="scroll-mt-28 mt-32">
-        <Slide>
-          <h2 className="font-incognito text-4xl mb-8 font-bold tracking-tight">
-            About
-          </h2>
-          <div className="dark:text-zinc-400 text-zinc-600 leading-relaxed space-y-4 max-w-2xl">
-            {profile.fullBio.map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
-            ))}
-          </div>
-          <div className="flex flex-wrap items-center gap-4 mt-6">
-            <a
-              href={profile.resumeURL}
-              download
-              className="flex items-center gap-x-2 dark:bg-primary-bg bg-zinc-100 border border-transparent dark:hover:border-zinc-700 hover:border-zinc-200 rounded-md px-4 py-2 text-sm font-incognito font-semibold"
-            >
-              Download Résumé <BiSolidDownload />
-            </a>
-            <a
-              href={`mailto:${profile.email}`}
-              className="flex items-center gap-x-2 text-sm hover:text-primary-color dark:text-zinc-400 text-zinc-600"
-            >
-              <BiEnvelope />
-              {profile.email}
-            </a>
-          </div>
-        </Slide>
-        <Usage />
-        <Achievements />
-      </section>
-
       {/* Projects */}
       <section id="projects" className="scroll-mt-28 mt-32">
         <Slide delay={0.1}>
@@ -163,6 +131,38 @@ export default function Home() {
 
       {/* Research */}
       <ResearchSection />
+
+      {/* About */}
+      <section id="about" className="scroll-mt-28 mt-32">
+        <Slide>
+          <h2 className="font-incognito text-4xl mb-8 font-bold tracking-tight">
+            About
+          </h2>
+          <div className="dark:text-zinc-400 text-zinc-600 leading-relaxed space-y-4 max-w-2xl">
+            {profile.fullBio.map((paragraph, index) => (
+              <p key={index}>{paragraph}</p>
+            ))}
+          </div>
+          <div className="flex flex-wrap items-center gap-4 mt-6">
+            <a
+              href={profile.resumeURL}
+              download
+              className="flex items-center gap-x-2 dark:bg-primary-bg bg-zinc-100 border border-transparent dark:hover:border-zinc-700 hover:border-zinc-200 rounded-md px-4 py-2 text-sm font-incognito font-semibold"
+            >
+              Download Résumé <BiSolidDownload />
+            </a>
+            <a
+              href={`mailto:${profile.email}`}
+              className="flex items-center gap-x-2 text-sm hover:text-primary-color dark:text-zinc-400 text-zinc-600"
+            >
+              <BiEnvelope />
+              {profile.email}
+            </a>
+          </div>
+        </Slide>
+        <Usage />
+        <Achievements />
+      </section>
 
       {/* Blog */}
       <section id="blog" className="scroll-mt-28 mt-32 mb-16">

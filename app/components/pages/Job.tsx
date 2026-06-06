@@ -45,16 +45,18 @@ export default function Job() {
                 <div className="flex flex-col items-start">
                   <h3 className="text-xl font-semibold">{job.name}</h3>
                   <p className="dark:text-zinc-400 text-zinc-500 text-sm">{job.jobTitle}</p>
-                  <time className="text-sm text-zinc-500 mt-2 tracking-widest uppercase">
-                    {formatMonthYear(job.startDate)} –{" "}
-                    {job.endDate ? (
-                      formatMonthYear(job.endDate)
-                    ) : (
-                      <span className="dark:text-primary-color text-tertiary-color">
-                        Present
-                      </span>
-                    )}
-                  </time>
+                  {job.startDate && (
+                    <time className="text-sm text-zinc-500 mt-2 tracking-widest uppercase">
+                      {formatMonthYear(job.startDate)} –{" "}
+                      {job.endDate ? (
+                        formatMonthYear(job.endDate)
+                      ) : (
+                        <span className="dark:text-primary-color text-tertiary-color">
+                          Present
+                        </span>
+                      )}
+                    </time>
+                  )}
                   {job.bullets && job.bullets.length > 0 ? (
                     <ul className="mt-4 space-y-2">
                       {job.bullets.map((bullet, i) => (

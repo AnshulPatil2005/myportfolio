@@ -3,18 +3,18 @@ import { ProfileType, JobType, ProjectType, PostType, HeroeType, ResearchProject
 export const profile: ProfileType = {
   _id: "anshul-patil",
   fullName: "Anshul Patil",
-  headline: "Backend & Systems Developer | GSoC 2026 @ BRL-CAD",
+  headline: "Backend & Systems Developer | GSoC @ BRL-CAD",
   profileImage: {
     image: "",
     lqip: "",
     alt: "Anshul Patil",
   },
   shortBio:
-    "I build distributed systems and AI infrastructure — from open-source geometry processing to document intelligence pipelines. Currently pursuing B.Tech at IIIT Surat and contributing to BRL-CAD via Google Summer of Code 2026.",
+    "I build distributed systems and AI infrastructure — from open-source geometry processing to document intelligence pipelines. Currently pursuing B.Tech at IIIT Surat and contributing to BRL-CAD via Google Summer of Code.",
   email: "anshulpatil1022@gmail.com",
   fullBio: [
     "I'm a backend and systems developer currently pursuing B.Tech at the Indian Institute of Information Technology, Surat (2024–2028). My work spans distributed systems, AI tooling, and open-source infrastructure.",
-    "I'm a Google Summer of Code 2026 contributor at BRL-CAD, improving the Manifold C++ geometry processing library with CI reliability, cross-platform determinism checks, and benchmarking infrastructure. I'm also an active open-source contributor to Extralit — an AI document intelligence platform — where I've merged 10+ pull requests across ingestion pipelines, dataset workflows, and validation logic.",
+    "I'm a Google Summer of Code contributor at BRL-CAD, improving the Manifold C++ geometry processing library with CI reliability, cross-platform determinism checks, and benchmarking infrastructure. I'm also an active open-source contributor to Extralit — an AI document intelligence platform — where I've merged 10+ pull requests across ingestion pipelines, dataset workflows, and validation logic.",
     "Previously interned at Techvisio Design, where I built analytics dashboards processing 10K+ daily events, integrated AWS S3 for 300K+ monthly records, and reduced API latency by 40% through query optimization and caching.",
   ],
   location: "Mumbai, Maharashtra",
@@ -24,7 +24,7 @@ export const profile: ProfileType = {
 export const jobs: JobType[] = [
   {
     _id: "gsoc-2026",
-    name: "Google Summer of Code 2026, BRL-CAD",
+    name: "Google Summer of Code, BRL-CAD",
     jobTitle: "Selected Contributor, Manifold Subproject",
     url: "https://summerofcode.withgoogle.com/",
     description:
@@ -34,7 +34,7 @@ export const jobs: JobType[] = [
       "Designed cross-platform determinism checks using fixed mesh cases, canonical artifacts, SHA256 comparison, and clear mismatch reporting.",
       "Planned Linux Clang ASan+UBSan testing and PR/weekly benchmark workflows with base-vs-head comparison, JSON history, and dashboard trend visualization.",
     ],
-    startDate: "2026-01-01",
+    startDate: "",
     endDate: "",
   },
   {
