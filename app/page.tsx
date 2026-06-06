@@ -145,6 +145,12 @@ export default function Home() {
                         GitHub
                       </a>
                     )}
+                    <Link
+                      href={`/projects/${project.slug}`}
+                      className="flex items-center gap-1 text-xs mt-3 ml-auto dark:text-zinc-400 text-zinc-500 hover:dark:text-zinc-200 hover:text-zinc-800 transition-colors duration-150"
+                    >
+                      Details →
+                    </Link>
                   </div>
                 </div>
               ))}

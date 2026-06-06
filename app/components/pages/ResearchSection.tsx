@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { researchProjects } from "@/lib/data";
 import { Slide } from "@/app/animation/Slide";
 import { ResearchProjectType } from "@/types";
@@ -62,9 +63,9 @@ function ResearchCard({ project }: { project: ResearchProjectType }) {
         ))}
       </div>
 
-      {project.links && project.links.length > 0 && (
-        <div className="flex gap-4 mt-1">
-          {project.links.map((link) => (
+      <div className="flex items-center justify-between pt-2 border-t dark:border-zinc-800 border-zinc-200">
+        <div className="flex gap-4">
+          {project.links && project.links.map((link) => (
             <a
               key={link.label}
               href={link.url}
@@ -76,7 +77,13 @@ function ResearchCard({ project }: { project: ResearchProjectType }) {
             </a>
           ))}
         </div>
-      )}
+        <Link
+          href={`/research/${project._id}`}
+          className="text-xs font-medium dark:text-zinc-400 text-zinc-500 hover:dark:text-zinc-200 hover:text-zinc-800 transition-colors duration-150"
+        >
+          Read More →
+        </Link>
+      </div>
     </div>
   );
 }

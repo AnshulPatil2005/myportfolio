@@ -53,6 +53,10 @@ export type ProjectType = {
     lqip: string;
   };
   description: string;
+  fullDescription?: string[];
+  bullets?: string[];
+  metrics?: { label: string; value: string }[];
+  details?: { label: string; value: string }[];
 };
 
 export type PostType = {
@@ -83,6 +87,12 @@ export type PostType = {
   isPublished: boolean;
 };
 
+export type ResearchSection = {
+  heading: string;
+  body: string;
+  bullets?: string[];
+};
+
 export type ResearchProjectType = {
   _id: string;
   title: string;
@@ -92,6 +102,8 @@ export type ResearchProjectType = {
   tags: string[];
   metrics?: { label: string; value: string }[];
   links?: { label: string; url: string }[];
+  sections?: ResearchSection[];
+  pipeline?: string[];
 };
 
 export type HeroeType = {
