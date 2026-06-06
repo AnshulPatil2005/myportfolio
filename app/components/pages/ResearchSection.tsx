@@ -35,6 +35,22 @@ function ResearchCard({ project }: { project: ResearchProjectType }) {
         {project.shortDescription}
       </p>
 
+      {project.metrics && project.metrics.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {project.metrics.map((m) => (
+            <div
+              key={m.label}
+              className="dark:bg-zinc-800/60 bg-zinc-100 rounded-md px-3 py-2 text-center"
+            >
+              <p className="font-incognito text-sm font-bold dark:text-zinc-100 text-zinc-800 leading-tight">
+                {m.value}
+              </p>
+              <p className="text-xs dark:text-zinc-500 text-zinc-500 mt-0.5">{m.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-2">
         {project.tags.map((tag) => (
           <span

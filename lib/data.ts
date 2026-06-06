@@ -138,6 +138,25 @@ export const researchProjects: ResearchProjectType[] = [
     tags: ["NLP", "OCR", "Transformers", "IndicBERT", "MuRIL", "Python", "Low-resource NLP", "RAG"],
   },
   {
+    _id: "hldc-bail-nlp",
+    title: "HLDC-BailNLP: Hindi Legal Bail Prediction using Transformer Fine-Tuning",
+    status: "Completed",
+    shortDescription:
+      "Fine-tuned a transformer-based NLP model on the HLDC Hindi Legal Documents Corpus (900K+ documents) for bail decision classification, achieving 83.68% accuracy and 0.826 F1-score with FP16 mixed-precision training.",
+    fullDescription: [
+      "This project fine-tunes a transformer model on the HLDC (Hindi Legal Documents Corpus), a dataset of over 900K Hindi legal documents collected from Uttar Pradesh district courts. The task is binary bail prediction — classifying whether a bail application was granted or rejected — framed as a legal text classification problem over Hindi court orders.",
+      "The implementation improves on a prior baseline by switching to a stronger transformer architecture and applying FP16 mixed-precision training via PyTorch, which reduced training time and allowed faster iteration. The fine-tuning pipeline covers data preprocessing for Hindi legal text, tokenization, sequence classification head training, and evaluation.",
+      "Final evaluation results: 83.68% accuracy, 0.826 F1-score, 0.777 eval loss, and 77.08 samples/sec throughput. The project demonstrates that transformer models can learn meaningful legal reasoning signals from raw Hindi court text without manual feature engineering.",
+    ],
+    tags: ["NLP", "Python", "PyTorch", "Transformers", "FP16", "Legal AI", "Hindi NLP", "HLDC"],
+    metrics: [
+      { label: "Accuracy", value: "83.68%" },
+      { label: "F1-Score", value: "0.826" },
+      { label: "Eval Loss", value: "0.777" },
+      { label: "Throughput", value: "77 samples/s" },
+    ],
+  },
+  {
     _id: "cxr-generalization",
     title: "Robust and Explainable CNN-Based Chest X-Ray Classification Across Unseen Clinical Datasets",
     status: "Ongoing",

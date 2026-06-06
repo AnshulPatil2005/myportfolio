@@ -90,6 +90,7 @@ export type ResearchProjectType = {
   shortDescription: string;
   fullDescription: string[];
   tags: string[];
+  metrics?: { label: string; value: string }[];
   links?: { label: string; url: string }[];
 };
 
