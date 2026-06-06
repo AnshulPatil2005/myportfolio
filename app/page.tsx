@@ -12,7 +12,7 @@ import Achievements from "./components/pages/Achievements";
 import Posts from "./components/pages/Posts";
 import ResearchSection from "./components/pages/ResearchSection";
 import EmptyState from "./components/shared/EmptyState";
-import { BiSolidDownload, BiEnvelope } from "react-icons/bi";
+import { BiSolidDownload, BiEnvelope, BiLinkExternal, BiLogoGithub } from "react-icons/bi";
 
 export default function Home() {
   return (
@@ -90,31 +90,63 @@ export default function Home() {
           {projects.length > 0 ? (
             <div className="grid xl:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-5 mb-12">
               {projects.map((project) => (
-                <Link
-                  href={`/projects/${project.slug}`}
+                <div
                   key={project._id}
-                  className="flex items-center gap-x-4 dark:bg-primary-bg bg-zinc-50 border border-transparent dark:hover:border-zinc-700 hover:border-zinc-200 p-4 rounded-lg"
+                  className="flex flex-col dark:bg-primary-bg bg-zinc-50 border dark:border-zinc-800 border-zinc-200 dark:hover:border-zinc-700 hover:border-zinc-300 p-5 rounded-lg transition-colors duration-200"
                 >
-                  {project.logo ? (
-                    <Image
-                      src={project.logo}
-                      width={60}
-                      height={60}
-                      alt={project.name}
-                      className="dark:bg-zinc-800 bg-zinc-100 rounded-md p-2"
-                    />
-                  ) : (
-                    <div className="dark:bg-primary-bg bg-zinc-100 border dark:border-zinc-800 border-zinc-200 p-3 rounded-lg text-xl shrink-0">
+                  {/* Header */}
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="dark:bg-zinc-800 bg-zinc-100 border dark:border-zinc-700 border-zinc-200 p-2.5 rounded-md text-base shrink-0 font-mono dark:text-zinc-400 text-zinc-500">
                       {"{}"}
                     </div>
-                  )}
-                  <div>
-                    <h3 className="text-lg tracking-wide mb-1">{project.name}</h3>
-                    <p className="text-sm dark:text-zinc-400 text-zinc-600">
-                      {project.tagline}
-                    </p>
+                    <h3 className="font-incognito text-base font-semibold leading-snug tracking-tight pt-0.5">
+                      {project.name}
+                    </h3>
                   </div>
-                </Link>
+
+                  {/* Description — first sentence only */}
+                  <p className="text-sm dark:text-zinc-400 text-zinc-600 leading-relaxed mb-4 flex-1">
+                    {project.description.split(". ")[0] + "."}
+                  </p>
+
+                  {/* Tech tags */}
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    {project.tagline.split(",").map((t) => t.trim()).map((tag) => (
+                      <span
+                        key={tag}
+                        className="text-xs dark:bg-zinc-800 bg-zinc-100 dark:text-zinc-300 text-zinc-600 px-2 py-0.5 rounded"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Action links */}
+                  <div className="flex items-center gap-3 mt-auto pt-1 border-t dark:border-zinc-800 border-zinc-200">
+                    {project.projectUrl && (
+                      <a
+                        href={project.projectUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 text-xs font-medium mt-3 dark:text-zinc-200 text-zinc-800 dark:bg-zinc-800 bg-zinc-200 px-3 py-1.5 rounded-md dark:hover:bg-zinc-700 hover:bg-zinc-300 transition-colors duration-150"
+                      >
+                        <BiLinkExternal className="shrink-0" />
+                        Live Demo
+                      </a>
+                    )}
+                    {project.repository && (
+                      <a
+                        href={project.repository}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 text-xs mt-3 dark:text-zinc-400 text-zinc-500 hover:dark:text-zinc-200 hover:text-zinc-800 transition-colors duration-150"
+                      >
+                        <BiLogoGithub className="text-base shrink-0" />
+                        GitHub
+                      </a>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           ) : (

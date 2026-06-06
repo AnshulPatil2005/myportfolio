@@ -74,7 +74,7 @@ export const projects: ProjectType[] = [
     name: "AI Pull Request Reviewer",
     slug: "ai-pr-reviewer",
     tagline: "Python, FastAPI, GitHub API, LLM APIs, REST APIs",
-    projectUrl: "",
+    projectUrl: "https://ai-pr-reviewer-theta.vercel.app/",
     repository: "https://github.com/AnshulPatil2005",
     logo: "",
     coverImage: {
@@ -90,7 +90,7 @@ export const projects: ProjectType[] = [
     name: "Intelligent Document Processing Platform",
     slug: "intelligent-doc-processing",
     tagline: "FastAPI, Celery, Redis, Vector DB, OCR",
-    projectUrl: "",
+    projectUrl: "https://doc-rag-eight.vercel.app/",
     repository: "https://github.com/AnshulPatil2005",
     logo: "",
     coverImage: {
