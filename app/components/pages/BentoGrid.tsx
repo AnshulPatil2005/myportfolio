@@ -20,23 +20,9 @@ function Cell({ children, className = "" }: { children: React.ReactNode; classNa
 }
 
 export default function BentoGrid() {
-  const [ghRepos, setGhRepos] = useState<number | null>(null);
-  const [ghStars, setGhStars] = useState<number | null>(null);
   const [lcSolved, setLcSolved] = useState<number | null>(null);
 
   useEffect(() => {
-    // GitHub
-    fetch("/api/github-stats")
-      .then((r) => r.json())
-      .then((d) => {
-        if (!d.error) {
-          setGhRepos(d.publicRepos ?? null);
-          setGhStars(d.totalStars ?? null);
-        }
-      })
-      .catch(() => null);
-
-    // LeetCode — try localStorage cache first (written by LeetCodeStats)
     try {
       const username = process.env.NEXT_PUBLIC_LEETCODE_USERNAME || "Anshulpatil2011";
       const raw = localStorage.getItem(`lc_stats_${username}`);
@@ -97,22 +83,6 @@ export default function BentoGrid() {
           </div>
         </Cell>
 
-        {/* ── GitHub cell ────────────────────────────────────────────────── */}
-        <Cell className="flex flex-col gap-1">
-          <p className="text-xs uppercase tracking-widest dark:text-zinc-500 text-zinc-400 font-mono">
-            github
-          </p>
-          <p className="font-incognito text-4xl font-bold mt-1">
-            {ghRepos !== null ? ghRepos : "—"}
-          </p>
-          <p className="text-sm dark:text-zinc-400 text-zinc-500">public repos</p>
-          {ghStars !== null && (
-            <p className="text-xs dark:text-zinc-500 text-zinc-400 mt-1 font-mono">
-              ★ {ghStars} stars earned
-            </p>
-          )}
-        </Cell>
-
         {/* ── Location cell ──────────────────────────────────────────────── */}
         <Cell className="flex items-center gap-4">
           <div className="text-3xl leading-none select-none">🇮🇳</div>
@@ -122,8 +92,8 @@ export default function BentoGrid() {
           </div>
         </Cell>
 
-        {/* ── Skills cell ────────────────────────────────────────────────── */}
-        <Cell className="flex flex-col gap-2">
+        {/* ── Skills cell (spans 2 cols to fill the row) ─────────────────── */}
+        <Cell className="sm:col-span-2 flex flex-col gap-2">
           <p className="text-xs uppercase tracking-widest dark:text-zinc-500 text-zinc-400 font-mono mb-1">
             top skills
           </p>
@@ -137,20 +107,6 @@ export default function BentoGrid() {
               </span>
             ))}
           </div>
-        </Cell>
-
-        {/* ── Open Source cell ───────────────────────────────────────────── */}
-        <Cell className="flex flex-col justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-widest dark:text-zinc-500 text-zinc-400 font-mono mb-2">
-              open source
-            </p>
-            <p className="font-incognito text-2xl font-bold">10+ PRs</p>
-            <p className="text-sm dark:text-zinc-400 text-zinc-500 mt-1">merged</p>
-          </div>
-          <p className="text-xs dark:text-zinc-500 text-zinc-400 mt-3 font-mono leading-relaxed">
-            Extralit · BRL-CAD
-          </p>
         </Cell>
       </div>
     </section>

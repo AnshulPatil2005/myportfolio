@@ -1,7 +1,6 @@
 "use client";
 
 import { TypeAnimation } from "react-type-animation";
-import { useRef } from "react";
 import Link from "next/link";
 import Social from "../shared/Social";
 import { BiSolidDownload } from "react-icons/bi";
@@ -22,47 +21,10 @@ const TERMINAL_TEXT = [
 ] as const;
 
 export default function TerminalHero() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-
-  // Feature 8: cursor spotlight — radial glow follows the mouse, dark mode only
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    el.style.setProperty("--spotlight-x", `${e.clientX - rect.left}px`);
-    el.style.setProperty("--spotlight-y", `${e.clientY - rect.top}px`);
-  };
-
-  const handleMouseLeave = () => {
-    sectionRef.current?.style.setProperty("--spotlight-x", "-9999px");
-    sectionRef.current?.style.setProperty("--spotlight-y", "-9999px");
-  };
-
   return (
-    <section
-      ref={sectionRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className="relative flex xl:flex-row flex-col xl:items-center items-start xl:justify-between gap-x-12 gap-y-10 mb-16"
-      style={
-        {
-          "--spotlight-x": "-9999px",
-          "--spotlight-y": "-9999px",
-        } as React.CSSProperties
-      }
-    >
-      {/* Cursor spotlight overlay — only visible in dark mode */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 hidden dark:block rounded-xl"
-        style={{
-          background:
-            "radial-gradient(circle 320px at var(--spotlight-x) var(--spotlight-y), rgba(51,224,146,0.06) 0%, transparent 70%)",
-        }}
-      />
-
+    <section className="flex xl:flex-row flex-col xl:items-center items-start xl:justify-between gap-x-12 gap-y-10 mb-16">
       {/* Left column: terminal + CTA */}
-      <div className="relative z-10 w-full xl:max-w-xl">
+      <div className="w-full xl:max-w-xl">
         {/* Terminal window */}
         <div className="rounded-xl border dark:border-zinc-700/60 border-zinc-200 overflow-hidden shadow-xl dark:shadow-zinc-900/80 shadow-zinc-200/60 font-mono text-sm">
           {/* Window chrome */}
@@ -104,7 +66,7 @@ export default function TerminalHero() {
       </div>
 
       {/* Right column: headline + short bio */}
-      <div className="relative z-10 xl:max-w-sm max-w-full">
+      <div className="xl:max-w-sm max-w-full">
         <h1 className="font-incognito font-semibold tracking-tight text-3xl sm:text-4xl mb-4 lg:leading-[2.8rem] leading-tight">
           {profile.headline}
         </h1>

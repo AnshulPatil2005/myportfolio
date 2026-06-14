@@ -1,5 +1,5 @@
 import { Slide } from "../../animation/Slide";
-import { RiTrophyFill, RiCodeSSlashFill, RiStarFill, RiFlashlightFill } from "react-icons/ri";
+import { RiTrophyFill, RiStarFill, RiFlashlightFill } from "react-icons/ri";
 
 const achievements = [
   {
@@ -7,13 +7,6 @@ const achievements = [
     title: "Google Summer of Code 2026",
     description:
       "Selected contributor for BRL-CAD Manifold open-source subproject — improving C++ geometry processing CI and benchmarking infrastructure.",
-  },
-  {
-    icon: RiCodeSSlashFill,
-    title: "LeetCode 450+ Problems",
-    description:
-      "Solved 450+ problems across DSA, graphs, trees, and dynamic programming.",
-    link: `https://leetcode.com/u/${process.env.NEXT_PUBLIC_LEETCODE_USERNAME ?? ""}`,
   },
   {
     icon: RiTrophyFill,
