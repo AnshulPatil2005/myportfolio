@@ -5,7 +5,7 @@ import { RxHamburgerMenu } from "react-icons/rx";
 import {
   HiAcademicCap,
   HiBeaker,
-  HiBookmarkAlt,
+  HiMail,
   HiOutlineX,
   HiUser,
 } from "react-icons/hi";
@@ -29,9 +29,9 @@ export default function MobileMenu() {
       icon: HiAcademicCap,
     },
     {
-      title: "Blog",
-      href: "/#blog",
-      icon: HiBookmarkAlt,
+      title: "Contact",
+      href: "/#contact",
+      icon: HiMail,
     },
   ];
 

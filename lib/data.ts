@@ -1,5 +1,7 @@
 import { ProfileType, JobType, ProjectType, PostType, HeroeType, ResearchProjectType } from "@/types";
 
+export const availability = { open: true, label: "Open to internships · Summer 2026" };
+
 export const profile: ProfileType = {
   _id: "anshul-patil",
   fullName: "Anshul Patil",
@@ -83,7 +85,7 @@ export const projects: ProjectType[] = [
       lqip: "",
     },
     description:
-      "An AI developer tool that reviews pull requests using repository metadata, code diffs, and contextual file analysis. Built FastAPI services for diff parsing, repository inspection, prompt construction, model fallback, and automated review. Integrated GitHub webhook support to trigger automated PR analysis on new commits and provide faster review feedback during development workflows.",
+      "Automated PR review feedback using LLMs — reduces manual review overhead by analyzing code diffs, repository context, and commit history. Built FastAPI services for diff parsing, repository inspection, prompt construction, and model fallback. GitHub webhook integration triggers analysis on new commits with no manual steps required.",
   },
   {
     _id: "intelligent-doc-processing",
@@ -99,7 +101,7 @@ export const projects: ProjectType[] = [
       lqip: "",
     },
     description:
-      "A distributed document processing system to extract structured information from unstructured files using OCR and embedding retrieval. Implemented Celery and Redis queues to parallelize document ingestion, preprocessing, extraction, and query workflows. Built a retrieval layer using vector embeddings to support semantic search, document querying, and context-aware information extraction.",
+      "Parallelized document ingestion pipeline handling OCR extraction, vector embedding, and semantic search over unstructured files. Celery and Redis queue architecture enables concurrent multi-document processing. Retrieval layer uses vector embeddings for context-aware semantic search and structured information extraction.",
   },
   {
     _id: "portfolio-website",
@@ -115,7 +117,7 @@ export const projects: ProjectType[] = [
       lqip: "",
     },
     description:
-      "A clean, performant personal portfolio showcasing my work and experience. Built with Next.js App Router, TypeScript, Tailwind CSS, and Framer Motion.",
+      "Built with Next.js App Router, TypeScript, Tailwind CSS, and Framer Motion. Features a terminal-aesthetic hero with typewriter animation, floating glassmorphism navbar, AI chat widget (Claude Haiku), command palette (⌘K), and section progress indicators.",
   },
   {
     _id: "hldc-bail-nlp",

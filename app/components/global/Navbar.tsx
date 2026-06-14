@@ -11,7 +11,6 @@ const navLinks = [
   { title: "About", href: "/#about" },
   { title: "Projects", href: "/#projects" },
   { title: "Research", href: "/#research" },
-  { title: "Blog", href: "/#blog" },
 ];
 
 export default function Navbar() {
@@ -67,6 +66,13 @@ export default function Navbar() {
               ))}
             </ul>
           </nav>
+
+          <a
+            href="/#contact"
+            className="hidden md:flex items-center px-3 py-1 rounded-full text-sm font-mono border dark:bg-primary-color/10 bg-emerald-50 dark:text-primary-color text-emerald-700 dark:border-primary-color/30 border-emerald-300 hover:dark:bg-primary-color/20 transition-colors"
+          >
+            Contact
+          </a>
 
           <div className="flex items-center gap-x-3">
             <button

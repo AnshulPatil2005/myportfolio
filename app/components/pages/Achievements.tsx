@@ -1,7 +1,8 @@
+import React from "react";
 import { Slide } from "../../animation/Slide";
 import { RiTrophyFill, RiStarFill, RiFlashlightFill } from "react-icons/ri";
 
-const achievements = [
+const achievements: { icon: React.ElementType; title: string; description: string; link?: string }[] = [
   {
     icon: RiStarFill,
     title: "Google Summer of Code 2026",

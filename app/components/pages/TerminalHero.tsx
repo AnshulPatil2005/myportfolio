@@ -4,7 +4,7 @@ import { TypeAnimation } from "react-type-animation";
 import Link from "next/link";
 import Social from "../shared/Social";
 import { BiSolidDownload } from "react-icons/bi";
-import { profile } from "@/lib/data";
+import { profile, availability } from "@/lib/data";
 
 const TERMINAL_TEXT = [
   "~/anshul $ whoami",
@@ -17,7 +17,11 @@ const TERMINAL_TEXT = [
   700,
   "~/anshul $ whoami\n  Anshul Patil — Backend & Systems Developer\n\n~/anshul $ cat current_role.txt\n  GSoC @ BRL-CAD  ·  Extralit Contributor\n  B.Tech IIIT Surat (2024–2028)\n\n~/anshul $ ls research/",
   400,
-  "~/anshul $ whoami\n  Anshul Patil — Backend & Systems Developer\n\n~/anshul $ cat current_role.txt\n  GSoC @ BRL-CAD  ·  Extralit Contributor\n  B.Tech IIIT Surat (2024–2028)\n\n~/anshul $ ls research/\n  GujaratiLegalNLP/   CXR-Generalization/\n\n~/anshul $ ",
+  "~/anshul $ whoami\n  Anshul Patil — Backend & Systems Developer\n\n~/anshul $ cat current_role.txt\n  GSoC @ BRL-CAD  ·  Extralit Contributor\n  B.Tech IIIT Surat (2024–2028)\n\n~/anshul $ ls research/\n  GujaratiLegalNLP/   CXR-Generalization/",
+  600,
+  "~/anshul $ whoami\n  Anshul Patil — Backend & Systems Developer\n\n~/anshul $ cat current_role.txt\n  GSoC @ BRL-CAD  ·  Extralit Contributor\n  B.Tech IIIT Surat (2024–2028)\n\n~/anshul $ ls research/\n  GujaratiLegalNLP/   CXR-Generalization/\n\n~/anshul $ git log --oneline",
+  400,
+  "~/anshul $ whoami\n  Anshul Patil — Backend & Systems Developer\n\n~/anshul $ cat current_role.txt\n  GSoC @ BRL-CAD  ·  Extralit Contributor\n  B.Tech IIIT Surat (2024–2028)\n\n~/anshul $ ls research/\n  GujaratiLegalNLP/   CXR-Generalization/\n\n~/anshul $ git log --oneline\n  a1b2c3 feat: GSoC @ BRL-CAD (active)\n  d4e5f6 feat: Extralit — 10+ PRs merged\n  g7h8i9 feat: Techvisio — 40% latency ↓\n\n~/anshul $ ",
 ] as const;
 
 export default function TerminalHero() {
@@ -67,6 +71,12 @@ export default function TerminalHero() {
 
       {/* Right column: headline + short bio */}
       <div className="xl:max-w-sm max-w-full">
+        {availability.open && (
+          <span className="inline-flex items-center gap-2 dark:bg-zinc-800/60 bg-zinc-100 border dark:border-zinc-700 border-zinc-200 rounded-full px-3 py-1 text-xs font-mono dark:text-zinc-300 text-zinc-600 mb-4">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            {availability.label}
+          </span>
+        )}
         <h1 className="font-incognito font-semibold tracking-tight text-3xl sm:text-4xl mb-4 lg:leading-[2.8rem] leading-tight">
           {profile.headline}
         </h1>
@@ -75,9 +85,9 @@ export default function TerminalHero() {
         </p>
         <div className="mt-6 flex flex-wrap gap-3 text-xs font-mono">
           {[
-            { label: "↗ Projects", href: "/#projects" },
+            { label: "↗ Experience", href: "/#jobs" },
             { label: "↗ Research", href: "/#research" },
-            { label: "↗ Blog", href: "/#blog" },
+            { label: "↗ Contact", href: "/#contact" },
           ].map((l) => (
             <Link
               key={l.label}

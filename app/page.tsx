@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { profile, projects } from "@/lib/data";
+import { profile, projects, posts } from "@/lib/data";
 import Job from "./components/pages/Job";
 import { Slide } from "./animation/Slide";
 import ContributionGraph from "./components/pages/GithubCalendarComponent";
@@ -11,7 +11,7 @@ import ResearchSection from "./components/pages/ResearchSection";
 import EmptyState from "./components/shared/EmptyState";
 import TerminalHero from "./components/pages/TerminalHero";
 import BentoGrid from "./components/pages/BentoGrid";
-import { BiSolidDownload, BiEnvelope, BiLinkExternal, BiLogoGithub } from "react-icons/bi";
+import { BiSolidDownload, BiEnvelope, BiLinkExternal, BiLogoGithub, BiLogoLinkedin } from "react-icons/bi";
 
 export default function Home() {
   return (
@@ -21,12 +21,6 @@ export default function Home() {
 
       {/* Bento Grid — Quick Stats */}
       <BentoGrid />
-
-      {/* GitHub Activity */}
-      <ContributionGraph />
-
-      {/* LeetCode */}
-      <LeetCodeStats />
 
       {/* Work Experience */}
       <Job />
@@ -128,39 +122,81 @@ export default function Home() {
               <p key={index}>{paragraph}</p>
             ))}
           </div>
-          <div className="flex flex-wrap items-center gap-4 mt-6">
-            <a
-              href={profile.resumeURL}
-              download
-              className="flex items-center gap-x-2 dark:bg-primary-bg bg-zinc-100 border border-transparent dark:hover:border-zinc-700 hover:border-zinc-200 rounded-md px-4 py-2 text-sm font-incognito font-semibold"
-            >
-              Download Résumé <BiSolidDownload />
-            </a>
-            <a
-              href={`mailto:${profile.email}`}
-              className="flex items-center gap-x-2 text-sm hover:text-primary-color dark:text-zinc-400 text-zinc-600"
-            >
-              <BiEnvelope />
-              {profile.email}
-            </a>
-          </div>
         </Slide>
         <Usage />
         <Achievements />
       </section>
 
-      {/* Blog */}
-      <section id="blog" className="scroll-mt-28 mt-32 mb-16">
+      {/* GitHub Activity */}
+      <ContributionGraph />
+
+      {/* LeetCode */}
+      <LeetCodeStats />
+
+      {/* Contact */}
+      <section id="contact" className="scroll-mt-28 mt-32 mb-16">
         <Slide delay={0.1}>
           <h2 className="font-incognito text-4xl mb-4 font-bold tracking-tight">
-            Blog
+            Get In Touch
           </h2>
           <p className="dark:text-zinc-400 text-zinc-600 max-w-xl mb-8">
-            Personal stories about things I&apos;ve learned, projects I&apos;m working on, and general findings.
+            Available for backend and systems internships — Summer 2026. Open to remote and hybrid roles.
           </p>
-          <Posts />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
+            <a
+              href={`mailto:${profile.email}`}
+              className="flex flex-col gap-3 dark:bg-primary-bg bg-zinc-50 border dark:border-zinc-800 border-zinc-200 dark:hover:border-zinc-700 hover:border-zinc-300 rounded-xl p-5 transition-colors duration-200"
+            >
+              <BiEnvelope className="text-2xl dark:text-zinc-400 text-zinc-500" />
+              <div>
+                <p className="font-semibold text-sm mb-0.5">Email</p>
+                <p className="text-xs dark:text-zinc-500 text-zinc-400 break-all">{profile.email}</p>
+              </div>
+            </a>
+            <a
+              href="https://www.linkedin.com/in/anshul-patil-575006280/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col gap-3 dark:bg-primary-bg bg-zinc-50 border dark:border-zinc-800 border-zinc-200 dark:hover:border-zinc-700 hover:border-zinc-300 rounded-xl p-5 transition-colors duration-200"
+            >
+              <BiLogoLinkedin className="text-2xl dark:text-zinc-400 text-zinc-500" />
+              <div>
+                <p className="font-semibold text-sm mb-0.5">LinkedIn</p>
+                <p className="text-xs dark:text-zinc-500 text-zinc-400">Anshul Patil</p>
+              </div>
+            </a>
+            <a
+              href={profile.resumeURL}
+              download
+              className="flex flex-col gap-3 dark:bg-primary-bg bg-zinc-50 border dark:border-primary-color/30 border-emerald-300 dark:hover:border-primary-color/50 hover:border-emerald-400 rounded-xl p-5 transition-colors duration-200"
+            >
+              <BiSolidDownload className="text-2xl dark:text-primary-color text-emerald-600" />
+              <div>
+                <p className="font-semibold text-sm mb-0.5">Résumé</p>
+                <p className="text-xs dark:text-zinc-500 text-zinc-400">Download PDF</p>
+              </div>
+            </a>
+          </div>
+          <p className="mt-6 text-xs font-mono dark:text-zinc-600 text-zinc-400">
+            Currently at IIIT Surat · Mumbai, India · Open to remote and hybrid roles
+          </p>
         </Slide>
       </section>
+
+      {/* Blog — hidden until posts exist */}
+      {posts.length > 0 && (
+        <section id="blog" className="scroll-mt-28 mt-32 mb-16">
+          <Slide delay={0.1}>
+            <h2 className="font-incognito text-4xl mb-4 font-bold tracking-tight">
+              Blog
+            </h2>
+            <p className="dark:text-zinc-400 text-zinc-600 max-w-xl mb-8">
+              Personal stories about things I&apos;ve learned, projects I&apos;m working on, and general findings.
+            </p>
+            <Posts />
+          </Slide>
+        </section>
+      )}
     </main>
   );
 }

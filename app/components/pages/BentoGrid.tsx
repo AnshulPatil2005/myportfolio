@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
@@ -20,19 +19,6 @@ function Cell({ children, className = "" }: { children: React.ReactNode; classNa
 }
 
 export default function BentoGrid() {
-  const [lcSolved, setLcSolved] = useState<number | null>(null);
-
-  useEffect(() => {
-    try {
-      const username = process.env.NEXT_PUBLIC_LEETCODE_USERNAME || "Anshulpatil2011";
-      const raw = localStorage.getItem(`lc_stats_${username}`);
-      if (raw) {
-        const { data } = JSON.parse(raw) as { data: { total: number }; ts: number };
-        setLcSolved(data.total);
-      }
-    } catch {}
-  }, []);
-
   return (
     <section className="mt-16 mb-4">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -67,20 +53,27 @@ export default function BentoGrid() {
           </div>
         </Cell>
 
-        {/* ── LeetCode cell ──────────────────────────────────────────────── */}
+        {/* ── Availability cell ──────────────────────────────────────────── */}
         <Cell className="flex flex-col gap-1">
           <p className="text-xs uppercase tracking-widest dark:text-zinc-500 text-zinc-400 font-mono">
-            leetcode
+            availability
           </p>
-          <p className="font-incognito text-4xl font-bold mt-1">
-            {lcSolved !== null ? lcSolved : "—"}
+          <p className="font-incognito text-xl font-semibold mt-1 leading-snug">
+            Open to Internships
           </p>
-          <p className="text-sm dark:text-zinc-400 text-zinc-500">problems solved</p>
-          <div className="mt-2 flex gap-2 text-xs font-mono">
-            <span className="text-green-500">Easy</span>
-            <span className="text-yellow-500">Medium</span>
-            <span className="text-red-500">Hard</span>
+          <p className="text-sm dark:text-zinc-400 text-zinc-500">
+            Summer 2026 · Backend / Systems / AI
+          </p>
+          <div className="mt-2 flex items-center gap-2 text-xs font-mono">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="dark:text-zinc-300 text-zinc-600">Actively looking</span>
           </div>
+          <a
+            href="mailto:anshulpatil1022@gmail.com"
+            className="mt-2 text-xs font-mono dark:text-primary-color text-tertiary-color hover:underline"
+          >
+            reach out →
+          </a>
         </Cell>
 
         {/* ── Location cell ──────────────────────────────────────────────── */}
