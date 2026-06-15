@@ -21,7 +21,7 @@ const TERMINAL_TEXT = [
   600,
   "~/anshul $ whoami\n  Anshul Patil — Backend & Systems Developer\n\n~/anshul $ cat current_role.txt\n  GSoC @ BRL-CAD  ·  Extralit Contributor\n  B.Tech IIIT Surat (2024–2028)\n\n~/anshul $ ls research/\n  GujaratiLegalNLP/   CXR-Generalization/\n\n~/anshul $ git log --oneline",
   400,
-  "~/anshul $ whoami\n  Anshul Patil — Backend & Systems Developer\n\n~/anshul $ cat current_role.txt\n  GSoC @ BRL-CAD  ·  Extralit Contributor\n  B.Tech IIIT Surat (2024–2028)\n\n~/anshul $ ls research/\n  GujaratiLegalNLP/   CXR-Generalization/\n\n~/anshul $ git log --oneline\n  a1b2c3 feat: GSoC @ BRL-CAD (active)\n  d4e5f6 feat: Extralit — 10+ PRs merged\n  g7h8i9 feat: Techvisio — 40% latency ↓\n\n~/anshul $ ",
+  "~/anshul $ whoami\n  Anshul Patil — Backend & Systems Developer\n\n~/anshul $ cat current_role.txt\n  GSoC @ BRL-CAD  ·  Extralit Contributor\n  B.Tech IIIT Surat (2024–2028)\n\n~/anshul $ ls research/\n  GujaratiLegalNLP/   CXR-Generalization/\n\n~/anshul $ git log --oneline\n  a1b2c3 feat: GSoC @ BRL-CAD\n  d4e5f6 feat: Extralit — 10+ PRs merged\n  g7h8i9 feat: Techvisio — 40% latency ↓\n\n~/anshul $ ",
 ] as const;
 
 export default function TerminalHero() {
