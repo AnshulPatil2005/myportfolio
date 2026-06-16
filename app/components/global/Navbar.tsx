@@ -69,8 +69,9 @@ export default function Navbar() {
 
           <a
             href="/#contact"
-            className="hidden md:flex items-center px-3 py-1 rounded-full text-sm font-mono border dark:bg-primary-color/10 bg-emerald-50 dark:text-primary-color text-emerald-700 dark:border-primary-color/30 border-emerald-300 hover:dark:bg-primary-color/20 transition-colors"
+            className="hidden md:flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-mono font-semibold border dark:bg-primary-color/15 bg-emerald-100 dark:text-primary-color text-emerald-800 dark:border-primary-color/35 border-emerald-300 dark:hover:bg-primary-color/25 hover:bg-emerald-200 dark:shadow-[0_0_14px_rgba(51,224,146,0.18)] transition-all duration-150"
           >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
             Contact
           </a>
 
