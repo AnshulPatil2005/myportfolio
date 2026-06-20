@@ -55,6 +55,22 @@ export const jobs: JobType[] = [
     endDate: "",
   },
   {
+    _id: "bluestock",
+    name: "Bluestock™",
+    jobTitle: "Software Engineer Intern",
+    url: "https://bluestock.in/",
+    description:
+      "Worked on improving system reliability, performance, and user-facing financial features through clean code, debugging, testing, and collaborative development.",
+    bullets: [
+      "Improved system reliability and performance across user-facing financial features.",
+      "Wrote clean, well-tested code and performed debugging across the codebase.",
+      "Collaborated remotely with the team over a 3-month internship engagement.",
+    ],
+    startDate: "2025-12-01",
+    endDate: "2026-02-28",
+    logo: "",
+  },
+  {
     _id: "techvisio",
     name: "Techvisio Design",
     jobTitle: "Software Developer Intern",
