@@ -8,8 +8,8 @@ export const metadata: Metadata = {
 export default function NotFound() {
   return (
     <NotFoundComponent
-      title="Error 404!"
-      description="Oopsies! This page does not exist on victoreke.com. While you're here, you can read some featured post below."
+      title="Error 404"
+      description="This page doesn't exist on anshulpatil.dev. While you're here, you can read some featured posts below."
     />
   );
 }

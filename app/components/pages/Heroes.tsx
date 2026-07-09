@@ -30,7 +30,7 @@ export default function Heroes() {
           {heroes.map((heroe) => (
             <li
               key={heroe._id}
-              className="flex items-center gap-x-2 dark:bg-primary-bg bg-zinc-100 border dark:border-zinc-800 border-zinc-200 rounded-md px-2 py-1"
+              className="flex items-center gap-x-2 border dark:border-zinc-800 border-zinc-300 px-2 py-1"
             >
               <EasterEgg isMet={heroe.met} />
               <RefLink

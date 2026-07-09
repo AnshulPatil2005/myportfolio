@@ -22,16 +22,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 function StatusBadge({ status }: { status: ResearchProjectType["status"] }) {
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border ${
-        status === "Ongoing"
-          ? "dark:bg-emerald-950 bg-emerald-50 dark:border-emerald-800 border-emerald-200 dark:text-emerald-400 text-emerald-700"
-          : "dark:bg-zinc-800 bg-zinc-100 dark:border-zinc-700 border-zinc-200 dark:text-zinc-400 text-zinc-600"
-      }`}
-    >
+    <span className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider px-2.5 py-1 border dark:border-zinc-700 border-zinc-300 dark:text-zinc-400 text-zinc-600">
       <span
-        className={`w-1.5 h-1.5 rounded-full ${
-          status === "Ongoing" ? "bg-emerald-500 animate-pulse" : "bg-zinc-400"
+        className={`w-1.5 h-1.5 shrink-0 ${
+          status === "Ongoing" ? "dark:bg-zinc-100 bg-zinc-900" : "dark:bg-zinc-600 bg-zinc-400"
         }`}
       />
       {status}
@@ -69,18 +63,16 @@ export default function ResearchDetail({ params }: Props) {
           </p>
 
           {/* Tags */}
-          <div className="flex flex-wrap gap-2 mb-10">
-            {project.tags.map((tag) => (
-              <span
-                key={tag}
-                className="text-xs dark:bg-zinc-800 bg-zinc-100 dark:text-zinc-300 text-zinc-700 px-2.5 py-1 rounded-md"
-              >
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-10 font-mono text-xs dark:text-zinc-500 text-zinc-500">
+            {project.tags.map((tag, i) => (
+              <span key={tag}>
+                {i > 0 && <span className="mr-4 dark:text-zinc-700 text-zinc-300">/</span>}
                 {tag}
               </span>
             ))}
           </div>
 
-          <hr className="dark:border-zinc-800 border-zinc-200 mb-10" />
+          <hr className="dark:border-zinc-800 border-zinc-300 mb-10" />
 
           {/* Overview paragraphs */}
           <section className="mb-12">
@@ -112,7 +104,7 @@ export default function ResearchDetail({ params }: Props) {
                           key={bi}
                           className="flex items-start gap-2.5 text-sm dark:text-zinc-400 text-zinc-600"
                         >
-                          <span className="mt-2 w-1.5 h-1.5 rounded-full dark:bg-zinc-500 bg-zinc-400 shrink-0" />
+                          <span className="mt-2 w-1.5 h-1.5 dark:bg-zinc-500 bg-zinc-400 shrink-0" />
                           {b}
                         </li>
                       ))}
@@ -134,8 +126,8 @@ export default function ResearchDetail({ params }: Props) {
               <ol className="space-y-3">
                 {project.pipeline.map((step, i) => (
                   <li key={i} className="flex items-start gap-3">
-                    <span className="shrink-0 w-6 h-6 rounded-full dark:bg-zinc-800 bg-zinc-100 dark:text-zinc-400 text-zinc-500 text-xs font-medium flex items-center justify-center mt-0.5">
-                      {i + 1}
+                    <span className="shrink-0 w-6 h-6 border dark:border-zinc-700 border-zinc-300 dark:text-zinc-400 text-zinc-500 font-mono text-xs flex items-center justify-center mt-0.5">
+                      {String(i + 1).padStart(2, "0")}
                     </span>
                     <p className="text-sm dark:text-zinc-400 text-zinc-600 leading-relaxed pt-0.5">
                       {step}

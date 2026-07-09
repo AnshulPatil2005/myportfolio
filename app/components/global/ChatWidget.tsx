@@ -2,8 +2,6 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { HiX, HiPaperAirplane } from "react-icons/hi";
-import { BsChatDots } from "react-icons/bs";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -90,12 +88,9 @@ export default function ChatWidget() {
         <button
           onClick={() => setOpen((o) => !o)}
           aria-label="Open AI chat assistant"
-          className="relative w-12 h-12 rounded-full dark:bg-zinc-900 bg-white border dark:border-zinc-700 border-zinc-200 shadow-lg flex items-center justify-center dark:text-zinc-300 text-zinc-600 hover:dark:border-zinc-500 hover:border-zinc-300 hover:scale-105 active:scale-95 transition-all duration-150"
+          className="relative w-12 h-12 dark:bg-ink bg-paper border dark:border-zinc-700 border-zinc-300 shadow-lg flex items-center justify-center dark:text-zinc-300 text-zinc-600 font-mono text-sm hover:dark:border-zinc-500 hover:border-zinc-400 active:scale-95 transition-all duration-150"
         >
-          <span className="absolute inset-0 rounded-full hidden dark:block animate-ping dark:bg-primary-color/10 bg-transparent" />
-          <span className="relative z-10">
-            {open ? <HiX className="text-lg" /> : <BsChatDots className="text-lg" />}
-          </span>
+          {open ? "×" : "Chat"}
         </button>
       </div>
 
@@ -108,14 +103,12 @@ export default function ChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.97 }}
             transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-            className="fixed bottom-24 right-6 z-50 w-80 sm:w-96 rounded-xl border dark:border-zinc-700 border-zinc-200 dark:bg-zinc-900 bg-white shadow-2xl flex flex-col overflow-hidden"
+            className="fixed bottom-24 right-6 z-50 w-80 sm:w-96 border dark:border-zinc-700 border-zinc-300 dark:bg-ink bg-paper shadow-2xl flex flex-col overflow-hidden"
             style={{ maxHeight: "min(520px, 70dvh)" }}
           >
             {/* Header */}
             <div className="flex items-center gap-3 px-4 py-3 border-b dark:border-zinc-800 border-zinc-200 dark:bg-zinc-800/50 bg-zinc-50 shrink-0">
-              <div className="w-7 h-7 rounded-full dark:bg-primary-color/20 bg-tertiary-color/10 flex items-center justify-center">
-                <span className="text-xs">✦</span>
-              </div>
+              <span className="font-mono text-sm dark:text-zinc-400 text-zinc-500">✦</span>
               <div className="flex-1">
                 <p className="text-sm font-semibold font-incognito">Ask Anshul&apos;s AI</p>
                 <p className="text-xs dark:text-zinc-500 text-zinc-400">Powered by Claude Haiku</p>
@@ -123,9 +116,9 @@ export default function ChatWidget() {
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Close chat"
-                className="dark:text-zinc-500 text-zinc-400 hover:dark:text-zinc-200 hover:text-zinc-700 transition-colors"
+                className="font-mono dark:text-zinc-500 text-zinc-400 hover:dark:text-zinc-200 hover:text-zinc-700 transition-colors"
               >
-                <HiX />
+                ×
               </button>
             </div>
 
@@ -141,7 +134,7 @@ export default function ChatWidget() {
                       <button
                         key={s}
                         onClick={() => sendMessage(s)}
-                        className="text-left text-xs dark:bg-zinc-800 bg-zinc-50 border dark:border-zinc-700 border-zinc-200 rounded-lg px-3 py-2 dark:text-zinc-300 text-zinc-600 dark:hover:border-zinc-500 hover:border-zinc-300 transition-colors duration-150"
+                        className="text-left text-xs border dark:border-zinc-700 border-zinc-300 px-3 py-2 dark:text-zinc-300 text-zinc-600 dark:hover:border-zinc-500 hover:border-zinc-400 transition-colors duration-150"
                       >
                         {s}
                       </button>
@@ -155,10 +148,10 @@ export default function ChatWidget() {
                     className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[85%] text-sm px-3 py-2 rounded-xl leading-relaxed ${
+                      className={`max-w-[85%] text-sm px-3 py-2 leading-relaxed border ${
                         msg.role === "user"
-                          ? "dark:bg-zinc-700 bg-zinc-200 dark:text-zinc-100 text-zinc-800 rounded-br-sm"
-                          : "dark:bg-zinc-800 bg-zinc-50 border dark:border-zinc-700 border-zinc-200 dark:text-zinc-300 text-zinc-700 rounded-bl-sm"
+                          ? "dark:bg-zinc-800 bg-zinc-100 dark:border-zinc-700 border-zinc-300 dark:text-zinc-100 text-zinc-800"
+                          : "dark:border-zinc-700 border-zinc-200 dark:text-zinc-300 text-zinc-700"
                       }`}
                     >
                       {msg.content || (
@@ -195,9 +188,9 @@ export default function ChatWidget() {
                 type="submit"
                 disabled={!input.trim() || streaming}
                 aria-label="Send message"
-                className="dark:text-primary-color text-tertiary-color disabled:opacity-30 hover:opacity-80 transition-opacity"
+                className="font-mono text-sm dark:text-zinc-200 text-zinc-800 disabled:opacity-30 hover:opacity-70 transition-opacity"
               >
-                <HiPaperAirplane className="rotate-90 text-lg" />
+                &rarr;
               </button>
             </form>
           </motion.div>

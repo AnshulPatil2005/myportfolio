@@ -8,17 +8,11 @@ html {
 
 @import "prism.css";
 
-body {
-  background-image: url("../../public/noise.png");
-  background-size: 200px 200px;
-  background-position: 0 0;
-}
-
 h1,
 h2,
 h3,
 h4 {
-  font-family: var(--incognito), "Inter", sans-serif;
+  font-family: var(--font-display), serif;
 }
 
 .path {

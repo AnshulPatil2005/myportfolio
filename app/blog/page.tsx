@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-import { BiDetail } from "react-icons/bi";
 import Posts from "../components/pages/Posts";
 import Social from "../components/shared/Social";
 import { Slide } from "../animation/Slide";
@@ -28,7 +27,6 @@ export default async function Blog() {
 
       <Slide delay={0.1}>
         <div className="flex items-center gap-x-3 mb-8">
-          <BiDetail />
           <h2 className="text-xl font-semibold tracking-tight">Explore All</h2>
         </div>
         <Posts />

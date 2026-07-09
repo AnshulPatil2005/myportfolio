@@ -2,9 +2,7 @@ import Image from "next/legacy/image";
 import Link from "next/link";
 import { PostType } from "@/types";
 import EmptyState from "../shared/EmptyState";
-import { BiSolidTime } from "react-icons/bi";
 import { formatDate } from "../../utils/date";
-import { HiCalendar } from "react-icons/hi";
 import { posts } from "@/lib/data";
 
 const fallbackImage: string =
@@ -20,12 +18,12 @@ export default function Posts() {
               <article key={post._id}>
                 <Link
                   href={`/blog/${post.slug}`}
-                  className="flex lg:flex-row flex-col lg:items-center items-start gap-8 dark:bg-primary-bg bg-secondary-bg p-6 rounded-lg border dark:border-zinc-800 border-zinc-200 group"
+                  className="flex lg:flex-row flex-col lg:items-center items-start gap-8 p-6 border dark:border-zinc-800 border-zinc-300 group"
                 >
                   <div className="relative lg:w-[450px] lg:h-52 w-full h-56 overflow-clip">
                     <Image
                       src={post.coverImage?.image || fallbackImage}
-                      className="dark:bg-zinc-800 bg-zinc-100 rounded-md object-cover group-hover:scale-125 duration-300"
+                      className="object-cover group-hover:scale-125 duration-300"
                       alt={post.coverImage?.alt || post.title}
                       layout="fill"
                       placeholder={post.coverImage ? "blur" : "empty"}
@@ -41,7 +39,6 @@ export default function Posts() {
                     </p>
                     <div className="flex items-center gap-x-4 mt-3 text-sm">
                       <div className="flex items-center gap-x-2">
-                        <HiCalendar />
                         <time dateTime={post.date ? post.date : post._createdAt}>
                           {post.date
                             ? formatDate(post.date)
@@ -49,7 +46,6 @@ export default function Posts() {
                         </time>
                       </div>
                       <div className="flex items-center gap-x-2">
-                        <BiSolidTime />
                         <span>{Math.ceil(post.body.split(" ").length / 200)} min read</span>
                       </div>
                     </div>

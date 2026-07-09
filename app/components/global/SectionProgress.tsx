@@ -41,7 +41,7 @@ export default function SectionProgress() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 6 }}
                   transition={{ duration: 0.15 }}
-                  className="text-xs font-mono dark:text-zinc-400 text-zinc-500 dark:bg-zinc-800 bg-zinc-100 border dark:border-zinc-700 border-zinc-200 px-2 py-1 rounded-md whitespace-nowrap"
+                  className="text-xs font-mono dark:text-zinc-300 text-zinc-600 dark:bg-ink bg-paper border dark:border-zinc-700 border-zinc-300 px-2 py-1 whitespace-nowrap"
                 >
                   {section.label}
                 </motion.span>
@@ -56,9 +56,9 @@ export default function SectionProgress() {
                   : { width: 6, height: 6, opacity: 0.4 }
               }
               transition={{ duration: 0.2 }}
-              className={`rounded-full transition-colors duration-200 ${
+              className={`transition-colors duration-200 ${
                 isActive
-                  ? "dark:bg-primary-color bg-tertiary-color shadow-[0_0_6px_2px_rgba(51,224,146,0.3)]"
+                  ? "dark:bg-zinc-100 bg-zinc-900"
                   : "dark:bg-zinc-600 bg-zinc-300 group-hover:opacity-70"
               }`}
             />

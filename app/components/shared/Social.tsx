@@ -3,20 +3,15 @@ import RefLink from "./RefLink";
 
 export default function Social({ type }: { type: "social" | "publication" }) {
   return (
-    <ul className="flex items-center flex-wrap gap-x-5 gap-y-4 my-10">
+    <ul className="flex items-center flex-wrap gap-x-6 gap-y-3 my-10 font-mono text-sm">
       {socialLinks
         .filter((item) => item.status === type)
         .map((value) => (
           <li key={value.id}>
             <RefLink
               href={value.url}
-              className="flex items-center border-b dark:border-b-zinc-800 border-zinc-200 group"
+              className="border-b dark:border-zinc-700 border-zinc-300 pb-0.5 dark:text-zinc-400 text-zinc-500 dark:hover:text-zinc-100 hover:text-zinc-900 dark:hover:border-zinc-500 hover:border-zinc-500 transition-colors duration-150"
             >
-              <value.icon
-                className="flex-shrink-0 h-5 w-5 text-zinc-500 group-hover:dark:text-white group-hover:text-zinc-800 duration-300"
-                aria-hidden="true"
-              />{" "}
-              &nbsp;
               {value.name}
             </RefLink>
           </li>

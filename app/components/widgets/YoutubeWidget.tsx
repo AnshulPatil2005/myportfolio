@@ -1,5 +1,4 @@
 import getYoutubeId from "@/app/utils/get-youtubeId";
-import { BiLogoYoutube } from "react-icons/bi";
 import YoutubeIframe from "../shared/YoutubeIframe";
 
 export function YoutubeWidget(props: any) {
@@ -14,8 +13,7 @@ export function YoutubeWidget(props: any) {
           <YoutubeIframe videoId={id} />
         </>
       ) : (
-        <div className="flex items-center justify-center gap-x-2 my-3">
-          <BiLogoYoutube className="text-[red] text-lg" />
+        <div className="flex items-center justify-center gap-x-2 my-3 font-mono text-sm">
           <span>Add YouTube URL</span>
         </div>
       )}

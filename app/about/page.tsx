@@ -1,7 +1,5 @@
 import Image from "next/image";
 import { Metadata } from "next";
-import type { ProfileType } from "@/types";
-import { BiEnvelope, BiSolidDownload } from "react-icons/bi";
 import Heroes from "../components/pages/Heroes";
 import Usage from "../components/pages/Usage";
 import Achievements from "../components/pages/Achievements";
@@ -46,7 +44,7 @@ export default function About() {
               <div className="sticky top-10">
                 {profile.profileImage.image ? (
                   <Image
-                    className="rounded-2xl mb-4 object-cover max-h-96 min-h-96 bg-top"
+                    className="mb-4 object-cover max-h-96 min-h-96 bg-top border dark:border-zinc-800 border-zinc-300"
                     src={profile.profileImage.image}
                     width={400}
                     height={400}
@@ -55,23 +53,22 @@ export default function About() {
                     priority
                   />
                 ) : (
-                  <div className="h-96 w-[400px] bg-zinc-500 mb-4 rounded-2xl"></div>
+                  <div className="h-96 w-[400px] border dark:border-zinc-800 border-zinc-300 mb-4"></div>
                 )}
 
                 <div className="flex flex-col text-center gap-y-4">
                   <a
                     href={profile.resumeURL}
                     download
-                    className="flex items-center justify-center text-center gap-x-2 dark:bg-primary-bg bg-zinc-100 border border-transparent dark:hover:border-zinc-700 hover:border-zinc-200 rounded-md py-2 text-lg font-incognito font-semibold"
+                    className="flex items-center justify-center text-center gap-x-2 border dark:border-zinc-700 border-zinc-300 dark:hover:border-zinc-500 hover:border-zinc-400 py-2 text-lg font-incognito font-semibold"
                   >
-                    Download Résumé <BiSolidDownload className="text-base" />
+                    Download R&eacute;sum&eacute; &darr;
                   </a>
 
                   <a
                     href={`mailto:${profile.email}`}
-                    className="flex items-center gap-x-2 hover:text-primary-color"
+                    className="dark:hover:text-zinc-100 hover:text-zinc-900"
                   >
-                    <BiEnvelope className="text-lg" />
                     {profile.email}
                   </a>
                 </div>

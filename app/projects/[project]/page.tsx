@@ -1,8 +1,6 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import type { ProjectType } from "@/types";
 import { Slide } from "../../animation/Slide";
-import { BiLinkExternal, BiLogoGithub } from "react-icons/bi";
 import { showcaseProjects } from "@/lib/data";
 
 type Props = {
@@ -41,43 +39,39 @@ export default function Project({ params }: Props) {
             <h1 className="font-incognito font-black tracking-tight sm:text-5xl text-3xl max-w-xl leading-tight">
               {project.name}
             </h1>
-            <div className="flex items-center gap-x-2">
+            <div className="flex items-center gap-x-2 font-mono text-sm">
               <a
                 href={project.projectUrl || undefined}
                 rel="noreferrer noopener"
                 target="_blank"
-                className={`flex items-center gap-x-2 dark:bg-primary-bg bg-secondary-bg dark:text-white text-zinc-700 border border-transparent rounded-md px-4 py-2 text-sm duration-200 ${
+                className={`border dark:border-zinc-700 border-zinc-300 dark:text-zinc-200 text-zinc-700 px-4 py-2 duration-200 ${
                   !project.projectUrl
                     ? "cursor-not-allowed opacity-50"
-                    : "cursor-pointer hover:dark:border-zinc-700 hover:border-zinc-200"
+                    : "cursor-pointer dark:hover:border-zinc-500 hover:border-zinc-500"
                 }`}
               >
-                <BiLinkExternal aria-hidden="true" />
-                {project.projectUrl ? "Live Demo" : "Coming Soon"}
+                {project.projectUrl ? "Live Demo ↗" : "Coming Soon"}
               </a>
               <a
                 href={project.repository || undefined}
                 rel="noreferrer noopener"
                 target="_blank"
-                className={`flex items-center gap-x-2 dark:bg-primary-bg bg-secondary-bg dark:text-white text-zinc-700 border border-transparent rounded-md px-4 py-2 text-sm duration-200 ${
+                className={`border dark:border-zinc-700 border-zinc-300 dark:text-zinc-200 text-zinc-700 px-4 py-2 duration-200 ${
                   !project.repository
                     ? "cursor-not-allowed opacity-50"
-                    : "cursor-pointer hover:dark:border-zinc-700 hover:border-zinc-200"
+                    : "cursor-pointer dark:hover:border-zinc-500 hover:border-zinc-500"
                 }`}
               >
-                <BiLogoGithub aria-hidden="true" />
                 GitHub
               </a>
             </div>
           </div>
 
           {/* Tech tags */}
-          <div className="flex flex-wrap gap-2 mb-8">
-            {tags.map((tag) => (
-              <span
-                key={tag}
-                className="text-xs dark:bg-zinc-800 bg-zinc-100 dark:text-zinc-300 text-zinc-700 px-2.5 py-1 rounded-md"
-              >
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-8 font-mono text-xs dark:text-zinc-500 text-zinc-500">
+            {tags.map((tag, i) => (
+              <span key={tag}>
+                {i > 0 && <span className="mr-4 dark:text-zinc-700 text-zinc-300">/</span>}
                 {tag}
               </span>
             ))}
@@ -85,7 +79,7 @@ export default function Project({ params }: Props) {
 
           {/* Metadata details grid */}
           {project.details && project.details.length > 0 && (
-            <div className="dark:bg-primary-bg bg-zinc-50 border dark:border-zinc-800 border-zinc-200 rounded-lg p-5 mb-6">
+            <div className="border dark:border-zinc-800 border-zinc-300 p-5 mb-6">
               <dl className="grid sm:grid-cols-2 grid-cols-1 gap-x-8 gap-y-3">
                 {project.details.map((d) => (
                   <div key={d.label}>
@@ -107,7 +101,7 @@ export default function Project({ params }: Props) {
               {project.metrics.map((m) => (
                 <div
                   key={m.label}
-                  className="dark:bg-primary-bg bg-zinc-50 border dark:border-zinc-800 border-zinc-200 rounded-lg px-4 py-3 text-center"
+                  className="border dark:border-zinc-800 border-zinc-300 px-4 py-3 text-center"
                 >
                   <p className="font-incognito text-xl font-bold dark:text-zinc-100 text-zinc-800 leading-tight">
                     {m.value}
@@ -128,14 +122,14 @@ export default function Project({ params }: Props) {
 
           {/* Key highlights / resume bullets */}
           {project.bullets && project.bullets.length > 0 && (
-            <div className="dark:bg-primary-bg bg-zinc-50 border dark:border-zinc-800 border-zinc-200 rounded-lg p-5">
+            <div className="border dark:border-zinc-800 border-zinc-300 p-5">
               <h2 className="font-incognito text-sm font-semibold uppercase tracking-widest dark:text-zinc-400 text-zinc-500 mb-3">
                 Key Highlights
               </h2>
               <ul className="space-y-2">
                 {project.bullets.map((b, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm dark:text-zinc-300 text-zinc-700">
-                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full dark:bg-zinc-500 bg-zinc-400 shrink-0" />
+                  <li key={i} className="flex items-start gap-2.5 text-sm dark:text-zinc-300 text-zinc-700">
+                    <span className="mt-1.5 w-1.5 h-1.5 dark:bg-zinc-500 bg-zinc-400 shrink-0" />
                     {b}
                   </li>
                 ))}

@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useState } from "react";
 import funImage from "@/public/yeah-right.png";
-import { BiCheckbox, BiSolidCheckboxChecked } from "react-icons/bi";
 
 export default function EasterEgg({ isMet }: { isMet: boolean }) {
   const [image, setImage] = useState(false);
@@ -21,18 +20,12 @@ export default function EasterEgg({ isMet }: { isMet: boolean }) {
 
   return (
     <>
-      <button onClick={toggleImage}>
-        {isMet !== true ? (
-          <BiCheckbox
-            className="text-3xl dark:text-zinc-300 text-zinc-600"
-            aria-hidden="true"
-          />
-        ) : (
-          <BiSolidCheckboxChecked
-            className="text-3xl dark:text-primary-color text-secondary-color"
-            aria-hidden="true"
-          />
-        )}
+      <button onClick={toggleImage} aria-hidden="true">
+        <span
+          className={`inline-block w-5 h-5 border dark:border-zinc-600 border-zinc-400 ${
+            isMet === true ? "dark:bg-zinc-100 bg-zinc-900" : ""
+          }`}
+        />
       </button>
 
       <Image

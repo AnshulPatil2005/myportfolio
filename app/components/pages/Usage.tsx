@@ -48,7 +48,7 @@ export default function Usage() {
                 {items.map((item) => (
                   <span
                     key={item}
-                    className="dark:bg-primary-bg bg-zinc-100 border dark:border-zinc-800 border-zinc-200 rounded-md px-3 py-1 text-sm"
+                    className="border dark:border-zinc-800 border-zinc-300 px-3 py-1 text-sm"
                   >
                     {item}
                   </span>

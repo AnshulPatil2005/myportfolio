@@ -109,15 +109,13 @@ function Heatmap({ submissionCalendar }: { submissionCalendar: string }) {
 function StatPill({
   label,
   value,
-  color = "",
 }: {
   label: string;
   value: string | number;
-  color?: string;
 }) {
   return (
-    <div className="rounded-lg text-center px-4 py-2 border border-transparent dark:bg-primary-bg bg-zinc-50 dark:border-zinc-800 border-zinc-200 min-w-[72px]">
-      <p className={`text-lg font-bold font-incognito leading-tight ${color}`}>{value}</p>
+    <div className="text-center px-4 py-2 border dark:border-zinc-800 border-zinc-300 min-w-[72px]">
+      <p className="text-lg font-bold font-incognito leading-tight">{value}</p>
       <p className="text-xs dark:text-zinc-400 text-zinc-500 mt-0.5">{label}</p>
     </div>
   );
@@ -218,7 +216,7 @@ export default function LeetCodeStats() {
 
         {/* Card + stat pills */}
         <div className="flex xl:flex-row flex-col gap-4">
-          <div className="dark:bg-primary-bg bg-secondary-bg border dark:border-zinc-800 border-zinc-200 p-8 rounded-lg max-w-fit max-h-fit">
+          <div className="border dark:border-zinc-800 border-zinc-300 p-8 max-w-fit max-h-fit">
             {loading ? (
               <div className="flex gap-[3px]">
                 {Array.from({ length: 52 }).map((_, wi) => (
@@ -262,9 +260,9 @@ export default function LeetCodeStats() {
             {stats ? (
               <>
                 <StatPill label="Solved" value={stats.total} />
-                <StatPill label="Easy"   value={stats.easy}   color="text-green-500" />
-                <StatPill label="Medium" value={stats.medium} color="text-yellow-500" />
-                <StatPill label="Hard"   value={stats.hard}   color="text-red-500" />
+                <StatPill label="Easy"   value={stats.easy} />
+                <StatPill label="Medium" value={stats.medium} />
+                <StatPill label="Hard"   value={stats.hard} />
                 {stats.ranking > 0 && (
                   <StatPill label="Rank" value={`#${stats.ranking.toLocaleString()}`} />
                 )}
@@ -273,7 +271,7 @@ export default function LeetCodeStats() {
               Array.from({ length: 4 }).map((_, i) => (
                 <div
                   key={i}
-                  className="rounded-lg px-4 py-2 border dark:border-zinc-800 border-zinc-200 dark:bg-primary-bg bg-zinc-50 min-w-[72px] h-[54px] animate-pulse"
+                  className="px-4 py-2 border dark:border-zinc-800 border-zinc-300 dark:bg-zinc-800 bg-zinc-200 min-w-[72px] h-[54px] animate-pulse"
                 />
               ))
             ) : null}

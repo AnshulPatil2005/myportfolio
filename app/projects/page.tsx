@@ -33,7 +33,7 @@ export default function Project() {
               <Link
                 href={`/projects/${project.slug}`}
                 key={project._id}
-                className="flex items-center gap-x-4 dark:bg-primary-bg bg-zinc-50 border border-transparent dark:hover:border-zinc-700 hover:border-zinc-200 p-4 rounded-lg"
+                className="flex items-center gap-x-4 border dark:border-zinc-800 border-zinc-300 dark:hover:border-zinc-600 hover:border-zinc-400 p-4 transition-colors duration-150"
               >
                 {project.logo ? (
                   <Image
@@ -41,11 +41,11 @@ export default function Project() {
                     width={60}
                     height={60}
                     alt={project.name}
-                    className="dark:bg-zinc-800 bg-zinc-100 rounded-md p-2"
+                    className="border dark:border-zinc-700 border-zinc-300 p-2"
                   />
                 ) : (
-                  <div className="dark:bg-primary-bg bg-zinc-50 border border-transparent dark:hover:border-zinc-700 hover:border-zinc-200 p-2 rounded-lg text-3xl">
-                    🪴
+                  <div className="border dark:border-zinc-700 border-zinc-300 w-[60px] h-[60px] shrink-0 grid place-items-center font-mono text-xs dark:text-zinc-500 text-zinc-400">
+                    {"{}"}
                   </div>
                 )}
                 <div>

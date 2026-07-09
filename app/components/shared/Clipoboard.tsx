@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { BiCopy } from "react-icons/bi";
-import { RiCheckboxCircleFill } from "react-icons/ri";
 
 export default function Clipoboard({ content }: { content: string }) {
   const [status, setStatus] = useState(false);
@@ -17,12 +15,8 @@ export default function Clipoboard({ content }: { content: string }) {
   }
 
   return (
-    <button onClick={handleClipboard}>
-      {!status ? (
-        <BiCopy />
-      ) : (
-        <RiCheckboxCircleFill className="text-secondary-color transition" />
-      )}
+    <button onClick={handleClipboard} className="font-mono text-xs">
+      {!status ? "Copy" : "Copied"}
     </button>
   );
 }

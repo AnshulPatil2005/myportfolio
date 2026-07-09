@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import { BiMinus, BiPlus } from "react-icons/bi";
 
 export default function Accordion({
   id,
@@ -24,8 +23,8 @@ export default function Accordion({
         <h3 className="text-lg mb-1 dark:text-white text-zinc-700">
           {question}
         </h3>
-        <button className="p-1 rounded-full text-sm cursor-[inherit] duration-100 dark:bg-primary-bg bg-secondary-bg">
-          {active === id ? <BiMinus /> : <BiPlus />}
+        <button className="w-6 h-6 grid place-items-center border dark:border-zinc-700 border-zinc-300 text-sm cursor-[inherit] duration-100 font-mono">
+          {active === id ? "−" : "+"}
         </button>
       </div>
       <p className="dark:text-zinc-400 text-zinc-600 overflow-hidden">

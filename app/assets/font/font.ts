@@ -1,55 +1,24 @@
-import localFont from "next/font/local";
+import { Playfair_Display, Source_Serif_4, JetBrains_Mono } from "next/font/google";
 
-export const incognito = localFont({
-  src: [
-    {
-      path: "incognito_bold.woff2",
-      weight: "800",
-      style: "normal",
-    },
-    {
-      path: "incognito_condensed.woff2",
-      weight: "700",
-      style: "normal",
-    },
-    {
-      path: "incognito_medium.woff2",
-      weight: "600",
-      style: "normal",
-    },
-    {
-      path: "incognito_regular.woff2",
-      weight: "400",
-      style: "normal",
-    },
-  ],
-  variable: "--incognito",
+export const display = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "700", "900"],
+  style: ["normal", "italic"],
+  variable: "--font-display",
   display: "swap",
 });
 
-export const gitlabmono = localFont({
-  src: [
-    {
-      path: "gitlab-mono.woff2",
-      weight: "300",
-      style: "normal",
-    },
-    {
-      path: "gitlab-mono.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "gitlab-mono.woff2",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "gitlab-mono.woff2",
-      weight: "600",
-      style: "normal",
-    },
-  ],
-  variable: "--gitlabmono",
+export const body = Source_Serif_4({
+  subsets: ["latin"],
+  weight: ["300", "400", "600"],
+  style: ["normal", "italic"],
+  variable: "--font-body",
+  display: "swap",
+});
+
+export const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-mono",
   display: "swap",
 });

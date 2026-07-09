@@ -36,7 +36,7 @@ export default function GitHubStats() {
         {statItems.map(({ label, value }) => (
           <div
             key={label}
-            className="dark:bg-primary-bg bg-zinc-50 border dark:border-zinc-800 border-zinc-200 rounded-lg p-4 text-center"
+            className="border dark:border-zinc-800 border-zinc-300 p-4 text-center"
           >
             <p className="text-2xl font-bold font-incognito">{value}</p>
             <p className="text-sm dark:text-zinc-400 text-zinc-600 mt-1">{label}</p>

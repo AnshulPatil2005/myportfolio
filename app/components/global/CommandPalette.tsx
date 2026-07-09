@@ -6,14 +6,6 @@ import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { showcaseProjects, researchProjects, profile } from "@/lib/data";
-import {
-  HiArrowRight,
-  HiOutlineGlobeAlt,
-  HiOutlineMoon,
-  HiOutlineSun,
-  HiOutlineDownload,
-  HiOutlineSearch,
-} from "react-icons/hi";
 
 type EasterEgg = { query: string; response: string };
 
@@ -98,14 +90,14 @@ export function CommandPalette() {
           >
             <Command
               label="Command Palette"
-              className="rounded-xl border dark:border-zinc-700 border-zinc-200 dark:bg-zinc-900 bg-white shadow-2xl overflow-hidden"
+              className="border dark:border-zinc-700 border-zinc-300 dark:bg-ink bg-paper shadow-2xl overflow-hidden"
               onKeyDown={(e) => {
                 if (e.key === "Escape") close();
               }}
             >
               {/* Search input */}
               <div className="flex items-center gap-3 px-4 border-b dark:border-zinc-800 border-zinc-200">
-                <HiOutlineSearch className="dark:text-zinc-400 text-zinc-500 text-lg shrink-0" />
+                <span className="font-mono dark:text-zinc-500 text-zinc-400 text-sm shrink-0">/</span>
                 <Command.Input
                   value={search}
                   onValueChange={handleSearch}
@@ -113,14 +105,14 @@ export function CommandPalette() {
                   autoFocus
                   className="flex-1 bg-transparent py-4 text-sm dark:text-white text-zinc-900 placeholder:dark:text-zinc-500 placeholder:text-zinc-400 outline-none"
                 />
-                <kbd className="hidden sm:inline-flex text-[10px] font-mono dark:text-zinc-500 text-zinc-400 border dark:border-zinc-700 border-zinc-200 rounded px-1.5 py-0.5">
+                <kbd className="hidden sm:inline-flex text-[10px] font-mono dark:text-zinc-500 text-zinc-400 border dark:border-zinc-700 border-zinc-300 px-1.5 py-0.5">
                   ESC
                 </kbd>
               </div>
 
               {/* Easter egg response */}
               {easterEgg && (
-                <div className="px-4 py-3 text-sm dark:text-primary-color text-tertiary-color font-mono border-b dark:border-zinc-800 border-zinc-200">
+                <div className="px-4 py-3 text-sm dark:text-zinc-100 text-zinc-900 font-mono border-b dark:border-zinc-800 border-zinc-200">
                   $ {easterEgg}
                 </div>
               )}
@@ -148,9 +140,9 @@ export function CommandPalette() {
                       key={item.label}
                       value={item.label}
                       onSelect={() => navigate(item.href)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 rounded mx-1"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 mx-1"
                     >
-                      <HiArrowRight className="dark:text-zinc-500 text-zinc-400 shrink-0" />
+                      <span className="font-mono dark:text-zinc-500 text-zinc-400 shrink-0">&rarr;</span>
                       {item.label}
                     </Command.Item>
                   ))}
@@ -166,7 +158,7 @@ export function CommandPalette() {
                       key={p._id}
                       value={`${p.name} ${p.tagline}`}
                       onSelect={() => navigate(`/projects/${p.slug}`)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 rounded mx-1"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 mx-1"
                     >
                       <span className="font-mono text-xs dark:text-zinc-500 text-zinc-400 shrink-0">
                         {"{}"}
@@ -186,10 +178,10 @@ export function CommandPalette() {
                       key={r._id}
                       value={`${r.title} ${r.tags.join(" ")}`}
                       onSelect={() => navigate(`/research/${r._id}`)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 rounded mx-1"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 mx-1"
                     >
                       <span className="font-mono text-xs dark:text-zinc-500 text-zinc-400 shrink-0">
-                        📄
+                        ¶
                       </span>
                       <span className="truncate">{r.title.split(" ").slice(0, 6).join(" ")}…</span>
                     </Command.Item>
@@ -216,9 +208,9 @@ export function CommandPalette() {
                         window.open(item.href, "_blank", "noopener,noreferrer");
                         close();
                       }}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 rounded mx-1"
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 mx-1"
                     >
-                      <HiOutlineGlobeAlt className="dark:text-zinc-500 text-zinc-400 shrink-0" />
+                      <span className="font-mono dark:text-zinc-500 text-zinc-400 shrink-0">&rarr;</span>
                       {item.label}
                     </Command.Item>
                   ))}
@@ -235,21 +227,19 @@ export function CommandPalette() {
                       setTheme(currentTheme === "dark" ? "light" : "dark");
                       close();
                     }}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 rounded mx-1"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 mx-1"
                   >
-                    {currentTheme === "dark" ? (
-                      <HiOutlineSun className="dark:text-zinc-500 text-zinc-400 shrink-0" />
-                    ) : (
-                      <HiOutlineMoon className="dark:text-zinc-500 text-zinc-400 shrink-0" />
-                    )}
+                    <span className="font-mono text-xs dark:text-zinc-500 text-zinc-400 shrink-0">
+                      {currentTheme === "dark" ? "Light" : "Dark"}
+                    </span>
                     Toggle Theme
                   </Command.Item>
                   <Command.Item
                     value="Download Resume CV"
                     onSelect={downloadResume}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 rounded mx-1"
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 mx-1"
                   >
-                    <HiOutlineDownload className="dark:text-zinc-500 text-zinc-400 shrink-0" />
+                    <span className="font-mono dark:text-zinc-500 text-zinc-400 shrink-0">&darr;</span>
                     Download Résumé
                   </Command.Item>
                 </Command.Group>
@@ -258,15 +248,15 @@ export function CommandPalette() {
               {/* Footer hint */}
               <div className="px-4 py-2.5 border-t dark:border-zinc-800 border-zinc-200 flex items-center gap-4 text-xs dark:text-zinc-500 text-zinc-400 font-mono">
                 <span>
-                  <kbd className="border dark:border-zinc-700 border-zinc-200 rounded px-1 py-0.5">↑↓</kbd>
+                  <kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5">↑↓</kbd>
                   {" "}navigate
                 </span>
                 <span>
-                  <kbd className="border dark:border-zinc-700 border-zinc-200 rounded px-1 py-0.5">↵</kbd>
+                  <kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5">↵</kbd>
                   {" "}select
                 </span>
                 <span>
-                  <kbd className="border dark:border-zinc-700 border-zinc-200 rounded px-1 py-0.5">esc</kbd>
+                  <kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5">esc</kbd>
                   {" "}close
                 </span>
               </div>

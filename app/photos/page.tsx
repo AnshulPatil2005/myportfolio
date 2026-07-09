@@ -45,7 +45,7 @@ export default function Photos() {
               alt="playing guitar"
               width={350}
               height={800}
-              className="dark:bg-primary-bg bg-secondary-bg"
+              className="dark:bg-zinc-800 bg-zinc-200"
             />
           ))}
         </Slide>

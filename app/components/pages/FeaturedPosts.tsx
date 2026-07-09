@@ -19,7 +19,7 @@ export default function FeaturedPosts({ params }: { params?: string }) {
         >
           <Link
             href={`/blog/${post.slug}`}
-            className="flex flex-col gap-4 dark:bg-primary-bg bg-secondary-bg p-5 rounded-lg border dark:border-zinc-800 border-zinc-200"
+            className="flex flex-col gap-4 p-5 border dark:border-zinc-800 border-zinc-300"
           >
             {post.coverImage?.image && (
               <Image

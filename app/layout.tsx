@@ -1,20 +1,12 @@
 import "@/app/styles/globals.css";
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import { incognito } from "./assets/font/font";
-import { gitlabmono } from "./assets/font/font";
+import { display, body, mono } from "./assets/font/font";
 import Navbar from "./components/global/Navbar";
 import Footer from "./components/global/Footer";
 import { Providers } from "./providers";
 import { CommandPalette } from "./components/global/CommandPalette";
 import SectionProgress from "./components/global/SectionProgress";
 import ChatWidget from "./components/global/ChatWidget";
-
-const inter = Inter({
-  subsets: ["latin"],
-  display: "swap",
-  variable: "--inter",
-});
 
 const options = {
   title: "Anshul Patil | Full-Stack Developer",
@@ -48,7 +40,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${incognito.variable} ${inter.className} ${gitlabmono.variable} dark:bg-zinc-900 bg-white dark:text-white text-zinc-700`}
+        className={`${display.variable} ${body.variable} ${mono.variable} font-body dark:bg-ink bg-paper dark:text-zinc-200 text-zinc-800`}
       >
         <Providers>
           <Navbar />

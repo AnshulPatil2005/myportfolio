@@ -36,10 +36,10 @@ export default function Navbar() {
       />
 
       <header
-        className={`text-sm z-50 transition-[padding,border-radius,background-color,box-shadow,border-color] duration-300 ease-in-out ${
+        className={`text-sm z-50 transition-[padding,background-color,box-shadow,border-color] duration-300 ease-in-out ${
           scrolled
-            ? "fixed top-4 left-0 right-0 mx-auto w-fit px-6 py-2.5 rounded-full border dark:border-zinc-700/70 border-zinc-200/80 dark:bg-zinc-900/85 bg-white/85 backdrop-blur-md shadow-lg dark:shadow-[0_0_24px_rgba(51,224,146,0.07)] shadow-zinc-300/40"
-            : "py-6 md:px-16 px-6 border-b dark:border-zinc-800 border-zinc-200 md:mb-28 mb-10"
+            ? "fixed top-4 left-0 right-0 mx-auto w-fit px-6 py-2.5 border dark:border-zinc-700/70 border-zinc-300 dark:bg-ink/95 bg-paper/95 backdrop-blur-md shadow-lg shadow-zinc-300/30"
+            : "py-6 md:px-16 px-6 border-b dark:border-zinc-800 border-zinc-300 md:mb-28 mb-10"
         }`}
       >
         <div
@@ -60,7 +60,7 @@ export default function Navbar() {
                 <li key={id}>
                   <Link
                     href={link.href}
-                    className="font-incognito dark:text-white text-zinc-600 dark:hover:text-primary-color hover:text-zinc-900 duration-300 text-base"
+                    className="font-mono text-sm dark:text-zinc-400 text-zinc-600 dark:hover:text-zinc-100 hover:text-zinc-900 duration-200"
                   >
                     {link.title}
                   </Link>
@@ -76,7 +76,7 @@ export default function Navbar() {
                   new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true })
                 )
               }
-              className="hidden md:flex items-center gap-1 text-xs font-mono dark:text-zinc-500 text-zinc-400 border dark:border-zinc-700 border-zinc-200 rounded-md px-2 py-1 dark:hover:border-zinc-500 hover:border-zinc-300 transition-colors duration-150"
+              className="hidden md:flex items-center gap-1 text-xs font-mono dark:text-zinc-500 text-zinc-400 border dark:border-zinc-700 border-zinc-300 px-2 py-1 dark:hover:border-zinc-500 hover:border-zinc-400 transition-colors duration-150"
               aria-label="Open command palette"
             >
               <kbd>⌘K</kbd>
