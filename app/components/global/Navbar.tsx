@@ -8,8 +8,10 @@ import { useScroll } from "framer-motion";
 import { useEffect, useState } from "react";
 
 const navLinks = [
+  { title: "Products", href: "/#products" },
   { title: "About", href: "/#about" },
   { title: "Projects", href: "/#projects" },
+  { title: "Open Source", href: "/#open-source" },
   { title: "Research", href: "/#research" },
 ];
 

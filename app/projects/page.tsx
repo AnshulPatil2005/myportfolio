@@ -5,7 +5,7 @@ import type { ProjectType } from "@/types";
 import EmptyState from "../components/shared/EmptyState";
 import { Slide } from "../animation/Slide";
 import PageHeading from "../components/shared/PageHeading";
-import { projects } from "@/lib/data";
+import { showcaseProjects } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "Projects | Anshul Patil",
@@ -23,13 +23,13 @@ export default function Project() {
     <main className="max-w-7xl mx-auto md:px-16 px-6">
       <PageHeading
         title="Projects"
-        description="I've worked on tons of little projects over the years but these are the ones that I'm most proud of. Many of them are open-source, so if you see something that piques your interest, check out the code and contribute if you have ideas on how it can be improved."
+        description="Focused repositories across AI code review, legal data scraping, distributed-systems reliability, competitive programming, portfolio tooling, and notebook-based ML experimentation."
       />
 
       <Slide delay={0.1}>
-        {projects.length > 0 ? (
+        {showcaseProjects.length > 0 ? (
           <section className="grid xl:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-5 mb-12">
-            {projects.map((project) => (
+            {showcaseProjects.map((project) => (
               <Link
                 href={`/projects/${project.slug}`}
                 key={project._id}

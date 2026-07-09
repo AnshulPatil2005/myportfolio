@@ -85,7 +85,8 @@ export default function TerminalHero() {
         </p>
         <div className="mt-6 flex flex-wrap gap-3 text-xs font-mono">
           {[
-            { label: "↗ Experience", href: "/#jobs" },
+            { label: "Products", href: "/#products" },
+            { label: "Projects", href: "/#projects" },
             { label: "↗ Research", href: "/#research" },
             { label: "↗ Contact", href: "/#contact" },
           ].map((l) => (

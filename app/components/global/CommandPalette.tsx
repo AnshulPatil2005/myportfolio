@@ -5,7 +5,7 @@ import { Command } from "cmdk";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { projects, researchProjects, profile } from "@/lib/data";
+import { showcaseProjects, researchProjects, profile } from "@/lib/data";
 import {
   HiArrowRight,
   HiOutlineGlobeAlt,
@@ -137,8 +137,10 @@ export function CommandPalette() {
                   className="[&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:dark:text-zinc-500 [&_[cmdk-group-heading]]:text-zinc-400"
                 >
                   {[
+                    { label: "Go to Products", href: "/#products" },
                     { label: "Go to About", href: "/#about" },
                     { label: "Go to Projects", href: "/#projects" },
+                    { label: "Go to Open Source", href: "/#open-source" },
                     { label: "Go to Research", href: "/#research" },
                     { label: "Go to Blog", href: "/#blog" },
                   ].map((item) => (
@@ -159,7 +161,7 @@ export function CommandPalette() {
                   heading="Projects"
                   className="[&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:dark:text-zinc-500 [&_[cmdk-group-heading]]:text-zinc-400"
                 >
-                  {projects.map((p) => (
+                  {showcaseProjects.map((p) => (
                     <Command.Item
                       key={p._id}
                       value={`${p.name} ${p.tagline}`}

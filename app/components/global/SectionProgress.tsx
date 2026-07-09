@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 
 const SECTIONS = [
+  { id: "products", label: "Products" },
   { id: "projects", label: "Projects" },
+  { id: "open-source", label: "Open Source" },
   { id: "research", label: "Research" },
   { id: "about", label: "About" },
   { id: "blog", label: "Blog" },

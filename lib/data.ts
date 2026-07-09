@@ -1,4 +1,13 @@
-import { ProfileType, JobType, ProjectType, PostType, HeroeType, ResearchProjectType } from "@/types";
+import {
+  ProfileType,
+  JobType,
+  ProjectType,
+  ProductType,
+  OpenSourceContributionType,
+  PostType,
+  HeroeType,
+  ResearchProjectType,
+} from "@/types";
 
 export const availability = { open: true, label: "Open to internships · Summer 2026" };
 
@@ -86,6 +95,65 @@ export const jobs: JobType[] = [
   },
 ];
 
+export const products: ProductType[] = [
+  {
+    _id: "stratum",
+    name: "Stratum",
+    slug: "stratum",
+    tagline: "AI code intelligence, deployment risk, incident correlation",
+    projectUrl: "",
+    repository: "https://github.com/AnshulPatil2005/Stratum",
+    status: "Working product",
+    audience: "Engineering teams shipping frequent pull requests",
+    description:
+      "Stratum is a living intelligence layer for software teams. It starts with AI-assisted PR review, then connects reviewed changes to deployment planning, architecture drift, and production incident investigation so teams can see where risk is entering the codebase and what changed before something broke.",
+    bullets: [
+      "Reviews GitHub pull requests with typed findings, risk scoring, per-file summaries, review modes, async jobs, reruns, comparisons, and exports.",
+      "Analyzes deployment batches to detect semantic conflicts between PRs before they are shipped together.",
+      "Builds a live architecture-drift view from accumulated review data, highlighting risky modules, boundary erosion, and refactor pressure.",
+      "Correlates Sentry, Render, and Railway production errors with recently reviewed PRs using file/module overlap, recency, severity, and cross-service co-incidence signals.",
+    ],
+    metrics: [
+      { label: "Stages", value: "4" },
+      { label: "Tests", value: "115" },
+      { label: "Providers", value: "3" },
+    ],
+    details: [
+      { label: "Stack", value: "FastAPI, React, TypeScript, SQLAlchemy, OpenRouter, Tailwind" },
+      { label: "Product type", value: "Developer intelligence / code review / incident analysis" },
+      { label: "Core users", value: "Founders, CTOs, maintainers, and engineering teams" },
+    ],
+  },
+  {
+    _id: "docrag-v3",
+    name: "docRAG v3",
+    slug: "docrag-v3",
+    tagline: "PDF RAG, OCR, semantic search, research GraphRAG",
+    projectUrl: "",
+    repository: "https://github.com/AnshulPatil2005/docRAG_v3",
+    status: "Working RAG system with GraphRAG roadmap",
+    audience: "Researchers and teams working with dense PDF collections",
+    description:
+      "docRAG v3 is a document intelligence platform for uploading PDFs, extracting text with OCR fallback, indexing chunks in Qdrant, and asking grounded questions with citations. The newer roadmap extends the system toward research-paper GraphRAG with paper parsing, citation extraction, ontology validation, entity extraction, and hybrid graph/vector retrieval.",
+    bullets: [
+      "Processes PDF uploads asynchronously with FastAPI, Celery, Redis, OCR, sentence-transformer embeddings, and Qdrant vector search.",
+      "Supports natural-language chat over documents with citations that point back to source document chunks and pages.",
+      "Includes an Angular frontend for upload, task status tracking, health checks, recent tasks, and document query workflows.",
+      "Adds research-paper intelligence foundations: ontology validation, paper parsing, citation normalization, and entity extraction for graph construction.",
+    ],
+    metrics: [
+      { label: "API routes", value: "4" },
+      { label: "Graph phases", value: "19" },
+      { label: "Frontend", value: "Angular" },
+    ],
+    details: [
+      { label: "Stack", value: "FastAPI, Celery, Redis, Qdrant, Angular, Docker, Sentence Transformers" },
+      { label: "Product type", value: "Document AI / RAG / research knowledge system" },
+      { label: "Core users", value: "Researchers, analysts, legal/academic teams, and PDF-heavy workflows" },
+    ],
+  },
+];
+
 export const projects: ProjectType[] = [
   {
     _id: "ai-pr-reviewer",
@@ -168,6 +236,157 @@ export const projects: ProjectType[] = [
       { label: "Dataset", value: "HLDC — 900K+ Hindi legal documents from UP district courts" },
       { label: "Components", value: "Data preprocessing, text classification, transformer fine-tuning, FP16 optimization, evaluation pipeline" },
       { label: "Year", value: "2025" },
+    ],
+  },
+];
+
+export const showcaseProjects: ProjectType[] = [
+  {
+    _id: "ai-pr-reviewer",
+    name: "AI Pull Request Reviewer",
+    slug: "ai-pr-reviewer",
+    tagline: "FastAPI, React, TypeScript, GitHub API, OpenRouter",
+    projectUrl: "https://ai-pr-reviewer-theta.vercel.app/",
+    repository: "https://github.com/AnshulPatil2005/AI-PR-Reviewer",
+    logo: "",
+    coverImage: { image: "", alt: null, lqip: "" },
+    description:
+      "Full-stack AI pull request reviewer that fetches GitHub PR diffs, runs LLM-assisted risk analysis, persists review history, and returns structured findings, suggestions, per-file summaries, and exportable review reports.",
+  },
+  {
+    _id: "sect-scrape",
+    name: "sect_scrape",
+    slug: "sect-scrape",
+    tagline: "Python, Playwright, BeautifulSoup, SQLite, OCR",
+    projectUrl: "",
+    repository: "https://github.com/AnshulPatil2005/sect_scrape",
+    logo: "",
+    coverImage: { image: "", alt: null, lqip: "" },
+    description:
+      "Research-grade scraper for Gujarat eCourts disposed CRMA/JMFC cases, focused on CrPC sections 436, 437, 438, and 439. It automates the eCourts portal with Playwright, handles CAPTCHA/OCR support, stores structured metadata in JSON/JSONL/SQLite, and preserves source HTML/PDF orders for verification.",
+  },
+  {
+    _id: "faulty-node-detection",
+    name: "Faulty Node Detection",
+    slug: "faulty-node-detection",
+    tagline: "NS-3, Python, anomaly detection, HTML dashboard",
+    projectUrl: "",
+    repository: "https://github.com/AnshulPatil2005/faulty_node_detection",
+    logo: "",
+    coverImage: { image: "", alt: null, lqip: "" },
+    description:
+      "Four-stage faulty-node detection pipeline for simulated networks. It builds a 12-node NS-3 topology, injects packet-loss/high-delay/low-bandwidth faults, extracts FlowMonitor features, detects anomalies with z-score/IQR/composite scoring, and explains results through an interactive HTML dashboard with an LLM diagnostic agent.",
+  },
+  {
+    _id: "codeforces",
+    name: "Codeforces",
+    slug: "codeforces",
+    tagline: "FastAPI, React, TypeScript, Codeforces API",
+    projectUrl: "",
+    repository: "https://github.com/AnshulPatil2005/codeforces",
+    logo: "",
+    coverImage: { image: "", alt: null, lqip: "" },
+    description:
+      "Modern full-stack Codeforces dashboard for contest profiles, rating visualizations, performance insights, and problem browsing. The backend uses FastAPI with rate limiting and caching around real Codeforces data; the frontend uses React, TypeScript, Tailwind, React Query, and Recharts.",
+  },
+  {
+    _id: "smartfolio",
+    name: "Smartfolio",
+    slug: "smartfolio",
+    tagline: "Python, portfolio analytics, automation",
+    projectUrl: "",
+    repository: "https://github.com/AnshulPatil2005/Smartfolio",
+    logo: "",
+    coverImage: { image: "", alt: null, lqip: "" },
+    description:
+      "Python project around smarter portfolio analysis and automation. It shows backend-oriented product thinking applied to financial/portfolio workflows where data processing and decision support matter.",
+  },
+  {
+    _id: "il-tur",
+    name: "IL-TUR",
+    slug: "il-tur",
+    tagline: "Jupyter Notebook, NLP, model experimentation",
+    projectUrl: "",
+    repository: "https://github.com/AnshulPatil2005/IL-TUR",
+    logo: "",
+    coverImage: { image: "", alt: null, lqip: "" },
+    description:
+      "Notebook-based machine learning/NLP experimentation repository. It is useful recruiter evidence for data preparation, exploratory modeling, evaluation, and research-style iteration.",
+  },
+];
+
+export const openSourceContributions: OpenSourceContributionType[] = [
+  {
+    _id: "browser-use",
+    name: "browser-use",
+    repository: "https://github.com/AnshulPatil2005/browser-use",
+    description:
+      "Fork of the browser-use automation project, which focuses on making websites accessible to AI agents.",
+    focus: "Browser automation, agent tooling, and AI-driven web task execution.",
+  },
+  {
+    _id: "swarm-external-secrets",
+    name: "sugar-org/swarm-external-secrets",
+    repository: "https://github.com/sugar-org/swarm-external-secrets",
+    description:
+      "Docker Swarm external secrets provider plugin for integrating Swarm workloads with external secret stores such as Vault.",
+    focus: "Go, Docker Swarm infrastructure, secret-management workflows, and deployment tooling.",
+  },
+  {
+    _id: "extralit",
+    name: "Extralit/extralit",
+    repository: "https://github.com/Extralit/extralit",
+    description:
+      "Open-source AI document intelligence platform for systemic data extraction with LLM assistance.",
+    focus:
+      "Document workflows, dataset configuration, frontend validation, testing utilities, and deployment reliability.",
+    pullRequests: [
+      { number: 191, title: "Remove ARM-specific JVM options from Elasticsearch configuration", url: "https://github.com/Extralit/extralit/pull/191", state: "merged" },
+      { number: 188, title: "Fix document status bug", url: "https://github.com/Extralit/extralit/pull/188", state: "open" },
+      { number: 185, title: "Add MockClient implementation for unit testing", url: "https://github.com/Extralit/extralit/pull/185", state: "open" },
+      { number: 180, title: "Add DatasetConfigurationTableQuestion component and tests", url: "https://github.com/Extralit/extralit/pull/180", state: "open" },
+    ],
+  },
+  {
+    _id: "hyperledger-binibft",
+    name: "BiniWorld/Hyperledger-BiniBFT",
+    repository: "https://github.com/BiniWorld/Hyperledger-BiniBFT",
+    description: "Go-based open-source work around Hyperledger/BFT infrastructure.",
+    focus: "Parser test coverage and reliability improvements in distributed-consensus tooling.",
+    pullRequests: [
+      { number: 17, title: "Add initial unit tests for BiniBFT parsing", url: "https://github.com/BiniWorld/Hyperledger-BiniBFT/pull/17", state: "open" },
+    ],
+  },
+  {
+    _id: "soul-protocol",
+    name: "qbtrix/soul-protocol",
+    repository: "https://github.com/qbtrix/soul-protocol",
+    description:
+      "Open standard for portable AI identity, memory, and emotion across AI companions.",
+    focus: "CLI behavior, memory commands, deduplication, and migration from older command patterns.",
+    pullRequests: [
+      { number: 236, title: "Deprecate soul remember in favor of soul note", url: "https://github.com/qbtrix/soul-protocol/pull/236", state: "open" },
+      { number: 235, title: "Add fact-mode soul observe with dedup; deprecate remember", url: "https://github.com/qbtrix/soul-protocol/pull/235", state: "closed" },
+    ],
+  },
+  {
+    _id: "manifold",
+    name: "elalish/manifold",
+    repository: "https://github.com/elalish/manifold",
+    description:
+      "C++ geometry library focused on topological robustness, used for mesh operations and geometry processing.",
+    focus:
+      "GSoC work on CI reliability, cross-platform determinism, sanitizer workflows, benchmarking, WASM/runtime fixes, examples, and docs.",
+    pullRequests: [
+      { number: 1762, title: "Fix benchmark guard", url: "https://github.com/elalish/manifold/pull/1762", state: "open" },
+      { number: 1758, title: "Weekly benchmarks", url: "https://github.com/elalish/manifold/pull/1758", state: "open" },
+      { number: 1728, title: "ASan+UBSan workflow lane Pt2", url: "https://github.com/elalish/manifold/pull/1728", state: "merged" },
+      { number: 1680, title: "Non-blocking PR benchmark guard", url: "https://github.com/elalish/manifold/pull/1680", state: "merged" },
+      { number: 1666, title: "Dedicated Linux Clang ASan+UBSan workflow lane", url: "https://github.com/elalish/manifold/pull/1666", state: "merged" },
+      { number: 1594, title: "Cross-platform determinism check", url: "https://github.com/elalish/manifold/pull/1594", state: "merged" },
+      { number: 1575, title: "Add 3MF importer and test coverage", url: "https://github.com/elalish/manifold/pull/1575", state: "merged" },
+      { number: 1547, title: "Fix integer divide-by-zero in RefineToTolerance", url: "https://github.com/elalish/manifold/pull/1547", state: "merged" },
+      { number: 1541, title: "Fix Cylinder(h, 0, r) cone support", url: "https://github.com/elalish/manifold/pull/1541", state: "merged" },
     ],
   },
 ];

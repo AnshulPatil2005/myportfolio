@@ -14,6 +14,11 @@ export default function MobileMenu() {
   const [navShow, setNavShow] = useState(false);
   const data = [
     {
+      title: "Products",
+      href: "/#products",
+      icon: HiBeaker,
+    },
+    {
       title: "About",
       href: "/#about",
       icon: HiUser,
@@ -22,6 +27,11 @@ export default function MobileMenu() {
       title: "Projects",
       href: "/#projects",
       icon: HiBeaker,
+    },
+    {
+      title: "Open Source",
+      href: "/#open-source",
+      icon: HiAcademicCap,
     },
     {
       title: "Research",

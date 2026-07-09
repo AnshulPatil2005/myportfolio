@@ -59,6 +59,37 @@ export type ProjectType = {
   details?: { label: string; value: string }[];
 };
 
+export type ProductType = {
+  _id: string;
+  name: string;
+  slug: string;
+  tagline: string;
+  projectUrl: string;
+  repository: string;
+  status: string;
+  audience: string;
+  description: string;
+  bullets: string[];
+  metrics?: { label: string; value: string }[];
+  details?: { label: string; value: string }[];
+};
+
+export type PullRequestType = {
+  number: number;
+  title: string;
+  url: string;
+  state: "open" | "merged" | "closed";
+};
+
+export type OpenSourceContributionType = {
+  _id: string;
+  name: string;
+  repository: string;
+  description: string;
+  focus: string;
+  pullRequests?: PullRequestType[];
+};
+
 export type PostType = {
   _id: string;
   _createdAt: string;

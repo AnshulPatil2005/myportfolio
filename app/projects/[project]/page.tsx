@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { ProjectType } from "@/types";
 import { Slide } from "../../animation/Slide";
 import { BiLinkExternal, BiLogoGithub } from "react-icons/bi";
-import { projects } from "@/lib/data";
+import { showcaseProjects } from "@/lib/data";
 
 type Props = {
   params: {
@@ -12,11 +12,11 @@ type Props = {
 };
 
 export function generateStaticParams() {
-  return projects.map((project) => ({ project: project.slug }));
+  return showcaseProjects.map((project) => ({ project: project.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const project = projects.find((p) => p.slug === params.project);
+  const project = showcaseProjects.find((p) => p.slug === params.project);
   if (!project) return { title: "Project Not Found" };
 
   return {
@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default function Project({ params }: Props) {
-  const project = projects.find((p) => p.slug === params.project);
+  const project = showcaseProjects.find((p) => p.slug === params.project);
   if (!project) notFound();
 
   const tags = project.tagline.split(",").map((t) => t.trim());
