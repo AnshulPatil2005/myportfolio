@@ -106,7 +106,7 @@ export const products: ProductType[] = [
     status: "Working product",
     audience: "Engineering teams shipping frequent pull requests",
     description:
-      "Stratum is a living intelligence layer for software teams. It starts with AI-assisted PR review, then connects reviewed changes to deployment planning, architecture drift, and production incident investigation so teams can see where risk is entering the codebase and what changed before something broke.",
+      "Stratum is a living intelligence layer for software teams — the advanced, closed-source product built on top of the open-source AI Pull Request Reviewer. It extends PR review into deployment planning, architecture drift, and production incident investigation so teams can see where risk is entering the codebase and what changed before something broke.",
     bullets: [
       "Reviews GitHub pull requests with typed findings, risk scoring, per-file summaries, review modes, async jobs, reruns, comparisons, and exports.",
       "Analyzes deployment batches to detect semantic conflicts between PRs before they are shipped together.",
@@ -251,7 +251,7 @@ export const showcaseProjects: ProjectType[] = [
     logo: "",
     coverImage: { image: "", alt: null, lqip: "" },
     description:
-      "Full-stack AI pull request reviewer that fetches GitHub PR diffs, runs LLM-assisted risk analysis, persists review history, and returns structured findings, suggestions, per-file summaries, and exportable review reports.",
+      "Full-stack AI pull request reviewer that fetches GitHub PR diffs, runs LLM-assisted risk analysis, persists review history, and returns structured findings, suggestions, per-file summaries, and exportable review reports. Open-source and self-hostable — its architecture became the foundation Stratum was built on.",
   },
   {
     _id: "sect-scrape",

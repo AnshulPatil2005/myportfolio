@@ -12,6 +12,7 @@ type Story = {
   live?: string;
   detailsSlug?: string;
   graphic: GraphicVariant;
+  eyebrow: string;
 };
 
 const prReviewer = showcaseProjects.find((p) => p._id === "ai-pr-reviewer");
@@ -19,27 +20,9 @@ const hldc = projects.find((p) => p._id === "hldc-bail-nlp");
 const stratum = products.find((p) => p._id === "stratum");
 const docrag = products.find((p) => p._id === "docrag-v3");
 
+// AI Pull Request Reviewer ships first as the open-source foundation;
+// Stratum immediately follows as the advanced product built on top of it.
 const stories: Story[] = [
-  stratum && {
-    id: stratum._id,
-    name: stratum.name,
-    tagline: stratum.tagline,
-    description: stratum.description,
-    stack: stratum.details?.find((d) => d.label === "Stack")?.value.split(",").map((s) => s.trim()) ?? [],
-    repository: stratum.repository,
-    live: stratum.projectUrl || undefined,
-    graphic: "network",
-  },
-  docrag && {
-    id: docrag._id,
-    name: docrag.name,
-    tagline: docrag.tagline,
-    description: docrag.description,
-    stack: docrag.details?.find((d) => d.label === "Stack")?.value.split(",").map((s) => s.trim()) ?? [],
-    repository: docrag.repository,
-    live: docrag.projectUrl || undefined,
-    graphic: "pipeline",
-  },
   prReviewer && {
     id: prReviewer._id,
     name: prReviewer.name,
@@ -50,6 +33,29 @@ const stories: Story[] = [
     live: prReviewer.projectUrl || undefined,
     detailsSlug: prReviewer.slug,
     graphic: "diff",
+    eyebrow: "Open source",
+  },
+  stratum && {
+    id: stratum._id,
+    name: stratum.name,
+    tagline: stratum.tagline,
+    description: stratum.description,
+    stack: stratum.details?.find((d) => d.label === "Stack")?.value.split(",").map((s) => s.trim()) ?? [],
+    repository: stratum.repository,
+    live: stratum.projectUrl || undefined,
+    graphic: "network",
+    eyebrow: "Built on AI Pull Request Reviewer",
+  },
+  docrag && {
+    id: docrag._id,
+    name: docrag.name,
+    tagline: docrag.tagline,
+    description: docrag.description,
+    stack: docrag.details?.find((d) => d.label === "Stack")?.value.split(",").map((s) => s.trim()) ?? [],
+    repository: docrag.repository,
+    live: docrag.projectUrl || undefined,
+    graphic: "pipeline",
+    eyebrow: "Product",
   },
   hldc && {
     id: hldc._id,
@@ -61,6 +67,7 @@ const stories: Story[] = [
     live: hldc.projectUrl || undefined,
     detailsSlug: hldc.slug,
     graphic: "manuscript",
+    eyebrow: "Research",
   },
 ].filter(Boolean) as Story[];
 
@@ -133,6 +140,9 @@ export default function FeaturedWork() {
               {split ? (
                 <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
                   <div>
+                    <p className="text-xs uppercase tracking-widest font-mono dark:text-zinc-500 text-zinc-400 mb-3">
+                      {story.eyebrow}
+                    </p>
                     <h3 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">{story.name}</h3>
                     <p className="dark:text-zinc-400 text-zinc-600 leading-relaxed max-w-xl">
                       {story.description}
@@ -146,6 +156,9 @@ export default function FeaturedWork() {
                 </div>
               ) : (
                 <div className="max-w-3xl mx-auto text-center">
+                  <p className="text-xs uppercase tracking-widest font-mono dark:text-zinc-500 text-zinc-400 mb-3">
+                    {story.eyebrow}
+                  </p>
                   <h3 className="text-3xl sm:text-5xl font-bold tracking-tight mb-5">{story.name}</h3>
                   <p className="dark:text-zinc-400 text-zinc-600 leading-relaxed max-w-2xl mx-auto">
                     {story.description}

@@ -30,7 +30,7 @@ const skillGroups = [
 
 export default function Usage() {
   return (
-    <section className="max-w-4xl mt-32">
+    <section className="max-w-4xl mt-8">
       <Slide delay={0.14}>
         <div className="mb-10">
           <h2 className="text-4xl mb-4 font-bold tracking-tight">Stack &amp; Tools</h2>

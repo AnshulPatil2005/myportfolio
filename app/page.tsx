@@ -13,6 +13,9 @@ import BentoGrid from "./components/pages/BentoGrid";
 import FeaturedWork from "./components/pages/FeaturedWork";
 import CloserLook from "./components/pages/CloserLook";
 
+const aboutSummary =
+  "I'm a B.Tech student at IIIT Surat who has interned at Techvisio Design building analytics dashboards that cut API latency by 40%, and I contribute to open-source projects like Extralit and BRL-CAD's Manifold library. My focus is distributed systems, AI infrastructure, and developer tooling.";
+
 const gsocJob = jobs.find((j) => j._id === "gsoc-2026");
 const manifold = openSourceContributions.find((r) => r._id === "manifold");
 const otherRepos = openSourceContributions.filter((r) => r._id !== "manifold");
@@ -33,6 +36,13 @@ export default function Home() {
     <main className="max-w-7xl mx-auto md:px-16 px-6 mt-4">
       {/* Hero — Editorial masthead */}
       <Hero />
+
+      {/* Short About — condensed to two sentences */}
+      <Slide delay={0.05}>
+        <p className="max-w-2xl text-base dark:text-zinc-400 text-zinc-600 leading-relaxed mb-16 md:mb-20">
+          {aboutSummary}
+        </p>
+      </Slide>
 
       {/* Bento Grid — Quick Stats */}
       <BentoGrid />
@@ -141,6 +151,9 @@ export default function Home() {
         </Slide>
       </section>
 
+      {/* GitHub Activity */}
+      <ContributionGraph />
+
       {/* Research */}
       <ResearchSection />
 
@@ -148,18 +161,10 @@ export default function Home() {
       <section id="about" className="scroll-mt-20 mt-32 md:mt-40">
         <Slide>
           <SectionHeading index="05" title="About" />
-          <div className="dark:text-zinc-400 text-zinc-600 leading-relaxed space-y-4 max-w-2xl mt-6">
-            {profile.fullBio.map((paragraph, index) => (
-              <p key={index}>{paragraph}</p>
-            ))}
-          </div>
         </Slide>
         <Usage />
         <Achievements />
       </section>
-
-      {/* GitHub Activity */}
-      <ContributionGraph />
 
       {/* LeetCode */}
       <LeetCodeStats />
