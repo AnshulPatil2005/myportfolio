@@ -1,13 +1,15 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
+import { profile } from "@/lib/data";
 
 const data = [
-  { title: "Products", href: "/#products" },
+  { title: "Products", href: "/#featured-work" },
   { title: "About", href: "/#about" },
   { title: "Projects", href: "/#projects" },
   { title: "Open Source", href: "/#open-source" },
   { title: "Research", href: "/#research" },
+  { title: "Résumé", href: profile.resumeURL, download: true },
   { title: "Contact", href: "/#contact" },
 ];
 
@@ -63,7 +65,8 @@ export default function MobileMenu() {
             <Link
               key={link.title}
               href={link.href}
-              className="flex items-center gap-x-4 font-incognito font-semibold text-lg border-b dark:border-zinc-800 border-zinc-200 p-6 group"
+              {...(link.download ? { download: true } : {})}
+              className="flex items-center gap-x-4 font-semibold text-lg border-b dark:border-zinc-800 border-zinc-200 p-6 group"
               onClick={onToggleNav}
             >
               <span className="font-mono text-xs dark:text-zinc-600 text-zinc-400">

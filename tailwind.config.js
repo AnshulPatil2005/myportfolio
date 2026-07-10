@@ -9,14 +9,17 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        incognito: ["var(--font-display)", "serif"],
-        sans: ["var(--font-body)", "serif"],
-        serif: ["var(--font-body)", "serif"],
+        incognito: ["var(--font-sans)", "sans-serif"],
+        sans: ["var(--font-sans)", "sans-serif"],
+        serif: ["var(--font-sans)", "sans-serif"],
         mono: ["var(--font-mono)", "monospace"],
       },
       colors: {
-        ink: "#141311",
+        ink: "#0a0a0a",
+        void: "#000000",
+        surface: "#141414",
         paper: "#FAF9F6",
+        accent: "#3B82F6",
       },
       boxShadow: {
         "line-light": "rgba(17, 17, 26, 0.1) 0px 1px 0px",

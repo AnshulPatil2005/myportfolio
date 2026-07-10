@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Slide } from "../../animation/Slide";
-import { showcaseProjects } from "@/lib/data";
+import { projects, showcaseProjects } from "@/lib/data";
 
 type Props = {
   params: {
@@ -9,12 +9,19 @@ type Props = {
   };
 };
 
+// `projects` carries richer detail (fullDescription/metrics) for slugs it defines;
+// `showcaseProjects` fills in the rest. Merge so every showcased slug resolves.
+const projectsBySlug = new Map(
+  [...showcaseProjects, ...projects].map((p) => [p.slug, p])
+);
+const allProjects = Array.from(projectsBySlug.values());
+
 export function generateStaticParams() {
-  return showcaseProjects.map((project) => ({ project: project.slug }));
+  return allProjects.map((project) => ({ project: project.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const project = showcaseProjects.find((p) => p.slug === params.project);
+  const project = projectsBySlug.get(params.project);
   if (!project) return { title: "Project Not Found" };
 
   return {
@@ -24,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default function Project({ params }: Props) {
-  const project = showcaseProjects.find((p) => p.slug === params.project);
+  const project = projectsBySlug.get(params.project);
   if (!project) notFound();
 
   const tags = project.tagline.split(",").map((t) => t.trim());

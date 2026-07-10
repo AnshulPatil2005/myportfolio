@@ -6,13 +6,15 @@ import UnmountStudio from "./Unmount";
 import MobileMenu from "./MobileMenu";
 import { useScroll } from "framer-motion";
 import { useEffect, useState } from "react";
+import { profile } from "@/lib/data";
 
 const navLinks = [
-  { title: "Products", href: "/#products" },
+  { title: "Products", href: "/#featured-work" },
   { title: "About", href: "/#about" },
   { title: "Projects", href: "/#projects" },
   { title: "Open Source", href: "/#open-source" },
   { title: "Research", href: "/#research" },
+  { title: "Résumé", href: profile.resumeURL },
 ];
 
 export default function Navbar() {
@@ -20,47 +22,37 @@ export default function Navbar() {
   const { scrollY } = useScroll();
 
   useEffect(() => {
-    return scrollY.on("change", (y) => setScrolled(y > 80));
+    return scrollY.on("change", (y) => setScrolled(y > 40));
   }, [scrollY]);
 
   return (
     <UnmountStudio>
-      {/*
-        Spacer: steps in immediately when the header leaves document flow (fixed),
-        preserving the exact same vertical space so the page content doesn't jump.
-      */}
-      <div
-        aria-hidden="true"
-        style={{ transition: "none" }}
-        className={scrolled ? "h-16 md:mb-28 mb-10" : ""}
-      />
+      {/* Spacer preserves layout height beneath the always-fixed header. */}
+      <div aria-hidden="true" className="h-16" />
 
       <header
-        className={`text-sm z-50 transition-[padding,background-color,box-shadow,border-color] duration-300 ease-in-out ${
+        className={`fixed top-0 inset-x-0 z-50 h-16 transition-[background-color,border-color] duration-300 ease-in-out ${
           scrolled
-            ? "fixed top-4 left-0 right-0 mx-auto w-fit px-6 py-2.5 border dark:border-zinc-700/70 border-zinc-300 dark:bg-ink/95 bg-paper/95 backdrop-blur-md shadow-lg shadow-zinc-300/30"
-            : "py-6 md:px-16 px-6 border-b dark:border-zinc-800 border-zinc-300 md:mb-28 mb-10"
+            ? "dark:bg-ink/80 bg-paper/90 backdrop-blur-sm border-b dark:border-zinc-800/80 border-zinc-300"
+            : "bg-transparent border-b border-transparent"
         }`}
       >
-        <div
-          className={`flex items-center justify-between gap-x-6 ${
-            scrolled ? "" : "max-w-6xl mx-auto"
-          }`}
-        >
+        <div className="h-full max-w-7xl mx-auto md:px-16 px-6 flex items-center justify-between gap-x-6">
           <Link
             href="/"
-            className="font-incognito font-bold text-xl dark:text-white text-zinc-900 tracking-tight"
+            className="font-semibold text-lg dark:text-white text-zinc-900 tracking-tight"
           >
             AP
           </Link>
 
           <nav className="md:block hidden">
             <ul className="flex items-center gap-x-8">
-              {navLinks.map((link, id) => (
-                <li key={id}>
+              {navLinks.map((link) => (
+                <li key={link.title}>
                   <Link
                     href={link.href}
-                    className="font-mono text-sm dark:text-zinc-400 text-zinc-600 dark:hover:text-zinc-100 hover:text-zinc-900 duration-200"
+                    {...(link.title === "Résumé" ? { download: true } : {})}
+                    className="text-sm dark:text-zinc-400 text-zinc-600 dark:hover:text-white hover:text-zinc-900 transition-colors duration-200"
                   >
                     {link.title}
                   </Link>

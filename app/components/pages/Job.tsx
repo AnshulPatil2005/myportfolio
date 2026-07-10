@@ -5,12 +5,12 @@ import { jobs } from "@/lib/data";
 
 export default function Job() {
   return (
-    <section id="jobs" className="scroll-mt-28 mt-24">
+    <section id="jobs" className="scroll-mt-20 mt-16 md:mt-20">
       <Slide delay={0.16}>
         <div className="flex items-baseline gap-4 mb-10">
           <span className="font-mono text-xs dark:text-zinc-600 text-zinc-400">00</span>
-          <h2 className="font-incognito text-4xl font-bold tracking-tight">
-            Work Experience
+          <h2 className="text-4xl font-bold tracking-tight">
+            Experience
           </h2>
         </div>
       </Slide>
@@ -37,17 +37,14 @@ export default function Job() {
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline justify-between gap-4 flex-wrap mb-0.5">
-                        <p className="text-sm font-mono">
-                          <span className="dark:text-zinc-500 text-zinc-400">feat: </span>
-                          <a
-                            href={job.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-semibold dark:text-zinc-100 text-zinc-800 hover:underline"
-                          >
-                            {job.name}
-                          </a>
-                        </p>
+                        <a
+                          href={job.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-semibold text-base dark:text-zinc-100 text-zinc-800 hover:underline"
+                        >
+                          {job.name}
+                        </a>
                         {job.startDate && (
                           <time className="text-xs font-mono dark:text-zinc-500 text-zinc-400 shrink-0">
                             {formatMonthYear(job.startDate)} –{" "}

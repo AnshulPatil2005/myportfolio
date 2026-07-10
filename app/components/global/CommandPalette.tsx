@@ -6,6 +6,7 @@ import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { showcaseProjects, researchProjects, profile } from "@/lib/data";
+import { socialLinks } from "@/app/data/social";
 
 type EasterEgg = { query: string; response: string };
 
@@ -129,7 +130,7 @@ export function CommandPalette() {
                   className="[&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:dark:text-zinc-500 [&_[cmdk-group-heading]]:text-zinc-400"
                 >
                   {[
-                    { label: "Go to Products", href: "/#products" },
+                    { label: "Go to Products", href: "/#featured-work" },
                     { label: "Go to About", href: "/#about" },
                     { label: "Go to Projects", href: "/#projects" },
                     { label: "Go to Open Source", href: "/#open-source" },
@@ -193,14 +194,10 @@ export function CommandPalette() {
                   heading="Links"
                   className="[&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:dark:text-zinc-500 [&_[cmdk-group-heading]]:text-zinc-400"
                 >
-                  {[
-                    { label: "Open GitHub", href: "https://github.com/AnshulPatil2005" },
-                    { label: "Open LinkedIn", href: "https://linkedin.com/in/anshulpatil2005" },
-                    {
-                      label: "Open LeetCode",
-                      href: "https://leetcode.com/u/Anshulpatil2011",
-                    },
-                  ].map((item) => (
+                  {socialLinks
+                    .filter((l) => l.name !== "Email")
+                    .map((l) => ({ label: `Open ${l.name}`, href: l.url }))
+                    .map((item) => (
                     <Command.Item
                       key={item.label}
                       value={item.label}

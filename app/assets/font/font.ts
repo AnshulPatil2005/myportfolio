@@ -1,18 +1,9 @@
-import { Playfair_Display, Source_Serif_4, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 
-export const display = Playfair_Display({
+export const sans = Inter({
   subsets: ["latin"],
-  weight: ["400", "700", "900"],
-  style: ["normal", "italic"],
-  variable: "--font-display",
-  display: "swap",
-});
-
-export const body = Source_Serif_4({
-  subsets: ["latin"],
-  weight: ["300", "400", "600"],
-  style: ["normal", "italic"],
-  variable: "--font-body",
+  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-sans",
   display: "swap",
 });
 

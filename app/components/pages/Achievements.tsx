@@ -24,15 +24,15 @@ export default function Achievements() {
         <div className="mb-8">
           <h2 className="text-4xl mb-4 font-bold tracking-tight">Achievements</h2>
         </div>
-        <div className="space-y-5">
+        <div className="border-t dark:border-zinc-800 border-zinc-200">
           {achievements.map(({ title, description, link }, i) => (
             <div
               key={title}
-              className="flex items-start gap-x-4 border dark:border-zinc-800 border-zinc-300 p-4"
+              className="flex items-start gap-x-5 py-5 border-b dark:border-zinc-800 border-zinc-200 last:border-b-0"
             >
-              <div className="grid place-items-center border dark:border-zinc-700 border-zinc-300 w-9 h-9 shrink-0 font-mono text-xs dark:text-zinc-400 text-zinc-500">
+              <span className="font-mono text-xs dark:text-zinc-600 text-zinc-400 pt-0.5 shrink-0">
                 {String(i + 1).padStart(2, "0")}
-              </div>
+              </span>
               <div>
                 {link ? (
                   <a

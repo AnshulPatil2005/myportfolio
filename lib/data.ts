@@ -201,7 +201,7 @@ export const projects: ProjectType[] = [
       lqip: "",
     },
     description:
-      "Built with Next.js App Router, TypeScript, Tailwind CSS, and Framer Motion. Features a terminal-aesthetic hero with typewriter animation, floating glassmorphism navbar, AI chat widget (Claude Haiku), command palette (⌘K), and section progress indicators.",
+      "Built with Next.js App Router, TypeScript, Tailwind CSS, and Framer Motion. Features an editorial dark hero, an AI chat widget (Claude Haiku), a command palette (⌘K), and scroll-based section progress indicators.",
   },
   {
     _id: "hldc-bail-nlp",

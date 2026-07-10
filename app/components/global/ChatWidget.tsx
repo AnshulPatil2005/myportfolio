@@ -110,7 +110,7 @@ export default function ChatWidget() {
             <div className="flex items-center gap-3 px-4 py-3 border-b dark:border-zinc-800 border-zinc-200 dark:bg-zinc-800/50 bg-zinc-50 shrink-0">
               <span className="font-mono text-sm dark:text-zinc-400 text-zinc-500">✦</span>
               <div className="flex-1">
-                <p className="text-sm font-semibold font-incognito">Ask Anshul&apos;s AI</p>
+                <p className="text-sm font-semibold">Ask Anshul&apos;s AI</p>
                 <p className="text-xs dark:text-zinc-500 text-zinc-400">Powered by Claude Haiku</p>
               </div>
               <button
