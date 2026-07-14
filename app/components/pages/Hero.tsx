@@ -14,7 +14,7 @@ export default function Hero() {
           <span>Portfolio &middot; {profile.location}</span>
           {availability.open && (
             <span className="inline-flex items-center gap-2 dark:text-zinc-300 text-zinc-700 normal-case tracking-normal">
-              <span className="w-2 h-2 rounded-full dark:bg-emerald-400 bg-emerald-600 shrink-0" aria-hidden="true" />
+              <span className="w-2 h-2 rounded-full dark:bg-emerald-400 bg-emerald-600 shrink-0 animate-pulse" aria-hidden="true" />
               {availability.label}
             </span>
           )}
@@ -52,20 +52,20 @@ export default function Hero() {
         <div className="flex flex-wrap items-center gap-x-8 gap-y-3 mt-12">
           <Link
             href="/#featured-work"
-            className="dark:text-white text-zinc-900 font-semibold border-b-2 dark:border-accent border-accent pb-0.5 hover:opacity-80 transition-opacity duration-150"
+            className="dark:text-white text-zinc-900 font-semibold border-b-2 dark:border-accent border-accent pb-0.5 hover:opacity-75 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-zinc-300 focus-visible:ring-zinc-700 rounded-sm"
           >
             View my work &rarr;
           </Link>
           <a
             href={profile.resumeURL}
             download
-            className="text-sm dark:text-zinc-400 text-zinc-500 border-b border-transparent pb-0.5 dark:hover:text-zinc-100 hover:text-zinc-900 dark:hover:border-zinc-700 hover:border-zinc-400 transition-colors duration-150"
+            className="text-sm dark:text-zinc-400 text-zinc-500 border-b border-transparent pb-0.5 dark:hover:text-zinc-100 hover:text-zinc-900 dark:hover:border-zinc-700 hover:border-zinc-400 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-zinc-400 focus-visible:ring-zinc-600 rounded-sm"
           >
             R&eacute;sum&eacute;
           </a>
           <Link
             href="/#contact"
-            className="text-sm dark:text-zinc-400 text-zinc-500 border-b border-transparent pb-0.5 dark:hover:text-zinc-100 hover:text-zinc-900 dark:hover:border-zinc-700 hover:border-zinc-400 transition-colors duration-150"
+            className="text-sm dark:text-zinc-400 text-zinc-500 border-b border-transparent pb-0.5 dark:hover:text-zinc-100 hover:text-zinc-900 dark:hover:border-zinc-700 hover:border-zinc-400 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-zinc-400 focus-visible:ring-zinc-600 rounded-sm"
           >
             Contact
           </Link>

@@ -52,7 +52,7 @@ export default function Navbar() {
                   <Link
                     href={link.href}
                     {...(link.title === "Résumé" ? { download: true } : {})}
-                    className="text-sm dark:text-zinc-400 text-zinc-600 dark:hover:text-white hover:text-zinc-900 transition-colors duration-200"
+                    className="text-sm dark:text-zinc-400 text-zinc-600 dark:hover:text-white hover:text-zinc-900 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-zinc-400 focus-visible:ring-zinc-600 rounded-sm"
                   >
                     {link.title}
                   </Link>
@@ -68,7 +68,7 @@ export default function Navbar() {
                   new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true })
                 )
               }
-              className="hidden md:flex items-center gap-1 text-xs font-mono dark:text-zinc-500 text-zinc-400 border dark:border-zinc-700 border-zinc-300 px-2 py-1 dark:hover:border-zinc-500 hover:border-zinc-400 transition-colors duration-150"
+              className="hidden md:flex items-center gap-1 text-xs font-mono dark:text-zinc-500 text-zinc-400 border dark:border-zinc-700 border-zinc-300 px-2 py-1 dark:hover:border-zinc-500 hover:border-zinc-400 transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 dark:focus-visible:ring-zinc-400 focus-visible:ring-zinc-600 rounded-sm"
               aria-label="Open command palette"
             >
               <kbd>⌘K</kbd>
