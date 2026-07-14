@@ -4,15 +4,15 @@ const achievements: { title: string; description: string; link?: string }[] = [
   {
     title: "Google Summer of Code 2026",
     description:
-      "Selected contributor for BRL-CAD Manifold open-source subproject — improving C++ geometry processing CI and benchmarking infrastructure.",
+      "Selected contributor for BRL-CAD Manifold open-source subproject, improving C++ geometry processing CI and benchmarking infrastructure.",
   },
   {
-    title: "Winner — Agentic AI Strategy Hackathon",
+    title: "Winner, Agentic AI Strategy Hackathon",
     description:
       "First place for designing a multi-agent automation system with workflow orchestration.",
   },
   {
-    title: "3rd Place — Speed Coding, IIIT Surat",
+    title: "3rd Place, Speed Coding, IIIT Surat",
     description: "Placed 3rd among 100+ participants in a competitive speed coding event.",
   },
 ];

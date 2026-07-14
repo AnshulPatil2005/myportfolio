@@ -21,11 +21,11 @@ export const profile: ProfileType = {
     alt: "Anshul Patil",
   },
   shortBio:
-    "I build distributed systems and AI infrastructure — from open-source geometry processing to document intelligence pipelines. Currently pursuing B.Tech at IIIT Surat and contributing to BRL-CAD via Google Summer of Code.",
+    "I build distributed systems and AI infrastructure: open-source geometry processing, document intelligence pipelines, and production-grade developer tools. Currently pursuing B.Tech at IIIT Surat and contributing to BRL-CAD via Google Summer of Code.",
   email: "anshulpatil1022@gmail.com",
   fullBio: [
     "I'm a backend and systems developer currently pursuing B.Tech at the Indian Institute of Information Technology, Surat (2024–2028). My work spans distributed systems, AI tooling, and open-source infrastructure.",
-    "I'm a Google Summer of Code contributor at BRL-CAD, improving the Manifold C++ geometry processing library with CI reliability, cross-platform determinism checks, and benchmarking infrastructure. I'm also an active open-source contributor to Extralit — an AI document intelligence platform — where I've merged 10+ pull requests across ingestion pipelines, dataset workflows, and validation logic.",
+    "I'm a Google Summer of Code contributor at BRL-CAD, improving the Manifold C++ geometry processing library with CI reliability, cross-platform determinism checks, and benchmarking infrastructure. I'm also an active open-source contributor to Extralit, an AI document intelligence platform, where I've merged 10+ pull requests across ingestion pipelines, dataset workflows, and validation logic.",
     "Previously interned at Techvisio Design, where I built analytics dashboards processing 10K+ daily events, integrated AWS S3 for 300K+ monthly records, and reduced API latency by 40% through query optimization and caching.",
   ],
   location: "Mumbai, Maharashtra",
@@ -101,12 +101,12 @@ export const products: ProductType[] = [
     name: "Stratum",
     slug: "stratum",
     tagline: "AI code intelligence, deployment risk, incident correlation",
-    projectUrl: "https://ai-pr-reviewer-lacj.onrender.com",
+    projectUrl: "https://stratum-sepia.vercel.app/",
     repository: "https://github.com/AnshulPatil2005/Stratum",
     status: "Working product",
     audience: "Engineering teams shipping frequent pull requests",
     description:
-      "Stratum is a living intelligence layer for software teams — the advanced, closed-source product built on top of the open-source AI Pull Request Reviewer. It extends PR review into deployment planning, architecture drift, and production incident investigation so teams can see where risk is entering the codebase and what changed before something broke.",
+      "Stratum is a living intelligence layer for software teams, built on top of the open-source AI Pull Request Reviewer. It extends PR review into deployment planning, architecture drift, and production incident investigation so teams can see where risk is entering the codebase and what changed before something broke.",
     bullets: [
       "Reviews GitHub pull requests with typed findings, risk scoring, per-file summaries, review modes, async jobs, reruns, comparisons, and exports.",
       "Analyzes deployment batches to detect semantic conflicts between PRs before they are shipped together.",
@@ -169,7 +169,7 @@ export const projects: ProjectType[] = [
       lqip: "",
     },
     description:
-      "Automated PR review feedback using LLMs — reduces manual review overhead by analyzing code diffs, repository context, and commit history. Built FastAPI services for diff parsing, repository inspection, prompt construction, and model fallback. GitHub webhook integration triggers analysis on new commits with no manual steps required.",
+      "Automated PR review feedback using LLMs: reduces manual review overhead by analyzing code diffs, repository context, and commit history. Built FastAPI services for diff parsing, repository inspection, prompt construction, and model fallback. GitHub webhook integration triggers analysis on new commits with no manual steps required.",
   },
   {
     _id: "intelligent-doc-processing",
@@ -216,7 +216,7 @@ export const showcaseProjects: ProjectType[] = [
     logo: "",
     coverImage: { image: "", alt: null, lqip: "" },
     description:
-      "Full-stack AI pull request reviewer that fetches GitHub PR diffs, runs LLM-assisted risk analysis, persists review history, and returns structured findings, suggestions, per-file summaries, and exportable review reports. Open-source and self-hostable — its architecture became the foundation Stratum was built on.",
+      "Full-stack AI pull request reviewer that fetches GitHub PR diffs, runs LLM-assisted risk analysis, persists review history, and returns structured findings, suggestions, per-file summaries, and exportable review reports. Open-source and self-hostable; its architecture became the foundation Stratum was built on.",
   },
   {
     _id: "sect-scrape",

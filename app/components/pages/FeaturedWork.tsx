@@ -20,36 +20,42 @@ export default function FeaturedWork() {
           </span>
           <h2 className="text-4xl font-bold tracking-tight">Flagship Product</h2>
         </div>
-        <p className="dark:text-zinc-400 text-zinc-600 max-w-2xl mb-16">
-          One product built end-to-end — from a blank repo to a deployed, multi-tenant SaaS with 178 passing tests.
+        <p className="text-sm dark:text-zinc-500 text-zinc-500 max-w-xl mb-16">
+          One product built end-to-end, from a blank repo to a deployed multi-tenant SaaS.
         </p>
       </Slide>
 
       <Slide delay={0.08}>
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-xs uppercase tracking-widest font-mono dark:text-zinc-500 text-zinc-400 mb-3">
-            Flagship MVP · Live on Render
+            Flagship MVP · Live on Vercel
           </p>
-          <h3 className="text-4xl sm:text-6xl font-black tracking-tight mb-6">
+          <h3 className="text-3xl sm:text-4xl font-bold tracking-tight mb-5">
             {stratum.name}
           </h3>
-          <p className="dark:text-zinc-300 text-zinc-700 leading-relaxed max-w-2xl mx-auto text-lg">
-            A living intelligence layer for engineering teams. Stratum intercepts every PR, scores
-            its risk, flags semantic conflicts before deploy, tracks architectural drift, and
-            correlates production incidents back to the exact commits that caused them — four
-            stages, one unified product.
+          <p className="dark:text-zinc-400 text-zinc-600 leading-relaxed max-w-xl mx-auto text-sm mb-10">
+            Stratum sits between your GitHub and your production stack. It reviews every PR with
+            risk scores and typed findings, flags semantic conflicts between PRs before you
+            batch-deploy them, tracks how your architecture drifts over weeks of commits, and when
+            something breaks in prod it pinpoints exactly which PR caused it.
           </p>
 
-          {/* Metrics */}
-          <div className="flex justify-center gap-10 mt-10 mb-8">
-            {stratum.metrics?.map((m) => (
-              <div key={m.label} className="text-center">
-                <p className="text-3xl font-black tracking-tight dark:text-white text-zinc-900">
-                  {m.value}
+          {/* Stage pills */}
+          <div className="flex flex-wrap justify-center gap-3 mb-10">
+            {[
+              { label: "Review", desc: "Risk-score every PR" },
+              { label: "Deploy", desc: "Catch semantic conflicts" },
+              { label: "Drift", desc: "Track architecture health" },
+              { label: "Incident", desc: "Correlate prod errors to PRs" },
+            ].map((stage) => (
+              <div
+                key={stage.label}
+                className="border dark:border-zinc-700 border-zinc-300 px-4 py-2.5 text-left"
+              >
+                <p className="font-mono text-xs uppercase tracking-widest dark:text-zinc-400 text-zinc-600">
+                  {stage.label}
                 </p>
-                <p className="text-xs font-mono uppercase tracking-widest dark:text-zinc-500 text-zinc-500 mt-1">
-                  {m.label}
-                </p>
+                <p className="text-xs dark:text-zinc-500 text-zinc-500 mt-0.5">{stage.desc}</p>
               </div>
             ))}
           </div>
@@ -66,27 +72,20 @@ export default function FeaturedWork() {
             ))}
           </div>
 
-          {/* Links */}
-          <div className="flex justify-center flex-wrap items-center gap-x-6 gap-y-2 font-mono text-sm mb-12">
-            <a
-              href={stratum.projectUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="dark:text-white text-zinc-900 hover:underline"
-            >
-              Live &rarr;
-            </a>
-            <a
-              href={stratum.repository}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="dark:text-zinc-400 text-zinc-500 dark:hover:text-white hover:text-zinc-900 transition-colors duration-150"
-            >
-              Repository
-            </a>
-          </div>
+          {/* CTA */}
+          <a
+            href={stratum.projectUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 font-semibold dark:text-white text-zinc-900 border-b-2 dark:border-accent border-accent pb-0.5 hover:opacity-70 transition-opacity duration-150 mb-12"
+          >
+            Check it out
+            <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
+              &rarr;
+            </span>
+          </a>
 
-          <div className="aspect-[16/9] w-full max-w-2xl mx-auto">
+          <div className="aspect-[16/9] w-full max-w-2xl mx-auto mt-2">
             <ProjectGraphic variant="network" className="w-full h-full" />
           </div>
         </div>

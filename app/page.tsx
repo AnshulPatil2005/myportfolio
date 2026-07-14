@@ -234,7 +234,7 @@ export default function Home() {
             Let&rsquo;s build something useful.
           </h3>
           <p className="dark:text-zinc-400 text-zinc-600 max-w-xl mb-10">
-            Available for backend and systems internships — Summer 2026. Open to remote and hybrid roles.
+            Available for backend and systems internships, Summer 2026. Open to remote and hybrid roles.
           </p>
           <div className="flex flex-wrap items-center gap-x-10 gap-y-4 font-mono text-sm">
             <a
