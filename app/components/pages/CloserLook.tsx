@@ -5,6 +5,7 @@ import Link from "next/link";
 import { showcaseProjects } from "@/lib/data";
 import { Slide } from "../../animation/Slide";
 import ProjectGraphic, { GraphicVariant } from "./ProjectGraphic";
+import ScrambleIndex from "../global/ScrambleIndex";
 
 const GRAPHICS: Record<string, GraphicVariant> = {
   "sect-scrape": "manuscript",
@@ -42,7 +43,7 @@ export default function CloserLook() {
       <Slide delay={0.1}>
         <div className="flex items-baseline justify-between gap-4 mb-4 md:px-16 px-6">
           <div className="flex items-baseline gap-4">
-            <span className="font-mono text-xs dark:text-zinc-600 text-zinc-400">02</span>
+            <span className="font-mono text-xs dark:text-zinc-600 text-zinc-400"><ScrambleIndex target="02" /></span>
             <h2 className="text-4xl font-bold tracking-tight">Take a closer look</h2>
           </div>
           <div className="hidden sm:flex items-center gap-2">

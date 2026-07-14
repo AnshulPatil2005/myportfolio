@@ -4,7 +4,7 @@ import Link from "next/link";
 import Theme from "./Theme";
 import UnmountStudio from "./Unmount";
 import MobileMenu from "./MobileMenu";
-import { useScroll } from "framer-motion";
+import { motion, useScroll } from "framer-motion";
 import { useEffect, useState } from "react";
 import { profile } from "@/lib/data";
 
@@ -19,6 +19,7 @@ const navLinks = [
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const { scrollY } = useScroll();
 
   useEffect(() => {
@@ -48,7 +49,12 @@ export default function Navbar() {
           <nav className="md:block hidden">
             <ul className="flex items-center gap-x-8">
               {navLinks.map((link) => (
-                <li key={link.title}>
+                <li
+                  key={link.title}
+                  className="relative py-1"
+                  onMouseEnter={() => setHoveredLink(link.title)}
+                  onMouseLeave={() => setHoveredLink(null)}
+                >
                   <Link
                     href={link.href}
                     {...(link.title === "Résumé" ? { download: true } : {})}
@@ -56,6 +62,13 @@ export default function Navbar() {
                   >
                     {link.title}
                   </Link>
+                  {hoveredLink === link.title && (
+                    <motion.span
+                      layoutId="nav-underline"
+                      className="absolute left-0 right-0 -bottom-0.5 h-px dark:bg-zinc-300 bg-zinc-700"
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    />
+                  )}
                 </li>
               ))}
             </ul>

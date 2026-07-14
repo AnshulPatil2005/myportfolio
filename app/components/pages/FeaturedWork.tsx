@@ -1,6 +1,7 @@
 import { products, projects, showcaseProjects } from "@/lib/data";
 import { Slide } from "../../animation/Slide";
 import ProjectGraphic, { GraphicVariant } from "./ProjectGraphic";
+import ScrambleIndex from "../global/ScrambleIndex";
 
 type Story = {
   id: string;
@@ -124,7 +125,7 @@ export default function FeaturedWork() {
     <section id="featured-work" className="scroll-mt-20 mt-32 md:mt-40">
       <Slide delay={0.1}>
         <div className="flex items-baseline gap-4 mb-4">
-          <span className="font-mono text-xs dark:text-zinc-600 text-zinc-400">01</span>
+          <span className="font-mono text-xs dark:text-zinc-600 text-zinc-400"><ScrambleIndex target="01" /></span>
           <h2 className="text-4xl font-bold tracking-tight">Featured Work</h2>
         </div>
         <p className="dark:text-zinc-400 text-zinc-600 max-w-2xl mb-16">

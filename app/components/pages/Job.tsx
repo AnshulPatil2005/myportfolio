@@ -1,30 +1,52 @@
+"use client";
+
+import { motion } from "framer-motion";
 import { formatMonthYear } from "../../utils/date";
 import { Slide } from "../../animation/Slide";
 import EmptyState from "../shared/EmptyState";
 import { jobs } from "@/lib/data";
+import ScrambleIndex from "../global/ScrambleIndex";
 
 export default function Job() {
   return (
     <section id="jobs" className="scroll-mt-20 mt-16 md:mt-20">
       <Slide delay={0.16}>
         <div className="flex items-baseline gap-4 mb-10">
-          <span className="font-mono text-xs dark:text-zinc-600 text-zinc-400">00</span>
-          <h2 className="text-4xl font-bold tracking-tight">
-            Experience
-          </h2>
+          <span className="font-mono text-xs dark:text-zinc-600 text-zinc-400">
+            <ScrambleIndex target="00" />
+          </span>
+          <h2 className="text-4xl font-bold tracking-tight">Experience</h2>
         </div>
       </Slide>
 
       {jobs.length > 0 ? (
         <Slide delay={0.18}>
           <div className="relative max-w-2xl">
-            {/* Vertical timeline line */}
-            <div className="absolute left-[6px] top-3 bottom-3 w-px dark:bg-zinc-700 bg-zinc-300" />
+            {/* Vertical line — draws top to bottom as section enters view */}
+            <motion.div
+              className="absolute left-[6px] top-3 w-px dark:bg-zinc-700 bg-zinc-300"
+              initial={{ height: 0 }}
+              whileInView={{ height: "calc(100% - 1.5rem)" }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 1.4, ease: [0.25, 1, 0.5, 1], delay: 0.15 }}
+            />
+
             <div className="space-y-0">
-              {jobs.map((job) => {
+              {jobs.map((job, idx) => {
                 const isActive = !job.endDate;
                 return (
-                  <div key={job._id} className="relative flex gap-x-5 pb-10 last:pb-0">
+                  <motion.div
+                    key={job._id}
+                    className="relative flex gap-x-5 pb-10 last:pb-0"
+                    initial={{ opacity: 0, x: -10 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true, margin: "-20px" }}
+                    transition={{
+                      duration: 0.45,
+                      delay: 0.3 + idx * 0.15,
+                      ease: "easeOut",
+                    }}
+                  >
                     {/* Timeline marker */}
                     <div
                       className={`relative z-10 mt-1.5 w-3.5 h-3.5 shrink-0 border-2 ${
@@ -79,7 +101,7 @@ export default function Job() {
                         </p>
                       )}
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Social from "../shared/Social";
 import { Slide } from "../../animation/Slide";
+import { motion } from "framer-motion";
 import { profile, availability } from "@/lib/data";
 
 export default function Hero() {
@@ -14,26 +15,52 @@ export default function Hero() {
           <span>Portfolio &middot; {profile.location}</span>
           {availability.open && (
             <span className="inline-flex items-center gap-2 dark:text-zinc-300 text-zinc-700 normal-case tracking-normal">
-              <span className="w-2 h-2 rounded-full dark:bg-emerald-400 bg-emerald-600 shrink-0 animate-pulse" aria-hidden="true" />
+              {/* Ripple ring instead of CSS pulse */}
+              <span className="relative inline-flex w-2 h-2 shrink-0" aria-hidden="true">
+                <motion.span
+                  className="absolute inset-0 rounded-full dark:bg-emerald-400 bg-emerald-600"
+                  animate={{ scale: [1, 2.8], opacity: [0.55, 0] }}
+                  transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
+                />
+                <span className="relative w-2 h-2 rounded-full dark:bg-emerald-400 bg-emerald-600" />
+              </span>
               {availability.label}
             </span>
           )}
         </div>
       </Slide>
 
-      {/* Masthead name */}
-      <Slide delay={0.05}>
-        <h1
-          className="font-black tracking-tight leading-[0.95] mb-8"
-          style={{ fontSize: "clamp(3rem, 9vw, 7rem)" }}
-        >
-          {profile.fullName}
-        </h1>
-      </Slide>
+      {/* Masthead — each word slides up from an overflow-hidden mask */}
+      <h1
+        className="font-black tracking-tight leading-[0.95] mb-8"
+        style={{ fontSize: "clamp(2.2rem, 5.5vw, 5rem)" }}
+      >
+        {profile.fullName.split(" ").map((word, i) => (
+          <span key={i} className="inline-block overflow-hidden mr-[0.3em] last:mr-0">
+            <motion.span
+              className="inline-block"
+              initial={{ y: "110%" }}
+              animate={{ y: 0 }}
+              transition={{
+                duration: 0.75,
+                delay: 0.06 + i * 0.11,
+                ease: [0.33, 1, 0.68, 1],
+              }}
+            >
+              {word}
+            </motion.span>
+          </span>
+        ))}
+      </h1>
 
-      <Slide delay={0.1}>
-        <div className="border-t dark:border-zinc-800 border-zinc-300 mb-8" />
-      </Slide>
+      {/* Divider — draws left to right */}
+      <motion.div
+        className="border-t dark:border-zinc-800 border-zinc-300 mb-8"
+        initial={{ scaleX: 0 }}
+        animate={{ scaleX: 1 }}
+        transition={{ duration: 0.9, ease: [0.25, 1, 0.5, 1], delay: 0.28 }}
+        style={{ transformOrigin: "left" }}
+      />
 
       {/* Role + bio */}
       <Slide delay={0.15}>
@@ -52,9 +79,12 @@ export default function Hero() {
         <div className="flex flex-wrap items-center gap-x-8 gap-y-3 mt-12">
           <Link
             href="/#featured-work"
-            className="dark:text-white text-zinc-900 font-semibold border-b-2 dark:border-accent border-accent pb-0.5 hover:opacity-75 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-zinc-300 focus-visible:ring-zinc-700 rounded-sm"
+            className="group dark:text-white text-zinc-900 font-semibold border-b-2 dark:border-accent border-accent pb-0.5 hover:opacity-75 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-zinc-300 focus-visible:ring-zinc-700 rounded-sm"
           >
-            View my work &rarr;
+            View my work{" "}
+            <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
+              &rarr;
+            </span>
           </Link>
           <a
             href={profile.resumeURL}

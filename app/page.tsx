@@ -12,6 +12,7 @@ import Hero from "./components/pages/Hero";
 import BentoGrid from "./components/pages/BentoGrid";
 import FeaturedWork from "./components/pages/FeaturedWork";
 import CloserLook from "./components/pages/CloserLook";
+import ScrambleIndex from "./components/global/ScrambleIndex";
 
 const aboutSummary =
   "I'm a B.Tech student at IIIT Surat who has interned at Techvisio Design building analytics dashboards that cut API latency by 40%, and I contribute to open-source projects like Extralit and BRL-CAD's Manifold library. My focus is distributed systems, AI infrastructure, and developer tooling.";
@@ -25,7 +26,9 @@ const linkedinLink = socialLinks.find((l) => l.name === "LinkedIn");
 function SectionHeading({ index, title }: { index: string; title: string }) {
   return (
     <div className="flex items-baseline gap-4 mb-4">
-      <span className="font-mono text-xs dark:text-zinc-600 text-zinc-400">{index}</span>
+      <span className="font-mono text-xs dark:text-zinc-600 text-zinc-400">
+        <ScrambleIndex target={index} />
+      </span>
       <h2 className="font-incognito text-4xl font-bold tracking-tight">{title}</h2>
     </div>
   );
