@@ -9,7 +9,7 @@ import {
   ResearchProjectType,
 } from "@/types";
 
-export const availability = { open: true, label: "Open to internships · Summer 2026" };
+export const availability = { open: true, label: "Open to internships" };
 
 export const profile: ProfileType = {
   _id: "anshul-patil",
@@ -101,7 +101,7 @@ export const products: ProductType[] = [
     name: "Stratum",
     slug: "stratum",
     tagline: "AI code intelligence, deployment risk, incident correlation",
-    projectUrl: "",
+    projectUrl: "https://ai-pr-reviewer-lacj.onrender.com",
     repository: "https://github.com/AnshulPatil2005/Stratum",
     status: "Working product",
     audience: "Engineering teams shipping frequent pull requests",
@@ -202,41 +202,6 @@ export const projects: ProjectType[] = [
     },
     description:
       "Built with Next.js App Router, TypeScript, Tailwind CSS, and Framer Motion. Features an editorial dark hero, an AI chat widget (Claude Haiku), a command palette (⌘K), and scroll-based section progress indicators.",
-  },
-  {
-    _id: "hldc-bail-nlp",
-    name: "HLDC-BailNLP: Hindi Legal Bail Prediction",
-    slug: "hldc-bail-nlp",
-    tagline: "Python, PyTorch, Transformers, FP16, NLP",
-    projectUrl: "",
-    repository: "https://github.com/AnshulPatil2005",
-    logo: "",
-    coverImage: { image: "", alt: null, lqip: "" },
-    description:
-      "Fine-tuned a transformer-based NLP model on the HLDC Hindi Legal Documents Corpus for bail decision classification, achieving 83.68% accuracy with FP16 mixed-precision training.",
-    fullDescription: [
-      "This project fine-tunes a transformer model on the HLDC (Hindi Legal Documents Corpus), a dataset of over 900K Hindi legal documents collected from Uttar Pradesh district courts. The task is binary bail prediction — classifying whether a bail application was granted or rejected — framed as a legal text classification problem over raw Hindi court orders.",
-      "The implementation improves on a prior baseline by switching to a stronger transformer architecture and applying FP16 mixed-precision training via PyTorch, which reduced training time and enabled faster iteration cycles. The pipeline covers data preprocessing for Hindi legal text, tokenization, sequence classification head training, learning rate scheduling, and evaluation.",
-      "Final evaluation results: 83.68% accuracy, 0.826 F1-score, 0.777 eval loss, and 77.08 samples/sec throughput. The project demonstrates that transformer models can learn meaningful legal reasoning signals from raw Hindi court text without manual feature engineering or domain-specific preprocessing.",
-    ],
-    bullets: [
-      "Fine-tuned a transformer-based NLP model on the HLDC Hindi Legal Documents Corpus for bail decision classification.",
-      "Improved a previous baseline using FP16 mixed-precision training and a stronger architecture for faster experimentation.",
-      "Achieved 83.68% accuracy, 0.826 F1-score, and 77.08 samples/sec evaluation throughput.",
-    ],
-    metrics: [
-      { label: "Accuracy", value: "83.68%" },
-      { label: "F1-Score", value: "0.826" },
-      { label: "Eval Loss", value: "0.777" },
-      { label: "Throughput", value: "77.08/s" },
-    ],
-    details: [
-      { label: "Domain", value: "NLP / Legal AI / Machine Learning" },
-      { label: "Type", value: "Research / Academic / Personal ML" },
-      { label: "Dataset", value: "HLDC — 900K+ Hindi legal documents from UP district courts" },
-      { label: "Components", value: "Data preprocessing, text classification, transformer fine-tuning, FP16 optimization, evaluation pipeline" },
-      { label: "Year", value: "2025" },
-    ],
   },
 ];
 

@@ -1,4 +1,4 @@
-import { profile, jobs, openSourceContributions, posts } from "@/lib/data";
+import { profile, jobs, openSourceContributions, posts, projects } from "@/lib/data";
 import { socialLinks } from "@/app/data/social";
 import Job from "./components/pages/Job";
 import { Slide } from "./animation/Slide";
@@ -22,6 +22,8 @@ const manifold = openSourceContributions.find((r) => r._id === "manifold");
 const otherRepos = openSourceContributions.filter((r) => r._id !== "manifold");
 const githubLink = socialLinks.find((l) => l.name === "GitHub");
 const linkedinLink = socialLinks.find((l) => l.name === "LinkedIn");
+const aiPrReviewer = projects.find((p) => p._id === "ai-pr-reviewer");
+const docRag = projects.find((p) => p._id === "intelligent-doc-processing");
 
 function SectionHeading({ index, title }: { index: string; title: string }) {
   return (
@@ -62,7 +64,7 @@ export default function Home() {
       {/* Open Source */}
       <section id="open-source" className="scroll-mt-20 mt-32 md:mt-40">
         <Slide delay={0.1}>
-          <SectionHeading index="03" title="Open Source" />
+          <SectionHeading index="03" title="My Open Source" />
         </Slide>
 
         <Slide delay={0.12}>
@@ -124,6 +126,58 @@ export default function Home() {
                 ))}
               </ul>
             )}
+          </div>
+        </Slide>
+
+        <Slide delay={0.14}>
+          <div className="border-t dark:border-zinc-800 border-zinc-300 mt-16 pt-10">
+            <p className="text-xs uppercase tracking-widest font-mono dark:text-zinc-500 text-zinc-400 mb-6">
+              My projects
+            </p>
+            <div className="grid sm:grid-cols-2 gap-x-10 gap-y-8 mb-0">
+              {aiPrReviewer && (
+                <div>
+                  <div className="flex items-baseline justify-between gap-3 mb-1">
+                    <h4 className="font-semibold">{aiPrReviewer.name}</h4>
+                    <a
+                      href={aiPrReviewer.repository}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-xs dark:text-zinc-500 text-zinc-400 dark:hover:text-white hover:text-zinc-900 shrink-0"
+                    >
+                      Repo &rarr;
+                    </a>
+                  </div>
+                  <p className="text-sm dark:text-zinc-400 text-zinc-600 leading-relaxed">
+                    {aiPrReviewer.description}
+                  </p>
+                  <p className="font-mono text-xs dark:text-zinc-600 text-zinc-400 mt-2">
+                    {aiPrReviewer.tagline}
+                  </p>
+                </div>
+              )}
+              {docRag && (
+                <div>
+                  <div className="flex items-baseline justify-between gap-3 mb-1">
+                    <h4 className="font-semibold">{docRag.name}</h4>
+                    <a
+                      href={docRag.repository}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-xs dark:text-zinc-500 text-zinc-400 dark:hover:text-white hover:text-zinc-900 shrink-0"
+                    >
+                      Repo &rarr;
+                    </a>
+                  </div>
+                  <p className="text-sm dark:text-zinc-400 text-zinc-600 leading-relaxed">
+                    {docRag.description}
+                  </p>
+                  <p className="font-mono text-xs dark:text-zinc-600 text-zinc-400 mt-2">
+                    {docRag.tagline}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </Slide>
 

@@ -14,16 +14,7 @@ export default function Hero() {
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 pb-5 mb-8 border-b dark:border-zinc-800 border-zinc-300 font-mono text-xs uppercase tracking-[0.2em] dark:text-zinc-500 text-zinc-400">
           <span>Portfolio &middot; {profile.location}</span>
           {availability.open && (
-            <span className="inline-flex items-center gap-2 dark:text-zinc-300 text-zinc-700 normal-case tracking-normal">
-              {/* Ripple ring instead of CSS pulse */}
-              <span className="relative inline-flex w-2 h-2 shrink-0" aria-hidden="true">
-                <motion.span
-                  className="absolute inset-0 rounded-full dark:bg-emerald-400 bg-emerald-600"
-                  animate={{ scale: [1, 2.8], opacity: [0.55, 0] }}
-                  transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
-                />
-                <span className="relative w-2 h-2 rounded-full dark:bg-emerald-400 bg-emerald-600" />
-              </span>
+            <span className="dark:text-zinc-300 text-zinc-700 normal-case tracking-normal">
               {availability.label}
             </span>
           )}
@@ -52,6 +43,21 @@ export default function Hero() {
           </span>
         ))}
       </h1>
+
+      {/* Credential badges */}
+      <motion.div
+        className="flex flex-wrap items-center gap-2 mb-8"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.38 }}
+      >
+        <span className="font-mono text-xs uppercase tracking-[0.15em] dark:text-zinc-500 text-zinc-500 border dark:border-zinc-700 border-zinc-300 px-2.5 py-1">
+          GSoC @ BRL-CAD
+        </span>
+        <span className="font-mono text-xs uppercase tracking-[0.15em] dark:text-zinc-500 text-zinc-500 border dark:border-zinc-700 border-zinc-300 px-2.5 py-1">
+          Amazon ML Summer School
+        </span>
+      </motion.div>
 
       {/* Divider — draws left to right */}
       <motion.div
