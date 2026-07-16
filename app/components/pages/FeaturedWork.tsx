@@ -2,6 +2,7 @@ import { products } from "@/lib/data";
 import { Slide } from "../../animation/Slide";
 import ProjectGraphic from "./ProjectGraphic";
 import ScrambleIndex from "../global/ScrambleIndex";
+import StratumSignalAnimation from "./StratumSignalAnimation";
 
 const stratum = products.find((p) => p._id === "stratum");
 
@@ -59,6 +60,8 @@ export default function FeaturedWork() {
               </div>
             ))}
           </div>
+
+          <StratumSignalAnimation />
 
           {/* Stack */}
           <div className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 mb-8 font-mono text-xs dark:text-zinc-500 text-zinc-500">
