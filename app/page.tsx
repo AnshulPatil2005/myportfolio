@@ -13,6 +13,7 @@ import BentoGrid from "./components/pages/BentoGrid";
 import FeaturedWork from "./components/pages/FeaturedWork";
 import CloserLook from "./components/pages/CloserLook";
 import ScrambleIndex from "./components/global/ScrambleIndex";
+import PipelineAnimation from "./components/pages/PipelineAnimation";
 
 const aboutSummary =
   "I'm a B.Tech student at IIIT Surat who has interned at Techvisio Design building analytics dashboards that cut API latency by 40%, and I contribute to open-source projects like Extralit and BRL-CAD's Manifold library. My focus is distributed systems, AI infrastructure, and developer tooling.";
@@ -154,6 +155,7 @@ export default function Home() {
                   <p className="font-mono text-xs dark:text-zinc-600 text-zinc-400 mt-2">
                     {aiPrReviewer.tagline}
                   </p>
+                  <PipelineAnimation variant="ai-pr-reviewer" />
                 </div>
               )}
               {docRag && (
@@ -175,6 +177,7 @@ export default function Home() {
                   <p className="font-mono text-xs dark:text-zinc-600 text-zinc-400 mt-2">
                     {docRag.tagline}
                   </p>
+                  <PipelineAnimation variant="docrag" />
                 </div>
               )}
             </div>
