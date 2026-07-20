@@ -1,5 +1,4 @@
 import { products } from "@/lib/data";
-import { Slide } from "../../animation/Slide";
 import ProjectGraphic from "./ProjectGraphic";
 import ScrambleIndex from "../global/ScrambleIndex";
 import StratumSignalAnimation from "./StratumSignalAnimation";
@@ -14,19 +13,17 @@ export default function FeaturedWork() {
 
   return (
     <section id="featured-work" className="scroll-mt-20 mt-32 md:mt-40">
-      <Slide delay={0.1}>
-        <div className="flex items-baseline gap-4 mb-4">
-          <span className="font-mono text-xs dark:text-zinc-600 text-zinc-400">
-            <ScrambleIndex target="01" />
-          </span>
-          <h2 className="text-4xl font-bold tracking-tight">Flagship Product</h2>
-        </div>
-        <p className="text-sm dark:text-zinc-500 text-zinc-500 max-w-xl mb-16">
-          One product built end-to-end, from a blank repo to a deployed multi-tenant SaaS.
-        </p>
-      </Slide>
+      <div className="flex items-baseline gap-4 mb-4">
+        <span className="font-mono text-xs dark:text-zinc-600 text-zinc-400">
+          <ScrambleIndex target="01" />
+        </span>
+        <h2 className="text-4xl font-bold tracking-tight">Flagship Product</h2>
+      </div>
+      <p className="text-sm dark:text-zinc-500 text-zinc-500 max-w-xl mb-16">
+        One product built end-to-end, from a blank repo to a deployed multi-tenant SaaS.
+      </p>
 
-      <Slide delay={0.08}>
+      <div>
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-xs uppercase tracking-widest font-mono dark:text-zinc-500 text-zinc-400 mb-3">
             Flagship MVP · Live on Vercel
@@ -92,7 +89,7 @@ export default function FeaturedWork() {
             <ProjectGraphic variant="network" className="w-full h-full" />
           </div>
         </div>
-      </Slide>
+      </div>
     </section>
   );
 }
