@@ -17,7 +17,7 @@ export default function FeaturedWork() {
         <span className="font-mono text-xs dark:text-zinc-600 text-zinc-400">
           <ScrambleIndex target="01" />
         </span>
-        <h2 className="text-4xl font-bold tracking-tight">Flagship Product</h2>
+        <h2 className="font-display font-normal text-4xl tracking-tight">Flagship Product</h2>
       </div>
       <p className="text-sm dark:text-zinc-500 text-zinc-500 max-w-xl mb-16">
         One product built end-to-end, from a blank repo to a deployed multi-tenant SaaS.
@@ -28,7 +28,7 @@ export default function FeaturedWork() {
           <p className="text-xs uppercase tracking-widest font-mono dark:text-zinc-500 text-zinc-400 mb-3">
             Flagship MVP · Live on Vercel
           </p>
-          <h3 className="text-3xl sm:text-4xl font-bold tracking-tight mb-5">
+          <h3 className="font-sans font-bold text-3xl sm:text-4xl tracking-tight mb-5">
             {stratum.name}
           </h3>
           <p className="dark:text-zinc-400 text-zinc-600 leading-relaxed max-w-xl mx-auto text-sm mb-10">

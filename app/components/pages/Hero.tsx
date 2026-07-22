@@ -23,14 +23,23 @@ export default function Hero() {
         )}
       </motion.div>
 
-      {/* Name */}
+      {/* Name — Instrument Serif, italic last word in amber */}
       <motion.h1
-        className="text-4xl sm:text-5xl font-bold tracking-tight leading-tight mb-3"
+        className="font-display font-normal tracking-tight leading-[0.92] mb-3"
+        style={{ fontSize: "clamp(3rem, 7vw, 5.5rem)" }}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, delay: 0.1, ease: [0.25, 1, 0.5, 1] }}
       >
-        {profile.fullName}
+        {profile.fullName.split(" ").map((word, i, arr) =>
+          i === arr.length - 1 ? (
+            <span key={i} className="italic text-accent">
+              {word}
+            </span>
+          ) : (
+            <span key={i}>{word} </span>
+          )
+        )}
       </motion.h1>
 
       {/* Credentials */}

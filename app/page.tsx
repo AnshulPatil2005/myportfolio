@@ -30,7 +30,7 @@ function SectionHeading({ index, title }: { index: string; title: string }) {
       <span className="font-mono text-xs dark:text-zinc-600 text-zinc-400">
         <ScrambleIndex target={index} />
       </span>
-      <h2 className="font-incognito text-4xl font-bold tracking-tight">{title}</h2>
+      <h2 className="font-display font-normal text-4xl tracking-tight">{title}</h2>
     </div>
   );
 }

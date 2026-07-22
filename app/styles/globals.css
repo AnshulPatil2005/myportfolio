@@ -8,11 +8,25 @@ html {
 
 @import "prism.css";
 
-h1,
-h2,
-h3,
-h4 {
+/* Warm amber scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #100d0b; }
+::-webkit-scrollbar-thumb { background: #2a231e; border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: #3a3128; }
+
+/* Instrument Serif for display headings */
+h1, h2 {
+  font-family: var(--font-display), serif;
+}
+
+h3, h4 {
   font-family: var(--font-sans), sans-serif;
+}
+
+/* Warm text selection */
+::selection {
+  background: #ffb000;
+  color: #100d0b;
 }
 
 @media (prefers-reduced-motion: reduce) {

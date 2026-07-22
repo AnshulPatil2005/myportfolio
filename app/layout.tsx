@@ -1,6 +1,6 @@
 import "@/app/styles/globals.css";
 import type { Metadata } from "next";
-import { sans, mono } from "./assets/font/font";
+import { sans, mono, display } from "./assets/font/font";
 import Navbar from "./components/global/Navbar";
 import Footer from "./components/global/Footer";
 import { Providers } from "./providers";
@@ -40,7 +40,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="scroll-smooth">
       <body
-        className={`${sans.variable} ${mono.variable} font-sans dark:bg-ink bg-paper dark:text-zinc-200 text-zinc-800`}
+        className={`${sans.variable} ${mono.variable} ${display.variable} font-sans dark:bg-ink bg-paper dark:text-zinc-200 text-zinc-800`}
       >
         <Providers>
           <Navbar />
