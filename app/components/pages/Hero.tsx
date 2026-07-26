@@ -7,87 +7,89 @@ import { profile, availability } from "@/lib/data";
 
 export default function Hero() {
   return (
-    <section className="pt-4 pb-16 md:pb-24">
-      {/* Meta row — instant, it's context not content */}
+    <section className="pt-4 pb-20 md:pb-28">
+      {/* Meta row */}
       <motion.div
-        className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 pb-5 mb-10 border-b dark:border-zinc-800 border-zinc-300 font-mono text-xs uppercase tracking-[0.2em] dark:text-zinc-500 text-zinc-400"
+        className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 pb-5 mb-12 border-b dark:border-zinc-800 border-zinc-300 font-mono text-xs uppercase tracking-[0.2em] dark:text-zinc-500 text-zinc-400"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.35, ease: "easeOut" }}
       >
         <span>Portfolio &middot; {profile.location}</span>
         {availability.open && (
-          <span className="dark:text-zinc-300 text-zinc-700 normal-case tracking-normal text-xs">
+          <span className="dark:text-zinc-400 text-zinc-600 normal-case tracking-normal text-xs">
             {availability.label}
           </span>
         )}
       </motion.div>
 
-      {/* Name — Instrument Serif, italic last word in amber */}
+      {/* Name — editorial scale, Instrument Serif */}
       <motion.h1
-        className="font-display font-normal tracking-tight leading-[0.92] mb-3"
-        style={{ fontSize: "clamp(3rem, 7vw, 5.5rem)" }}
-        initial={{ opacity: 0, y: 10 }}
+        className="font-display font-normal leading-none tracking-[-0.03em] mb-6"
+        style={{ fontSize: "clamp(4.5rem, 13vw, 10.5rem)" }}
+        initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, delay: 0.1, ease: [0.25, 1, 0.5, 1] }}
+        transition={{ duration: 0.55, delay: 0.08, ease: [0.25, 1, 0.5, 1] }}
       >
         {profile.fullName.split(" ").map((word, i, arr) =>
           i === arr.length - 1 ? (
-            <span key={i} className="italic text-accent">
+            <span key={i} className="italic text-accent block sm:inline">
               {word}
             </span>
           ) : (
-            <span key={i}>{word} </span>
+            <span key={i} className="block sm:inline">
+              {word}{" "}
+            </span>
           )
         )}
       </motion.h1>
 
       {/* Credentials */}
       <motion.p
-        className="font-mono text-xs dark:text-zinc-500 text-zinc-400 uppercase tracking-widest mb-10"
+        className="font-mono text-xs dark:text-zinc-500 text-zinc-400 uppercase tracking-[0.2em] mb-12"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, delay: 0.22, ease: "easeOut" }}
+        transition={{ duration: 0.4, delay: 0.24, ease: "easeOut" }}
       >
-        GSoC @ BRL-CAD&nbsp;&nbsp;/&nbsp;&nbsp;Amazon ML Summer School
+        GSoC @ BRL-CAD&nbsp;&nbsp;&middot;&nbsp;&nbsp;Amazon ML Summer School
       </motion.p>
 
-      {/* Divider — draws left to right, like opening a curtain */}
+      {/* Divider — draws left to right */}
       <motion.div
-        className="border-t dark:border-zinc-800 border-zinc-300 mb-8"
+        className="border-t dark:border-zinc-800 border-zinc-300 mb-10"
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
-        transition={{ duration: 0.7, delay: 0.18, ease: [0.25, 1, 0.5, 1] }}
+        transition={{ duration: 0.75, delay: 0.18, ease: [0.25, 1, 0.5, 1] }}
         style={{ transformOrigin: "left" }}
       />
 
       {/* Role + bio */}
       <motion.div
-        className="grid lg:grid-cols-[1fr_1.5fr] gap-6 lg:gap-16 mb-12"
+        className="grid lg:grid-cols-[1fr_1.6fr] gap-6 lg:gap-20 mb-14"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.36, ease: "easeOut" }}
+        transition={{ duration: 0.45, delay: 0.34, ease: "easeOut" }}
       >
-        <p className="font-mono text-sm uppercase tracking-widest dark:text-zinc-400 text-zinc-500 leading-relaxed">
+        <p className="font-mono text-xs uppercase tracking-[0.18em] dark:text-zinc-500 text-zinc-500 leading-loose pt-1">
           {profile.headline}
         </p>
-        <p className="text-base leading-relaxed dark:text-zinc-300 text-zinc-700 max-w-2xl">
+        <p className="text-lg leading-relaxed dark:text-zinc-300 text-zinc-700 max-w-2xl">
           {profile.shortBio}
         </p>
       </motion.div>
 
       {/* CTAs */}
       <motion.div
-        className="flex flex-wrap items-center gap-x-8 gap-y-3 mb-8"
+        className="flex flex-wrap items-center gap-x-10 gap-y-4 mb-10"
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.48, ease: "easeOut" }}
+        transition={{ duration: 0.4, delay: 0.46, ease: "easeOut" }}
       >
         <Link
           href="/#featured-work"
-          className="group dark:text-white text-zinc-900 font-semibold border-b-2 dark:border-accent border-accent pb-0.5 hover:opacity-75 transition-opacity duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-zinc-300 focus-visible:ring-zinc-700 rounded-sm"
+          className="group inline-flex items-center gap-2 font-mono text-sm uppercase tracking-widest dark:text-white text-zinc-900 border-b-2 dark:border-accent border-accent pb-0.5 hover:opacity-70 transition-opacity duration-150"
         >
-          View my work{" "}
+          View my work
           <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
             &rarr;
           </span>
@@ -95,13 +97,13 @@ export default function Hero() {
         <a
           href={profile.resumeURL}
           download
-          className="text-sm dark:text-zinc-400 text-zinc-500 border-b border-transparent pb-0.5 dark:hover:text-zinc-100 hover:text-zinc-900 dark:hover:border-zinc-700 hover:border-zinc-400 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-zinc-400 focus-visible:ring-zinc-600 rounded-sm"
+          className="font-mono text-sm uppercase tracking-widest dark:text-zinc-500 text-zinc-500 border-b border-transparent pb-0.5 dark:hover:text-zinc-200 hover:text-zinc-800 dark:hover:border-zinc-600 hover:border-zinc-400 transition-colors duration-150"
         >
           R&eacute;sum&eacute;
         </a>
         <Link
           href="/#contact"
-          className="text-sm dark:text-zinc-400 text-zinc-500 border-b border-transparent pb-0.5 dark:hover:text-zinc-100 hover:text-zinc-900 dark:hover:border-zinc-700 hover:border-zinc-400 transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-zinc-400 focus-visible:ring-zinc-600 rounded-sm"
+          className="font-mono text-sm uppercase tracking-widest dark:text-zinc-500 text-zinc-500 border-b border-transparent pb-0.5 dark:hover:text-zinc-200 hover:text-zinc-800 dark:hover:border-zinc-600 hover:border-zinc-400 transition-colors duration-150"
         >
           Contact
         </Link>
@@ -110,7 +112,7 @@ export default function Hero() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, delay: 0.58, ease: "easeOut" }}
+        transition={{ duration: 0.4, delay: 0.56, ease: "easeOut" }}
       >
         <Social type="social" />
       </motion.div>

@@ -11,11 +11,13 @@ export default function Job() {
   return (
     <section id="jobs" className="scroll-mt-20 mt-16 md:mt-20">
       <Slide delay={0.16}>
-        <div className="flex items-baseline gap-4 mb-10">
-          <span className="font-mono text-xs dark:text-zinc-600 text-zinc-400">
-            <ScrambleIndex target="00" />
-          </span>
-          <h2 className="text-4xl font-bold tracking-tight">Experience</h2>
+        <div className="mb-10">
+          <p className="font-mono text-xs uppercase tracking-[0.22em] dark:text-accent text-amber-600 mb-3">
+            #<ScrambleIndex target="00" />
+          </p>
+          <h2 className="font-display font-normal text-5xl sm:text-7xl tracking-[-0.02em] leading-none">
+            Experience
+          </h2>
         </div>
       </Slide>
 

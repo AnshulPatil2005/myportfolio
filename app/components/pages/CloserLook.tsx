@@ -41,10 +41,12 @@ export default function CloserLook() {
   return (
     <section id="projects" className="scroll-mt-20 mt-32 md:mt-40">
       <Slide delay={0.1}>
-        <div className="flex items-baseline justify-between gap-4 mb-4 md:px-16 px-6">
-          <div className="flex items-baseline gap-4">
-            <span className="font-mono text-xs dark:text-zinc-600 text-zinc-400"><ScrambleIndex target="02" /></span>
-            <h2 className="text-4xl font-bold tracking-tight">Take a closer look</h2>
+        <div className="flex items-end justify-between gap-4 mb-6 md:px-16 px-6">
+          <div>
+            <p className="font-mono text-xs uppercase tracking-[0.22em] dark:text-accent text-amber-600 mb-3">
+              #<ScrambleIndex target="02" />
+            </p>
+            <h2 className="font-display font-normal text-5xl sm:text-7xl tracking-[-0.02em] leading-none">Take a closer look</h2>
           </div>
           <div className="hidden sm:flex items-center gap-2">
             <button
