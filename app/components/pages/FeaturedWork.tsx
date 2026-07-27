@@ -2,6 +2,7 @@ import { products } from "@/lib/data";
 import ProjectGraphic from "./ProjectGraphic";
 import ScrambleIndex from "../global/ScrambleIndex";
 import StratumSignalAnimation from "./StratumSignalAnimation";
+import EngravingImage from "../shared/EngravingImage";
 
 const stratum = products.find((p) => p._id === "stratum");
 
@@ -25,15 +26,16 @@ export default function FeaturedWork() {
         </p>
       </div>
 
-      <div>
-        <div className="max-w-3xl mx-auto text-center">
+      <div className="grid lg:grid-cols-[1fr_360px] xl:grid-cols-[1fr_420px] gap-12 lg:gap-16 items-start">
+        {/* Left — product info */}
+        <div>
           <p className="text-xs uppercase tracking-widest font-mono dark:text-zinc-500 text-zinc-400 mb-3">
             Flagship MVP · Live on Vercel
           </p>
           <h3 className="font-sans font-bold text-3xl sm:text-4xl tracking-tight mb-5">
             {stratum.name}
           </h3>
-          <p className="dark:text-zinc-400 text-zinc-600 leading-relaxed max-w-xl mx-auto text-sm mb-10">
+          <p className="dark:text-zinc-400 text-zinc-600 leading-relaxed text-sm mb-10 max-w-xl">
             Stratum sits between your GitHub and your production stack. It reviews every PR with
             risk scores and typed findings, flags semantic conflicts between PRs before you
             batch-deploy them, tracks how your architecture drifts over weeks of commits, and when
@@ -41,7 +43,7 @@ export default function FeaturedWork() {
           </p>
 
           {/* Stage pills */}
-          <div className="flex flex-wrap justify-center gap-3 mb-10">
+          <div className="flex flex-wrap gap-3 mb-10">
             {[
               { label: "Review", desc: "Risk-score every PR" },
               { label: "Deploy", desc: "Catch semantic conflicts" },
@@ -50,7 +52,7 @@ export default function FeaturedWork() {
             ].map((stage) => (
               <div
                 key={stage.label}
-                className="border dark:border-zinc-700 border-zinc-300 px-4 py-2.5 text-left"
+                className="border dark:border-zinc-700 border-zinc-300 px-4 py-2.5"
               >
                 <p className="font-mono text-xs uppercase tracking-widest dark:text-zinc-400 text-zinc-600">
                   {stage.label}
@@ -63,7 +65,7 @@ export default function FeaturedWork() {
           <StratumSignalAnimation />
 
           {/* Stack */}
-          <div className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 mb-8 font-mono text-xs dark:text-zinc-500 text-zinc-500">
+          <div className="flex flex-wrap gap-x-3 gap-y-1.5 mb-8 font-mono text-xs dark:text-zinc-500 text-zinc-500">
             {stack.map((tech, i) => (
               <span key={tech}>
                 {tech}
@@ -79,17 +81,19 @@ export default function FeaturedWork() {
             href={stratum.projectUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 font-semibold dark:text-white text-zinc-900 border-b-2 dark:border-accent border-accent pb-0.5 hover:opacity-70 transition-opacity duration-150 mb-12"
+            className="inline-flex items-center gap-2 font-semibold dark:text-white text-zinc-900 border-b-2 dark:border-accent border-accent pb-0.5 hover:opacity-70 transition-opacity duration-150"
           >
-            Check it out
-            <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
-              &rarr;
-            </span>
+            Check it out &rarr;
           </a>
+        </div>
 
-          <div className="aspect-[16/9] w-full max-w-2xl mx-auto mt-2">
-            <ProjectGraphic variant="network" className="w-full h-full" />
-          </div>
+        {/* Right — engraving */}
+        <div className="hidden lg:block">
+          <EngravingImage
+            src="/engraving-ruins.jpg"
+            alt=""
+            className="w-full aspect-[2/3]"
+          />
         </div>
       </div>
     </section>

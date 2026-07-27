@@ -12,6 +12,7 @@ import BentoGrid from "./components/pages/BentoGrid";
 import FeaturedWork from "./components/pages/FeaturedWork";
 import CloserLook from "./components/pages/CloserLook";
 import ScrambleIndex from "./components/global/ScrambleIndex";
+import EngravingImage from "./components/shared/EngravingImage";
 
 const aboutSummary =
   "I'm a B.Tech student at IIIT Surat who has interned at Techvisio Design building analytics dashboards that cut API latency by 40%, and I contribute to open-source projects like Extralit and BRL-CAD's Manifold library. My focus is distributed systems, AI infrastructure, and developer tooling.";
@@ -59,63 +60,74 @@ export default function Home() {
         <SectionHeading index="03" title="My Open Source" />
 
         <div className="border-t dark:border-zinc-800 border-zinc-300 pt-10 mt-6">
-          <h3 className="text-3xl sm:text-4xl font-bold tracking-tight max-w-2xl mb-6">
-            Making geometry infrastructure more reliable.
-          </h3>
-          {gsocJob && (
-            <p className="dark:text-zinc-400 text-zinc-600 leading-relaxed max-w-2xl mb-4">
-              {gsocJob.description}
-            </p>
-          )}
-          {manifold && (
-            <p className="dark:text-zinc-400 text-zinc-600 leading-relaxed max-w-2xl mb-8">
-              {manifold.focus}
-            </p>
-          )}
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-sm mb-8">
-            {manifold && (
-              <a
-                href={manifold.repository}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="dark:text-white text-zinc-900 hover:underline"
-              >
-                elalish/manifold &rarr;
-              </a>
-            )}
-            {gsocJob && (
-              <a
-                href={gsocJob.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="dark:text-zinc-400 text-zinc-500 dark:hover:text-white hover:text-zinc-900 transition-colors duration-150"
-              >
-                Google Summer of Code
-              </a>
-            )}
-          </div>
-          {manifold?.pullRequests && manifold.pullRequests.length > 0 && (
-            <ul className="space-y-2 max-w-2xl">
-              {manifold.pullRequests.map((pr) => (
-                <li key={pr.number}>
+          <div className="grid lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_380px] gap-12 lg:gap-16 items-start">
+            <div>
+              <h3 className="text-3xl sm:text-4xl font-bold tracking-tight max-w-2xl mb-6">
+                Making geometry infrastructure more reliable.
+              </h3>
+              {gsocJob && (
+                <p className="dark:text-zinc-400 text-zinc-600 leading-relaxed max-w-2xl mb-4">
+                  {gsocJob.description}
+                </p>
+              )}
+              {manifold && (
+                <p className="dark:text-zinc-400 text-zinc-600 leading-relaxed max-w-2xl mb-8">
+                  {manifold.focus}
+                </p>
+              )}
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-sm mb-8">
+                {manifold && (
                   <a
-                    href={pr.url}
+                    href={manifold.repository}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-start gap-3 text-sm dark:text-zinc-300 text-zinc-700 hover:underline"
+                    className="dark:text-white text-zinc-900 hover:underline"
                   >
-                    <span className="font-mono text-xs dark:text-zinc-500 text-zinc-400 pt-0.5 shrink-0">
-                      #{pr.number}
-                    </span>
-                    <span className="flex-1">{pr.title}</span>
-                    <span className="text-[10px] uppercase font-mono dark:text-zinc-500 text-zinc-500 shrink-0 pt-0.5">
-                      {pr.state}
-                    </span>
+                    elalish/manifold &rarr;
                   </a>
-                </li>
-              ))}
-            </ul>
-          )}
+                )}
+                {gsocJob && (
+                  <a
+                    href={gsocJob.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="dark:text-zinc-400 text-zinc-500 dark:hover:text-white hover:text-zinc-900 transition-colors duration-150"
+                  >
+                    Google Summer of Code
+                  </a>
+                )}
+              </div>
+              {manifold?.pullRequests && manifold.pullRequests.length > 0 && (
+                <ul className="space-y-2 max-w-2xl">
+                  {manifold.pullRequests.map((pr) => (
+                    <li key={pr.number}>
+                      <a
+                        href={pr.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-start gap-3 text-sm dark:text-zinc-300 text-zinc-700 hover:underline"
+                      >
+                        <span className="font-mono text-xs dark:text-zinc-500 text-zinc-400 pt-0.5 shrink-0">
+                          #{pr.number}
+                        </span>
+                        <span className="flex-1">{pr.title}</span>
+                        <span className="text-[10px] uppercase font-mono dark:text-zinc-500 text-zinc-500 shrink-0 pt-0.5">
+                          {pr.state}
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className="hidden lg:block">
+              <EngravingImage
+                src="/engraving-celestial.jpg"
+                alt=""
+                className="w-full aspect-square"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="border-t dark:border-zinc-800 border-zinc-300 mt-16 pt-10">

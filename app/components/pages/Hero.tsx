@@ -6,7 +6,7 @@ import EngravingImage from "../shared/EngravingImage";
 import { motion } from "framer-motion";
 import { profile, availability } from "@/lib/data";
 
-const ENGRAVING_SRC = "/engraving.jpg";
+const ENGRAVING_SRC = "/engraving-hero.jpg";
 
 export default function Hero() {
   return (
