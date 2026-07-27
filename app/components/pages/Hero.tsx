@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import Social from "../shared/Social";
+import EngravingImage from "../shared/EngravingImage";
 import { motion } from "framer-motion";
 import { profile, availability } from "@/lib/data";
+
+const ENGRAVING_SRC = "/engraving.jpg";
 
 export default function Hero() {
   return (
@@ -23,99 +26,120 @@ export default function Hero() {
         )}
       </motion.div>
 
-      {/* Name — editorial scale, Instrument Serif */}
-      <motion.h1
-        className="font-display font-normal leading-none tracking-[-0.03em] mb-6"
-        style={{ fontSize: "clamp(4.5rem, 13vw, 10.5rem)" }}
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.55, delay: 0.08, ease: [0.25, 1, 0.5, 1] }}
-      >
-        {profile.fullName.split(" ").map((word, i, arr) =>
-          i === arr.length - 1 ? (
-            <span key={i} className="italic text-accent block sm:inline">
-              {word}
-            </span>
-          ) : (
-            <span key={i} className="block sm:inline">
-              {word}{" "}
-            </span>
-          )
-        )}
-      </motion.h1>
+      {/* Two-column grid: text left, engraving right */}
+      <div className="grid lg:grid-cols-[1fr_420px] xl:grid-cols-[1fr_520px] gap-10 lg:gap-16 items-start">
+        {/* Left — text */}
+        <div>
+          {/* Name */}
+          <motion.h1
+            className="font-display font-normal leading-none tracking-[-0.03em] mb-6"
+            style={{ fontSize: "clamp(4rem, 10vw, 9rem)" }}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.08, ease: [0.25, 1, 0.5, 1] }}
+          >
+            {profile.fullName.split(" ").map((word, i, arr) =>
+              i === arr.length - 1 ? (
+                <span key={i} className="italic text-accent block">
+                  {word}
+                </span>
+              ) : (
+                <span key={i} className="block">
+                  {word}
+                </span>
+              )
+            )}
+          </motion.h1>
 
-      {/* Credentials */}
-      <motion.p
-        className="font-mono text-xs dark:text-zinc-500 text-zinc-400 uppercase tracking-[0.2em] mb-12"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, delay: 0.24, ease: "easeOut" }}
-      >
-        GSoC @ BRL-CAD&nbsp;&nbsp;&middot;&nbsp;&nbsp;Amazon ML Summer School
-      </motion.p>
+          {/* Credentials */}
+          <motion.p
+            className="font-mono text-xs dark:text-zinc-500 text-zinc-400 uppercase tracking-[0.2em] mb-12"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.24, ease: "easeOut" }}
+          >
+            GSoC @ BRL-CAD&nbsp;&nbsp;&middot;&nbsp;&nbsp;Amazon ML Summer School
+          </motion.p>
 
-      {/* Divider — draws left to right */}
-      <motion.div
-        className="border-t dark:border-zinc-800 border-zinc-300 mb-10"
-        initial={{ scaleX: 0 }}
-        animate={{ scaleX: 1 }}
-        transition={{ duration: 0.75, delay: 0.18, ease: [0.25, 1, 0.5, 1] }}
-        style={{ transformOrigin: "left" }}
-      />
+          {/* Divider */}
+          <motion.div
+            className="border-t dark:border-zinc-800 border-zinc-300 mb-10"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 0.75, delay: 0.18, ease: [0.25, 1, 0.5, 1] }}
+            style={{ transformOrigin: "left" }}
+          />
 
-      {/* Role + bio */}
-      <motion.div
-        className="grid lg:grid-cols-[1fr_1.6fr] gap-6 lg:gap-20 mb-14"
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, delay: 0.34, ease: "easeOut" }}
-      >
-        <p className="font-mono text-xs uppercase tracking-[0.18em] dark:text-zinc-500 text-zinc-500 leading-loose pt-1">
-          {profile.headline}
-        </p>
-        <p className="text-lg leading-relaxed dark:text-zinc-300 text-zinc-700 max-w-2xl">
-          {profile.shortBio}
-        </p>
-      </motion.div>
+          {/* Role + bio */}
+          <motion.div
+            className="mb-14 space-y-4"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: 0.34, ease: "easeOut" }}
+          >
+            <p className="font-mono text-xs uppercase tracking-[0.18em] dark:text-zinc-500 text-zinc-500">
+              {profile.headline}
+            </p>
+            <p className="text-lg leading-relaxed dark:text-zinc-300 text-zinc-700 max-w-xl">
+              {profile.shortBio}
+            </p>
+          </motion.div>
 
-      {/* CTAs */}
-      <motion.div
-        className="flex flex-wrap items-center gap-x-10 gap-y-4 mb-10"
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.46, ease: "easeOut" }}
-      >
-        <Link
-          href="/#featured-work"
-          className="group inline-flex items-center gap-2 font-mono text-sm uppercase tracking-widest dark:text-white text-zinc-900 border-b-2 dark:border-accent border-accent pb-0.5 hover:opacity-70 transition-opacity duration-150"
+          {/* CTAs */}
+          <motion.div
+            className="flex flex-wrap items-center gap-x-10 gap-y-4 mb-10"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.46, ease: "easeOut" }}
+          >
+            <Link
+              href="/#featured-work"
+              className="group inline-flex items-center gap-2 font-mono text-sm uppercase tracking-widest dark:text-white text-zinc-900 border-b-2 dark:border-accent border-accent pb-0.5 hover:opacity-70 transition-opacity duration-150"
+            >
+              View my work
+              <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
+                &rarr;
+              </span>
+            </Link>
+            <a
+              href={profile.resumeURL}
+              download
+              className="font-mono text-sm uppercase tracking-widest dark:text-zinc-500 text-zinc-500 border-b border-transparent pb-0.5 dark:hover:text-zinc-200 hover:text-zinc-800 dark:hover:border-zinc-600 hover:border-zinc-400 transition-colors duration-150"
+            >
+              R&eacute;sum&eacute;
+            </a>
+            <Link
+              href="/#contact"
+              className="font-mono text-sm uppercase tracking-widest dark:text-zinc-500 text-zinc-500 border-b border-transparent pb-0.5 dark:hover:text-zinc-200 hover:text-zinc-800 dark:hover:border-zinc-600 hover:border-zinc-400 transition-colors duration-150"
+            >
+              Contact
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.56, ease: "easeOut" }}
+          >
+            <Social type="social" />
+          </motion.div>
+        </div>
+
+        {/* Right — engraving */}
+        <motion.div
+          className="hidden lg:block"
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 1, 0.5, 1] }}
         >
-          View my work
-          <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
-            &rarr;
-          </span>
-        </Link>
-        <a
-          href={profile.resumeURL}
-          download
-          className="font-mono text-sm uppercase tracking-widest dark:text-zinc-500 text-zinc-500 border-b border-transparent pb-0.5 dark:hover:text-zinc-200 hover:text-zinc-800 dark:hover:border-zinc-600 hover:border-zinc-400 transition-colors duration-150"
-        >
-          R&eacute;sum&eacute;
-        </a>
-        <Link
-          href="/#contact"
-          className="font-mono text-sm uppercase tracking-widest dark:text-zinc-500 text-zinc-500 border-b border-transparent pb-0.5 dark:hover:text-zinc-200 hover:text-zinc-800 dark:hover:border-zinc-600 hover:border-zinc-400 transition-colors duration-150"
-        >
-          Contact
-        </Link>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, delay: 0.56, ease: "easeOut" }}
-      >
-        <Social type="social" />
-      </motion.div>
+          <EngravingImage
+            src={ENGRAVING_SRC}
+            alt=""
+            priority
+            className="w-full aspect-[3/4]"
+          />
+        </motion.div>
+      </div>
     </section>
   );
 }
