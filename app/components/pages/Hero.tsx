@@ -6,7 +6,7 @@ import EngravingImage from "../shared/EngravingImage";
 import { motion } from "framer-motion";
 import { profile, availability } from "@/lib/data";
 
-const ENGRAVING_SRC = "/engraving-hero.jpg";
+const ENGRAVING_SRC = "/engraving-melencolia.jpg";
 
 export default function Hero() {
   return (
@@ -136,6 +136,7 @@ export default function Hero() {
             src={ENGRAVING_SRC}
             alt=""
             priority
+            animate={false}
             className="w-full aspect-[3/4]"
           />
         </motion.div>

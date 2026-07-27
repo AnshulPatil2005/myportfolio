@@ -122,9 +122,9 @@ export default function Home() {
             </div>
             <div className="hidden lg:block">
               <EngravingImage
-                src="/engraving-celestial.jpg"
+                src="/engraving-flammarion.jpg"
                 alt=""
-                className="w-full aspect-square"
+                className="w-full aspect-[4/3]"
               />
             </div>
           </div>
