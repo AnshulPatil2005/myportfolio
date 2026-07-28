@@ -6,18 +6,22 @@ import { Slide } from "../../animation/Slide";
 import EmptyState from "../shared/EmptyState";
 import { jobs } from "@/lib/data";
 import ScrambleIndex from "../global/ScrambleIndex";
+import RadarSweep from "./RadarSweep";
 
 export default function Job() {
   return (
     <section id="jobs" className="scroll-mt-20 mt-16 md:mt-20">
       <Slide delay={0.16}>
-        <div className="mb-10">
-          <p className="font-mono text-xs uppercase tracking-[0.22em] dark:text-accent text-amber-600 mb-3">
-            #<ScrambleIndex target="00" />
-          </p>
-          <h2 className="font-display font-normal text-5xl sm:text-7xl tracking-[-0.02em] leading-none">
-            Experience
-          </h2>
+        <div className="flex items-start justify-between gap-6 mb-10">
+          <div>
+            <p className="font-mono text-xs uppercase tracking-[0.22em] dark:text-accent text-amber-600 mb-3">
+              #<ScrambleIndex target="00" />
+            </p>
+            <h2 className="font-display font-normal text-5xl sm:text-7xl tracking-[-0.02em] leading-none">
+              Experience
+            </h2>
+          </div>
+          <RadarSweep className="hidden sm:block mt-1 opacity-80" />
         </div>
       </Slide>
 
