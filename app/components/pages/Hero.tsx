@@ -127,12 +127,16 @@ export default function Hero() {
           </motion.div>
 
           <motion.p
-            className="mt-6 font-mono text-[10px] uppercase tracking-[0.22em] dark:text-zinc-700 text-zinc-400 select-none"
+            className="mt-6 font-mono text-[10px] uppercase tracking-[0.22em] dark:text-zinc-700 text-zinc-400 select-none flex items-center gap-3"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 1.1, ease: "easeOut" }}
           >
-            press <kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5 text-[9px]">F</kbd> to play
+            <span><kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5 text-[9px]">F</kbd> FPS</span>
+            <span className="dark:text-zinc-800 text-zinc-300">·</span>
+            <span><kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5 text-[9px]">T</kbd> Tower Defense</span>
+            <span className="dark:text-zinc-800 text-zinc-300">·</span>
+            <span><kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5 text-[9px]">G</kbd> Breakout</span>
           </motion.p>
         </div>
 

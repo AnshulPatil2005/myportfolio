@@ -10,6 +10,7 @@ import ChatWidget from "./components/global/ChatWidget";
 import BreakoutGame from "./components/global/BreakoutGame";
 import BreakoutHint from "./components/global/BreakoutHint";
 import FPSGame from "./components/global/FPSGame";
+import TowerDefense from "./components/global/TowerDefense";
 
 const options = {
   title: "Anshul Patil | Full-Stack Developer",
@@ -60,6 +61,7 @@ export default function RootLayout({
         </svg>
         <Providers>
           <FPSGame />
+          <TowerDefense />
           <Navbar />
           <CommandPalette />
           <SectionProgress />
