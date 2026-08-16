@@ -9,7 +9,7 @@ import {
   ResearchProjectType,
 } from "@/types";
 
-export const availability = { open: true, label: "Open to internships" };
+export const availability = { open: false, label: "Open to internships" };
 
 export const profile: ProfileType = {
   _id: "anshul-patil",
@@ -101,7 +101,7 @@ export const products: ProductType[] = [
     name: "Stratum",
     slug: "stratum",
     tagline: "AI code intelligence, deployment risk, incident correlation",
-    projectUrl: "https://stratum-sepia.vercel.app/",
+    projectUrl: "https://anshulpatil.is-a.dev/stratum",
     repository: "https://github.com/AnshulPatil2005/Stratum",
     status: "Working product",
     audience: "Engineering teams shipping frequent pull requests",

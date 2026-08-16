@@ -6,7 +6,7 @@ import { Slide } from "../../animation/Slide";
 import EmptyState from "../shared/EmptyState";
 import { jobs } from "@/lib/data";
 import ScrambleIndex from "../global/ScrambleIndex";
-import RadarSweep from "./RadarSweep";
+import TerminalLog from "./TerminalLog";
 
 export default function Job() {
   return (
@@ -21,7 +21,7 @@ export default function Job() {
               Experience
             </h2>
           </div>
-          <RadarSweep className="hidden sm:block mt-1 opacity-80" />
+          <TerminalLog className="hidden sm:block" />
         </div>
       </Slide>
 
