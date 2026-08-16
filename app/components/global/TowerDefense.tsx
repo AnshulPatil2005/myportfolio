@@ -599,7 +599,7 @@ export default function TowerDefense() {
     const onKey = (e: KeyboardEvent) => {
       const tag = (e.target as HTMLElement).tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
-      if (e.key === "T" && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+      if ((e.key === "t" || e.key === "T") && !e.ctrlKey && !e.metaKey) {
         setOpen(o => { if (!o) gsRef.current = mkGs(); return !o; });
       }
     };
