@@ -7,8 +7,6 @@ export default function BreakoutHint() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Only show if the intro was already seen (don't double-prompt on first visit)
-    if (!sessionStorage.getItem("portfolio-intro-seen")) return;
     if (sessionStorage.getItem("breakout-hint-seen")) return;
     const show = setTimeout(() => setVisible(true), 3200);
     const hide = setTimeout(() => {

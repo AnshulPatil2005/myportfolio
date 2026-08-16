@@ -125,6 +125,15 @@ export default function Hero() {
           >
             <Social type="social" />
           </motion.div>
+
+          <motion.p
+            className="mt-6 font-mono text-[10px] uppercase tracking-[0.22em] dark:text-zinc-700 text-zinc-400 select-none"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 1.1, ease: "easeOut" }}
+          >
+            press <kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5 text-[9px]">F</kbd> to play
+          </motion.p>
         </div>
 
         {/* Right — engraving */}

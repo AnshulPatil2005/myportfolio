@@ -9,7 +9,7 @@ import SectionProgress from "./components/global/SectionProgress";
 import ChatWidget from "./components/global/ChatWidget";
 import BreakoutGame from "./components/global/BreakoutGame";
 import BreakoutHint from "./components/global/BreakoutHint";
-import PortfolioIntro from "./components/global/PortfolioIntro";
+import FPSGame from "./components/global/FPSGame";
 
 const options = {
   title: "Anshul Patil | Full-Stack Developer",
@@ -59,7 +59,7 @@ export default function RootLayout({
           </defs>
         </svg>
         <Providers>
-          <PortfolioIntro />
+          <FPSGame />
           <Navbar />
           <CommandPalette />
           <SectionProgress />
