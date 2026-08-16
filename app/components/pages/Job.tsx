@@ -8,6 +8,8 @@ import { jobs } from "@/lib/data";
 import ScrambleIndex from "../global/ScrambleIndex";
 import TerminalLog from "./TerminalLog";
 
+const HASHES = ["4a7f9e2", "c3b8d51", "7e2a3f8", "9d4c1b6", "f81e2a0"];
+
 export default function Job() {
   return (
     <section id="jobs" className="scroll-mt-20 mt-32 md:mt-40">
@@ -27,90 +29,92 @@ export default function Job() {
 
       {jobs.length > 0 ? (
         <Slide delay={0.18}>
-          <div className="relative max-w-2xl">
-            {/* Vertical line — draws top to bottom as section enters view */}
-            <motion.div
-              className="absolute left-[6px] top-3 w-px dark:bg-zinc-700 bg-zinc-300"
-              initial={{ height: 0 }}
-              whileInView={{ height: "calc(100% - 1.5rem)" }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 1.4, ease: [0.25, 1, 0.5, 1], delay: 0.15 }}
-            />
+          {/* git prompt */}
+          <p className="font-mono text-[11px] dark:text-zinc-600 text-zinc-400 mb-6 tracking-wide select-none">
+            $ git log --graph --decorate
+          </p>
 
-            <div className="space-y-0">
-              {jobs.map((job, idx) => {
-                const isActive = !job.endDate;
-                return (
-                  <motion.div
-                    key={job._id}
-                    className="relative flex gap-x-5 pb-10 last:pb-0"
-                    initial={{ opacity: 0, x: -10 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true, margin: "-20px" }}
-                    transition={{
-                      duration: 0.45,
-                      delay: 0.3 + idx * 0.15,
-                      ease: "easeOut",
-                    }}
+          <div className="max-w-2xl space-y-8">
+            {jobs.map((job, idx) => {
+              const isActive = !job.endDate;
+              const hash = HASHES[idx] ?? "0000000";
+              return (
+                <motion.div
+                  key={job._id}
+                  initial={{ opacity: 0, x: -12 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: "-20px" }}
+                  transition={{ duration: 0.45, delay: 0.3 + idx * 0.15, ease: "easeOut" }}
+                >
+                  {/* Commit line */}
+                  <div className="flex items-center gap-2.5 mb-2 font-mono text-[11px]">
+                    <span className="dark:text-zinc-600 text-zinc-400 select-none">*</span>
+                    <span className="text-accent tracking-wide">{hash}</span>
+                    {isActive && (
+                      <span className="dark:text-zinc-600 text-zinc-400 text-[10px]">
+                        (HEAD → present)
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Body with left border as graph line */}
+                  <div
+                    className={`border-l-2 pl-5 ml-[5px] ${
+                      idx < jobs.length - 1
+                        ? "dark:border-zinc-800 border-zinc-200"
+                        : "border-transparent"
+                    }`}
                   >
-                    {/* Timeline marker */}
-                    <div
-                      className={`relative z-10 mt-1.5 w-3.5 h-3.5 shrink-0 border-2 ${
-                        isActive
-                          ? "dark:bg-zinc-100 bg-zinc-900 dark:border-zinc-100 border-zinc-900"
-                          : "dark:bg-ink bg-paper dark:border-zinc-600 border-zinc-400"
-                      }`}
-                    />
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline justify-between gap-4 flex-wrap mb-0.5">
-                        <a
-                          href={job.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="font-semibold text-base dark:text-zinc-100 text-zinc-800 hover:underline"
-                        >
-                          {job.name}
-                        </a>
-                        {job.startDate && (
-                          <time className="text-xs font-mono dark:text-zinc-500 text-zinc-400 shrink-0">
-                            {formatMonthYear(job.startDate)} –{" "}
-                            {job.endDate ? (
-                              formatMonthYear(job.endDate)
-                            ) : (
-                              <span className="dark:text-zinc-100 text-zinc-900 font-semibold">
-                                Present
-                              </span>
-                            )}
-                          </time>
-                        )}
-                      </div>
-                      <p className="text-xs font-mono dark:text-zinc-500 text-zinc-400 mb-3">
-                        {job.jobTitle}
-                      </p>
-                      {job.bullets && job.bullets.length > 0 ? (
-                        <ul className="space-y-1.5">
-                          {job.bullets.map((bullet, i) => (
-                            <li
-                              key={i}
-                              className="flex items-start gap-x-2.5 text-sm dark:text-zinc-400 text-zinc-600"
-                            >
-                              <span className="mt-1.5 h-1.5 w-1.5 dark:bg-zinc-600 bg-zinc-400 shrink-0" />
-                              {bullet}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-sm dark:text-zinc-400 text-zinc-600">
-                          {job.description}
-                        </p>
+                    <div className="flex items-baseline gap-x-4 flex-wrap mb-0.5">
+                      <a
+                        href={job.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-base dark:text-zinc-100 text-zinc-800 hover:underline"
+                      >
+                        {job.name}
+                      </a>
+                      {job.startDate && (
+                        <time className="text-xs font-mono dark:text-zinc-500 text-zinc-400 shrink-0">
+                          {formatMonthYear(job.startDate)} –{" "}
+                          {job.endDate ? (
+                            formatMonthYear(job.endDate)
+                          ) : (
+                            <span className="dark:text-zinc-100 text-zinc-900 font-semibold">
+                              Present
+                            </span>
+                          )}
+                        </time>
                       )}
                     </div>
-                  </motion.div>
-                );
-              })}
-            </div>
+
+                    <p className="text-xs font-mono dark:text-zinc-500 text-zinc-400 mb-3">
+                      {job.jobTitle}
+                    </p>
+
+                    {job.bullets && job.bullets.length > 0 ? (
+                      <ul className="space-y-1.5">
+                        {job.bullets.map((bullet, i) => (
+                          <li
+                            key={i}
+                            className="flex items-start gap-2.5 text-sm dark:text-zinc-400 text-zinc-600"
+                          >
+                            <span className="font-mono text-[10px] dark:text-zinc-600 text-zinc-400 pt-[3px] shrink-0 select-none">
+                              ▸
+                            </span>
+                            {bullet}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm dark:text-zinc-400 text-zinc-600">
+                        {job.description}
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         </Slide>
       ) : (
