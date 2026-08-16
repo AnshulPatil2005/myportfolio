@@ -132,6 +132,8 @@ export default function Hero() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 1.1, ease: "easeOut" }}
           >
+            <span className="dark:text-accent text-amber-600"><kbd className="border dark:border-amber-500/50 border-amber-500/60 px-1 py-0.5 text-[9px]">C</kbd> Career Mode — fight my résumé</span>
+            <span className="dark:text-zinc-800 text-zinc-300">·</span>
             <span><kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5 text-[9px]">F</kbd> FPS</span>
             <span className="dark:text-zinc-800 text-zinc-300">·</span>
             <span><kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5 text-[9px]">T</kbd> Tower Defense</span>

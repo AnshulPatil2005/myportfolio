@@ -251,6 +251,17 @@ export function CommandPalette() {
                     Play Breakout
                   </Command.Item>
                   <Command.Item
+                    value="Career Mode boss rush fight resume C"
+                    onSelect={() => {
+                      close();
+                      window.dispatchEvent(new KeyboardEvent("keydown", { key: "c", bubbles: true }));
+                    }}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 mx-1"
+                  >
+                    <span className="font-mono dark:text-zinc-500 text-zinc-400 shrink-0 text-[11px]">C</span>
+                    Career Mode — fight the résumé
+                  </Command.Item>
+                  <Command.Item
                     value="Play Tower Defense Architecture Drift T"
                     onSelect={() => {
                       close();

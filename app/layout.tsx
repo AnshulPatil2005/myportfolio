@@ -11,6 +11,7 @@ import BreakoutGame from "./components/global/BreakoutGame";
 import BreakoutHint from "./components/global/BreakoutHint";
 import FPSGame from "./components/global/FPSGame";
 import TowerDefense from "./components/global/TowerDefense";
+import CareerMode from "./components/global/CareerMode";
 
 const options = {
   title: "Anshul Patil | Full-Stack Developer",
@@ -62,6 +63,7 @@ export default function RootLayout({
         <Providers>
           <FPSGame />
           <TowerDefense />
+          <CareerMode />
           <Navbar />
           <CommandPalette />
           <SectionProgress />
