@@ -103,6 +103,14 @@ export default function Hero() {
                 &rarr;
               </span>
             </Link>
+            <button
+              onClick={() =>
+                window.dispatchEvent(new KeyboardEvent("keydown", { key: "c", bubbles: true }))
+              }
+              className="hidden md:inline-flex items-center gap-2.5 font-mono text-sm uppercase tracking-widest dark:text-accent text-amber-600 border dark:border-amber-500/50 border-amber-500/60 px-4 py-1.5 dark:hover:bg-amber-500/10 hover:bg-amber-500/5 hover:border-amber-500 transition-colors duration-150"
+            >
+              <span className="text-[10px]">▶</span> Play Career Mode
+            </button>
             <a
               href={profile.resumeURL}
               download

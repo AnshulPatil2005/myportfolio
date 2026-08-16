@@ -8,7 +8,7 @@ import { CommandPalette } from "./components/global/CommandPalette";
 import SectionProgress from "./components/global/SectionProgress";
 import ChatWidget from "./components/global/ChatWidget";
 import BreakoutGame from "./components/global/BreakoutGame";
-import BreakoutHint from "./components/global/BreakoutHint";
+import GameHint from "./components/global/GameHint";
 import FPSGame from "./components/global/FPSGame";
 import TowerDefense from "./components/global/TowerDefense";
 import CareerMode from "./components/global/CareerMode";
@@ -69,7 +69,7 @@ export default function RootLayout({
           <SectionProgress />
           <ChatWidget />
           <BreakoutGame />
-          <BreakoutHint />
+          <GameHint />
           {children}
           <Footer />
         </Providers>

@@ -77,6 +77,15 @@ export default function Navbar() {
           <div className="flex items-center gap-x-3">
             <button
               onClick={() =>
+                window.dispatchEvent(new KeyboardEvent("keydown", { key: "c", bubbles: true }))
+              }
+              className="hidden md:flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider dark:text-accent text-amber-600 border dark:border-amber-500/40 border-amber-500/60 px-2.5 py-1 dark:hover:border-amber-500 hover:border-amber-500 dark:hover:bg-amber-500/10 hover:bg-amber-500/5 transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-sm"
+              aria-label="Play Career Mode game"
+            >
+              <span className="text-[9px]">▶</span> Play
+            </button>
+            <button
+              onClick={() =>
                 document.dispatchEvent(
                   new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true })
                 )
