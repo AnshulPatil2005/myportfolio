@@ -239,6 +239,17 @@ export function CommandPalette() {
                     <span className="font-mono dark:text-zinc-500 text-zinc-400 shrink-0">&darr;</span>
                     Download Résumé
                   </Command.Item>
+                  <Command.Item
+                    value="Play Breakout game G"
+                    onSelect={() => {
+                      close();
+                      window.dispatchEvent(new KeyboardEvent("keydown", { key: "G", bubbles: true }));
+                    }}
+                    className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 mx-1"
+                  >
+                    <span className="font-mono dark:text-zinc-500 text-zinc-400 shrink-0 text-[11px]">G</span>
+                    Play Breakout
+                  </Command.Item>
                 </Command.Group>
               </Command.List>
 
