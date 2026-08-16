@@ -7,6 +7,7 @@ import { Providers } from "./providers";
 import { CommandPalette } from "./components/global/CommandPalette";
 import SectionProgress from "./components/global/SectionProgress";
 import ChatWidget from "./components/global/ChatWidget";
+import BreakoutGame from "./components/global/BreakoutGame";
 
 const options = {
   title: "Anshul Patil | Full-Stack Developer",
@@ -60,6 +61,7 @@ export default function RootLayout({
           <CommandPalette />
           <SectionProgress />
           <ChatWidget />
+          <BreakoutGame />
           {children}
           <Footer />
         </Providers>

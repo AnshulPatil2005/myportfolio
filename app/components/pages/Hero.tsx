@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Social from "../shared/Social";
 import EngravingImage from "../shared/EngravingImage";
+import ConwayCanvas from "../shared/ConwayCanvas";
 import { motion } from "framer-motion";
 import { profile, availability } from "@/lib/data";
 
@@ -10,7 +11,8 @@ const ENGRAVING_SRC = "/engraving-melencolia.jpg";
 
 export default function Hero() {
   return (
-    <section className="pt-4 pb-20 md:pb-28">
+    <section className="relative pt-4 pb-20 md:pb-28">
+      <ConwayCanvas />
       {/* Meta row */}
       <motion.div
         className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 pb-5 mb-12 border-b dark:border-zinc-800 border-zinc-300 font-mono text-xs uppercase tracking-[0.2em] dark:text-zinc-500 text-zinc-400"
