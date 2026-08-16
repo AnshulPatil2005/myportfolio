@@ -10,7 +10,7 @@ import RadarSweep from "./RadarSweep";
 
 export default function Job() {
   return (
-    <section id="jobs" className="scroll-mt-20 mt-16 md:mt-20">
+    <section id="jobs" className="scroll-mt-20 mt-32 md:mt-40">
       <Slide delay={0.16}>
         <div className="flex items-start justify-between gap-6 mb-10">
           <div>

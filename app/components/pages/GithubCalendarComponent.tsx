@@ -4,7 +4,7 @@ import { Slide } from "@/app/animation/Slide";
 
 export default function GithubCalendarComponent() {
   return (
-    <section>
+    <section className="mt-32 md:mt-40">
       <Slide delay={0.16} className="mb-8">
         <h2 className="font-incognito text-4xl font-bold tracking-tight">
           GitHub Activity

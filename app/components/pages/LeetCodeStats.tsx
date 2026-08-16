@@ -197,7 +197,7 @@ export default function LeetCodeStats() {
   const profileUrl = `https://leetcode.com/u/${username}`;
 
   return (
-    <section className="mt-16">
+    <section className="mt-32 md:mt-40">
       <Slide delay={0.16}>
         {/* Heading row */}
         <div className="flex items-center justify-between mb-8">
