@@ -4,10 +4,11 @@ import * as THREE from "three";
 import { useEffect, useRef } from "react";
 import { CHAPTERS, WEAPONS, GLYPHS, IMMUNE_TEXTS, ANSHUL_TAUNTS } from "./data";
 
-// World scale: 1 unit ≈ 30px of the old 2D arena.
+// First-person boss arena. 1 unit ≈ 30px of the original 2D layout.
 const AR_X = 15.5; // half-width
 const AR_Z = 8.8;  // half-depth
-const RW = 960, RH = 540; // render buffer
+const RW = 960, RH = 540;
+const EYE = 1.55;
 
 const AMBER = 0xffb000;
 const AMBER_HI = 0xffcf60;
@@ -18,10 +19,10 @@ const DARK = 0x1c1512;
 interface Props {
   chapter: number;
   paused: boolean;
-  onEvent: (e: "victory" | "dead" | "cine" | "ending") => void;
+  onEvent: (e: "victory" | "dead" | "cine" | "ending" | "pause") => void;
 }
 
-interface PB { x: number; z: number; vx: number; vz: number; dmg: number; pierce: number; dead: boolean }
+interface PB { x: number; y: number; z: number; vx: number; vy: number; vz: number; dmg: number; pierce: number; dead: boolean }
 interface EB { x: number; z: number; vx: number; vz: number; r: number; dead: boolean }
 interface MinionS { x: number; z: number; vx: number; vz: number; hp: number; t: number; ang: number; diving: boolean; dead: boolean; si: number }
 interface Part { x: number; y: number; z: number; vx: number; vy: number; vz: number; t: number; max: number; r: number; g: number; b: number }
@@ -39,12 +40,13 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
   const noteRef = useRef<HTMLDivElement>(null);
   const flashRef = useRef<HTMLDivElement>(null);
   const introRef = useRef<HTMLDivElement>(null);
+  const crossRef = useRef<HTMLDivElement>(null);
+  const lockHintRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
     const ch = chapter;
-    const chData = CHAPTERS[ch];
     const tier = Math.min(ch, WEAPONS.length - 1);
     const wp = WEAPONS[tier];
 
@@ -56,12 +58,14 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
     renderer.domElement.style.height = "100%";
     renderer.domElement.style.display = "block";
     mount.appendChild(renderer.domElement);
+    const canvas = renderer.domElement;
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0d0a08);
-    scene.fog = new THREE.Fog(0x0d0a08, 20, 52);
+    scene.fog = new THREE.Fog(0x0d0a08, 16, 46);
 
-    const camera = new THREE.PerspectiveCamera(52, RW / RH, 0.1, 120);
+    const camera = new THREE.PerspectiveCamera(72, RW / RH, 0.05, 120);
+    scene.add(camera);
 
     // ── Helpers ────────────────────────────────────────────────────────────
     const disposables: { dispose: () => void }[] = [];
@@ -115,28 +119,45 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
     (grid.material as THREE.Material).opacity = 0.55;
     scene.add(grid);
 
-    // boundary frame
-    const frameMat = lmat(AMBER, 0.5);
-    const framePts = [
-      new THREE.Vector3(-AR_X, 0.02, -AR_Z), new THREE.Vector3(AR_X, 0.02, -AR_Z),
-      new THREE.Vector3(AR_X, 0.02, AR_Z), new THREE.Vector3(-AR_X, 0.02, AR_Z),
-    ];
-    const frameGeo = track(new THREE.BufferGeometry().setFromPoints([...framePts, framePts[0]]));
-    scene.add(new THREE.Line(frameGeo, frameMat));
-    const postGeo = track(new THREE.CylinderGeometry(0.07, 0.07, 1.6, 6));
-    for (const p of framePts) {
-      const post = new THREE.Mesh(postGeo, bmat(AMBER, { transparent: true, opacity: 0.8 }));
-      post.position.set(p.x, 0.8, p.z);
+    // arena walls — dark slabs with amber rims so the space reads in first person
+    const wallH = 2.4;
+    const mkWall = (w: number, d: number, x: number, z: number) => {
+      const geo = track(new THREE.BoxGeometry(w, wallH, d));
+      const mesh = new THREE.Mesh(geo, bmat(0x0f0c0a));
+      mesh.position.set(x, wallH / 2, z);
+      const e = edgesOf(geo, AMBER, 0.35);
+      e.position.copy(mesh.position);
+      scene.add(mesh, e);
+    };
+    mkWall(AR_X * 2 + 1, 0.5, 0, -AR_Z - 0.25);
+    mkWall(AR_X * 2 + 1, 0.5, 0, AR_Z + 0.25);
+    mkWall(0.5, AR_Z * 2 + 1, -AR_X - 0.25, 0);
+    mkWall(0.5, AR_Z * 2 + 1, AR_X + 0.25, 0);
+    const postGeo = track(new THREE.CylinderGeometry(0.09, 0.09, 3.4, 6));
+    for (const [px2, pz2] of [[-AR_X, -AR_Z], [AR_X, -AR_Z], [AR_X, AR_Z], [-AR_X, AR_Z]] as [number, number][]) {
+      const post = new THREE.Mesh(postGeo, bmat(AMBER, { transparent: true, opacity: 0.85 }));
+      post.position.set(px2, 1.7, pz2);
       scene.add(post);
     }
 
-    // ambient floating dust
+    // distant monoliths for depth
+    for (let i = 0; i < 9; i++) {
+      const h = 4 + Math.random() * 9;
+      const geo = track(new THREE.BoxGeometry(1.4 + Math.random() * 2, h, 1.4 + Math.random() * 2));
+      const ang = (i / 9) * Math.PI * 2 + Math.random() * 0.4;
+      const dist = 26 + Math.random() * 12;
+      const e = edgesOf(geo, 0x4a3520, 0.5);
+      e.position.set(Math.cos(ang) * dist, h / 2, Math.sin(ang) * dist);
+      scene.add(e);
+    }
+
+    // floating dust
     {
-      const n = 220;
+      const n = 240;
       const pos = new Float32Array(n * 3);
       for (let i = 0; i < n; i++) {
         pos[i * 3] = (Math.random() - 0.5) * 70;
-        pos[i * 3 + 1] = Math.random() * 14 + 1;
+        pos[i * 3 + 1] = Math.random() * 12 + 0.5;
         pos[i * 3 + 2] = (Math.random() - 0.5) * 50;
       }
       const g = track(new THREE.BufferGeometry());
@@ -147,28 +168,36 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       scene.add(pts);
     }
 
-    // ── Player ─────────────────────────────────────────────────────────────
-    const playerGroup = new THREE.Group();
-    const shipGeo = track(new THREE.ConeGeometry(0.34, 1.0, 4));
-    const ship = new THREE.Mesh(shipGeo, bmat(0x0f0c0a));
-    ship.rotation.x = Math.PI / 2; // point along -z default; we rotate group to aim
-    ship.position.y = 0.45;
-    playerGroup.add(ship);
-    playerGroup.add((() => { const e = edgesOf(shipGeo, 0xffffff, 0.95); e.rotation.x = Math.PI / 2; e.position.y = 0.45; return e; })());
-    const playerRing = new THREE.Mesh(track(new THREE.RingGeometry(0.5, 0.58, 24)), bmat(AMBER, { transparent: true, opacity: 0.5, side: THREE.DoubleSide }));
-    playerRing.rotation.x = -Math.PI / 2;
-    playerRing.position.y = 0.03;
-    playerGroup.add(playerRing);
-    scene.add(playerGroup);
+    // ── Viewmodel gun ──────────────────────────────────────────────────────
+    const gun = new THREE.Group();
+    {
+      const bodyGeo = track(new THREE.BoxGeometry(0.15, 0.15, 0.5));
+      const body = new THREE.Mesh(bodyGeo, bmat(0x241c14));
+      const bodyE = edgesOf(bodyGeo, AMBER, 0.8);
+      const barrelGeo = track(new THREE.BoxGeometry(0.065, 0.065, 0.46));
+      const barrel = new THREE.Mesh(barrelGeo, bmat(0x38281a));
+      barrel.position.set(0, 0.035, -0.42);
+      const barrelE = edgesOf(barrelGeo, AMBER, 0.5);
+      barrelE.position.copy(barrel.position);
+      gun.add(body, bodyE, barrel, barrelE);
+    }
+    gun.position.set(0.32, -0.27, -0.65);
+    camera.add(gun);
+    const muzzleMat = track(new THREE.SpriteMaterial({ map: textTexture("✦", "#ffcf60", 64), transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+    const muzzle = new THREE.Sprite(muzzleMat);
+    muzzle.scale.setScalar(0.3);
+    muzzle.position.set(0.32, -0.22, -1.05);
+    camera.add(muzzle);
 
     // ── Bullets (instanced) ────────────────────────────────────────────────
     const MAX_PB = 160, MAX_EB = 340;
-    const pbMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.13, 8, 8)), bmat(AMBER_HI), MAX_PB);
+    const pbMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.11, 8, 8)), bmat(AMBER_HI), MAX_PB);
     const ebMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.17, 8, 8)), bmat(REDC), MAX_EB);
     pbMesh.frustumCulled = false; ebMesh.frustumCulled = false;
     pbMesh.count = 0; ebMesh.count = 0;
     scene.add(pbMesh, ebMesh);
     const m4 = new THREE.Matrix4();
+    const EB_Y = 1.25; // enemy fire flies at chest height
 
     // ── Particles ──────────────────────────────────────────────────────────
     const MAXP = 500;
@@ -182,17 +211,17 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
     partMesh.frustumCulled = false;
     scene.add(partMesh);
     const parts: Part[] = [];
-    function burst(x: number, z: number, n: number, color: number, speed = 5, y = 0.6) {
+    function burst(x: number, z: number, n: number, color: number, speed = 5, y = 0.9) {
       const r = ((color >> 16) & 255) / 255, g = ((color >> 8) & 255) / 255, b = (color & 255) / 255;
       for (let i = 0; i < n; i++) {
         if (parts.length >= MAXP) return;
         const a = Math.random() * Math.PI * 2;
         const s = speed * (0.3 + Math.random() * 0.7);
-        parts.push({ x, y: y + Math.random() * 0.4, z, vx: Math.cos(a) * s, vy: 1 + Math.random() * 3, vz: Math.sin(a) * s, t: 0, max: 0.4 + Math.random() * 0.5, r, g, b });
+        parts.push({ x, y: y + Math.random() * 0.5, z, vx: Math.cos(a) * s, vy: 1 + Math.random() * 3, vz: Math.sin(a) * s, t: 0, max: 0.4 + Math.random() * 0.5, r, g, b });
       }
     }
 
-    // ── Floaters (rising text sprites) ─────────────────────────────────────
+    // ── Floaters ───────────────────────────────────────────────────────────
     const FLOATN = 8;
     const floaters = Array.from({ length: FLOATN }, () => {
       const m = track(new THREE.SpriteMaterial({ transparent: true, depthWrite: false, opacity: 0 }));
@@ -202,19 +231,19 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       return { s, m, t: 0, max: 0.9, live: false };
     });
     let floatIdx = 0;
-    function floatTxt(txt: string, color: string, x: number, z: number, h = 0.5) {
+    function floatTxt(txt: string, color: string, x: number, z: number, h = 0.5, y = 1.6) {
       const f = floaters[floatIdx++ % FLOATN];
       const tex = textTexture(txt, color, 48);
       f.m.map = tex;
       f.m.opacity = 1;
       const img = tex.image as HTMLCanvasElement;
       f.s.scale.set((img.width / img.height) * h, h, 1);
-      f.s.position.set(x, 1.3, z);
+      f.s.position.set(x, y, z);
       f.s.visible = true;
       f.t = 0; f.live = true;
     }
 
-    // ── Zones (corruption) ─────────────────────────────────────────────────
+    // ── Zones ──────────────────────────────────────────────────────────────
     const zoneVis = Array.from({ length: 3 }, () => {
       const g = new THREE.Group();
       const fill = new THREE.Mesh(track(new THREE.CircleGeometry(1.9, 28)), bmat(0xff3c3c, { transparent: true, opacity: 0.14, side: THREE.DoubleSide }));
@@ -227,7 +256,7 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       return { g, fill: fill.material as THREE.MeshBasicMaterial, rim: rim.material as THREE.MeshBasicMaterial };
     });
 
-    // ── Minion sprites ─────────────────────────────────────────────────────
+    // ── Minions ────────────────────────────────────────────────────────────
     const MINN = 8;
     const minionVis = Array.from({ length: MINN }, (_, i) => {
       const s = textSprite(GLYPHS[i % GLYPHS.length], "#ffffff", 0.8);
@@ -240,7 +269,8 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
     const st = {
       t: 0, introT: 2.6, vicT: -1, deadT: -1, cineT: -1, timeScale: 1,
       px: 0, pz: 6.5, php: 100, invuln: 1.4, fireCd: 0,
-      aimX: 0, aimZ: 0, firing: false,
+      yaw: 0, pitch: 0, locked: false, firing: false,
+      gunKick: 0, muzzleT: 0, bobT: 0,
       keys: new Set<string>(),
       pb: [] as PB[], eb: [] as EB[], minions: [] as MinionS[],
       bossX: 0, bossZ: -4.3,
@@ -248,7 +278,6 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       bossMax: [300, 340, 380, 420, 500, 999][ch],
       shake: 0, bossPulse: 0,
       noteT: 0,
-      // mech
       vented: false, ventT: 4, cdA: 1.2, cdB: 3.5, cdC: 6, burstN: 0,
       shields: GLYPHS.slice(0, 5).map((g, i) => ({ ang: (i / 5) * Math.PI * 2, hp: 24, ch: g, alive: true })),
       openT: 0, spiralA: 0,
@@ -257,14 +286,15 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       exposedT: 0,
       zones: [] as { x: number; z: number; warm: number; life: number }[],
       finalT: 0, tauntIdx: 0, offer: null as { x: number; z: number } | null, offerT: 0,
-      fired: false, // cine event sent
+      fired: false,
     };
+    // face the boss on spawn
+    st.yaw = Math.atan2(-(st.bossX - st.px), -(st.bossZ - st.pz));
 
     function note(txt: string, secs = 1.6) {
-      if (noteRef.current) { noteRef.current.textContent = txt; }
+      if (noteRef.current) noteRef.current.textContent = txt;
       st.noteT = secs;
     }
-
     function aimShot(x: number, z: number, speed: number, r = 0.17, offAng = 0) {
       if (st.eb.length > MAX_EB - 4) return;
       const a = Math.atan2(st.pz - z, st.px - x) + offAng;
@@ -278,11 +308,9 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       }
     }
 
-    // ── Boss visuals ───────────────────────────────────────────────────────
+    // ── Boss visuals (same builds as before) ───────────────────────────────
     const bossGroup = new THREE.Group();
     scene.add(bossGroup);
-
-    // chapter-specific handles
     let slabEdges: THREE.LineSegments[] = [];
     let ventMesh: THREE.Mesh | null = null;
     let faceEdges: THREE.LineSegments | null = null;
@@ -384,7 +412,6 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         return { g, edge };
       });
     } else {
-      // ANSHUL
       const head = new THREE.Mesh(track(new THREE.SphereGeometry(0.42, 18, 14)), bmat(DARK));
       head.position.y = 2.5;
       const headE = edgesOf(track(new THREE.BoxGeometry(0.62, 0.62, 0.62)), AMBER, 0.35);
@@ -412,7 +439,6 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       aura.position.y = 0.03;
       bossGroup.add(head, headE, body, bodyE, laptop, lapE, screen, name, sub, aura);
 
-      // offer visuals
       const envGeo = track(new THREE.BoxGeometry(0.95, 0.6, 0.09));
       const env = new THREE.Mesh(envGeo, bmat(0x10160f));
       env.position.y = 0.95;
@@ -428,35 +454,43 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       offerGroup.add(env, envE, ring, olbl, olbl2);
     }
 
-    // ── Input ──────────────────────────────────────────────────────────────
-    const raycaster = new THREE.Raycaster();
-    const ndc = new THREE.Vector2();
-    const aimPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.4);
-    const aimPt = new THREE.Vector3();
+    // ── Input: pointer lock FPS controls ───────────────────────────────────
+    const seqActive = () => st.vicT >= 0 || st.deadT >= 0 || st.cineT >= 0;
 
-    const onMove = (e: MouseEvent) => {
-      const r = renderer.domElement.getBoundingClientRect();
-      ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
-      ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
-      raycaster.setFromCamera(ndc, camera);
-      if (raycaster.ray.intersectPlane(aimPlane, aimPt)) {
-        st.aimX = aimPt.x; st.aimZ = aimPt.z;
+    const onLockChange = () => {
+      st.locked = document.pointerLockElement === canvas;
+      if (!st.locked && st.introT <= 0 && !seqActive() && !pausedRef.current) {
+        // player pressed Esc — browser released the lock
+        onEventRef.current("pause");
       }
     };
-    const onDown = () => { st.firing = true; };
+    const onCanvasClick = () => {
+      if (!st.locked && st.introT <= 0 && !seqActive() && !pausedRef.current) {
+        canvas.requestPointerLock();
+      }
+    };
+    const onMouseMove = (e: MouseEvent) => {
+      if (!st.locked) return;
+      st.yaw -= e.movementX * 0.0022;
+      st.pitch = Math.max(-1.35, Math.min(1.35, st.pitch - e.movementY * 0.0022));
+    };
+    const onDown = (e: MouseEvent) => { if (st.locked && e.button === 0) st.firing = true; };
     const onUp = () => { st.firing = false; };
     const onKeyDown = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
       if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) st.keys.add(k);
     };
     const onKeyUp = (e: KeyboardEvent) => st.keys.delete(e.key.toLowerCase());
-    renderer.domElement.addEventListener("mousemove", onMove);
-    renderer.domElement.addEventListener("mousedown", onDown);
+
+    document.addEventListener("pointerlockchange", onLockChange);
+    canvas.addEventListener("click", onCanvasClick);
+    document.addEventListener("mousemove", onMouseMove);
+    canvas.addEventListener("mousedown", onDown);
     window.addEventListener("mouseup", onUp);
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
 
-    // ── Boss updates (ported from 2D, world units) ─────────────────────────
+    // ── Boss updates (identical mechanics) ─────────────────────────────────
     function updBoss(dt: number) {
       if (ch === 0) {
         st.bossX = Math.sin(st.t * 0.5) * 4.7;
@@ -492,7 +526,7 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         if (st.cdB <= 0) { st.cdB = 4.4; ringShot(st.bossX, st.bossZ, 12, 4.3, st.t); }
       } else if (ch === 2) {
         st.cdC -= dt;
-        if (st.cdC <= 0) { st.cdC = 2; st.bossX = (Math.random() - 0.5) * 12; st.bossZ = -5 + Math.random() * 3; burst(st.bossX, st.bossZ, 8, AMBER, 3); }
+        if (st.cdC <= 0) { st.cdC = 2; st.bossX = (Math.random() - 0.5) * 12; st.bossZ = -5 + Math.random() * 3; burst(st.bossX, st.bossZ, 8, AMBER, 3, 1.5); }
         st.spiralA += dt * 2.6;
         st.cdA -= dt;
         if (st.cdA <= 0) {
@@ -545,7 +579,7 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
           }));
           st.realIdx = (Math.random() * 3) | 0;
           ringShot(old.x, old.z, 14, 5, st.t);
-          burst(old.x, old.z, 10, AMBER, 4);
+          burst(old.x, old.z, 10, AMBER, 4, 1.5);
         }
         const real = st.ghosts[st.realIdx];
         st.bossX = real.x; st.bossZ = real.z;
@@ -578,8 +612,8 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         if (st.cdA <= 0) {
           st.cdA = 6;
           st.zones = Array.from({ length: 3 }, () => ({
-            x: Math.max(-AR_X + 2, Math.min(AR_X - 2, st.px + (Math.random() - 0.5) * 8.7 * 2)),
-            z: Math.max(-AR_Z + 2, Math.min(AR_Z - 2, st.pz + (Math.random() - 0.5) * 6.7 * 2)),
+            x: Math.max(-AR_X + 2, Math.min(AR_X - 2, st.px + (Math.random() - 0.5) * 17)),
+            z: Math.max(-AR_Z + 2, Math.min(AR_Z - 2, st.pz + (Math.random() - 0.5) * 13)),
             warm: 1, life: 4,
           }));
         }
@@ -618,11 +652,14 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       }
     }
 
+    // ── Player-bullet hits (3D) ────────────────────────────────────────────
     function hitBoss(b: PB): boolean {
+      // vertical body extents per boss for cylinder tests
+      const bodyH = [4.8, 3.0, 3.0, 3.0, 3.2, 3.2][ch];
       if (ch === 5) {
-        if (Math.hypot(b.x - st.bossX, b.z - st.bossZ) < 1.55) {
-          floatTxt(IMMUNE_TEXTS[(Math.random() * IMMUNE_TEXTS.length) | 0], "#999999", b.x, b.z, 0.42);
-          burst(b.x, b.z, 3, 0x777777, 2.5);
+        if (Math.hypot(b.x - st.bossX, b.z - st.bossZ) < 1.55 && b.y > 0 && b.y < bodyH) {
+          floatTxt(IMMUNE_TEXTS[(Math.random() * IMMUNE_TEXTS.length) | 0], "#999999", b.x, b.z, 0.42, b.y);
+          burst(b.x, b.z, 3, 0x777777, 2.5, b.y);
           return true;
         }
         return false;
@@ -636,7 +673,8 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
             if (!s.alive) continue;
             const sx = st.bossX + Math.cos(s.ang + st.t) * 2.6;
             const sz = st.bossZ + Math.sin(s.ang + st.t) * 2.6;
-            if (Math.hypot(b.x - sx, b.z - sz) < 0.55) {
+            const d3 = Math.sqrt((b.x - sx) ** 2 + (b.y - 1.4) ** 2 + (b.z - sz) ** 2);
+            if (d3 < 0.62) {
               if (i === firstAlive) {
                 s.hp -= b.dmg;
                 burst(sx, sz, 4, AMBER, 3, 1.3);
@@ -647,20 +685,21 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
               return true;
             }
           }
-          if (Math.hypot(b.x - st.bossX, b.z - st.bossZ) < 1.4) { floatTxt("SHIELDED", "#999999", b.x, b.z, 0.36); return true; }
+          if (Math.hypot(b.x - st.bossX, b.z - st.bossZ) < 1.4 && b.y > 0 && b.y < bodyH) { floatTxt("SHIELDED", "#999999", b.x, b.z, 0.36, b.y); return true; }
           return false;
         }
       }
       if (ch === 3 && st.pinT <= 0) {
         for (let i = 0; i < st.ghosts.length; i++) {
           const g = st.ghosts[i];
-          if (Math.hypot(b.x - g.x, b.z - g.z) < 1.35) {
+          const d3 = Math.sqrt((b.x - g.x) ** 2 + (b.y - 1.5) ** 2 + (b.z - g.z) ** 2);
+          if (d3 < 1.45) {
             if (i === st.realIdx) {
               st.bossHp -= b.dmg; st.pinHits++; st.bossPulse = 0.14;
-              burst(b.x, b.z, 3, AMBER, 3, 1.4);
+              burst(b.x, b.z, 3, AMBER, 3, b.y);
               if (st.pinHits >= 8) { st.pinT = 3; note("PINNED — HASHES MATCH", 1.6); }
             } else {
-              floatTxt("MISMATCH", "#999999", b.x, b.z, 0.36);
+              floatTxt("MISMATCH", "#999999", b.x, b.z, 0.36, b.y);
             }
             return true;
           }
@@ -671,23 +710,24 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         for (const mo of st.mods) {
           if (!mo.alive) continue;
           const mx = st.bossX + Math.cos(mo.ang) * 5, mz = st.bossZ + Math.sin(mo.ang) * 5;
-          if (Math.hypot(b.x - mx, b.z - mz) < 0.75) {
+          const d3 = Math.sqrt((b.x - mx) ** 2 + (b.y - 0.98) ** 2 + (b.z - mz) ** 2);
+          if (d3 < 0.85) {
             mo.hp -= b.dmg;
-            burst(mx, mz, 3, REDC, 3);
-            if (mo.hp <= 0) { mo.alive = false; floatTxt(mo.label + " refactored", "#4ade80", mx, mz); burst(mx, mz, 18, AMBER, 5); }
+            burst(mx, mz, 3, REDC, 3, 1);
+            if (mo.hp <= 0) { mo.alive = false; floatTxt(mo.label + " refactored", "#4ade80", mx, mz, 0.5, 1.4); burst(mx, mz, 18, AMBER, 5, 1); }
             return true;
           }
         }
       }
       const r = [2.3, 1.4, 1.5, 1.35, 1.55][ch] || 1.5;
-      if (Math.hypot(b.x - st.bossX, b.z - st.bossZ) < r) {
+      if (Math.hypot(b.x - st.bossX, b.z - st.bossZ) < r && b.y > 0 && b.y < bodyH) {
         let mult = 1;
         if (ch === 0) mult = st.vented ? 1 : 0.25;
         if (ch === 3) mult = st.pinT > 0 ? 2 : 1;
         if (ch === 4) mult = st.mods.some(m => m.alive) ? 0.2 : 1;
         st.bossHp -= b.dmg * mult;
         st.bossPulse = 0.14;
-        burst(b.x, b.z, mult >= 1 ? 4 : 2, mult >= 1 ? AMBER : 0x666666, 3, 1.2);
+        burst(b.x, b.z, mult >= 1 ? 4 : 2, mult >= 1 ? AMBER : 0x666666, 3, b.y);
         return true;
       }
       return false;
@@ -700,8 +740,9 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       if (st.noteT > 0) st.noteT -= rdt;
       if (st.shake > 0) st.shake = Math.max(0, st.shake - rdt * 5);
       if (st.bossPulse > 0) st.bossPulse -= rdt;
+      if (st.gunKick > 0) st.gunKick = Math.max(0, st.gunKick - rdt * 6);
+      if (st.muzzleT > 0) st.muzzleT -= rdt;
 
-      // sequences
       if (st.vicT >= 0) {
         st.vicT -= rdt;
         if (st.vicT <= 0) onEventRef.current("victory");
@@ -724,33 +765,47 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       }
       if (st.introT > 0) {
         st.introT -= rdt;
-        return; // boss intro camera swoop, no gameplay
+        return;
       }
+      if (!st.locked) return; // wait for pointer lock before gameplay runs
 
       if (st.invuln > 0) st.invuln -= dt;
 
-      // move
-      let dx = 0, dz = 0;
-      if (st.keys.has("w") || st.keys.has("arrowup")) dz -= 1;
-      if (st.keys.has("s") || st.keys.has("arrowdown")) dz += 1;
-      if (st.keys.has("a") || st.keys.has("arrowleft")) dx -= 1;
-      if (st.keys.has("d") || st.keys.has("arrowright")) dx += 1;
-      if (dx || dz) {
+      // movement relative to look direction
+      let mx = 0, mz = 0;
+      if (st.keys.has("w") || st.keys.has("arrowup")) mz += 1;
+      if (st.keys.has("s") || st.keys.has("arrowdown")) mz -= 1;
+      if (st.keys.has("a") || st.keys.has("arrowleft")) mx -= 1;
+      if (st.keys.has("d") || st.keys.has("arrowright")) mx += 1;
+      const moving = mx !== 0 || mz !== 0;
+      if (moving) {
+        const fx = -Math.sin(st.yaw), fz = -Math.cos(st.yaw);
+        const rx = -fz, rz = fx;
+        let dx = fx * mz + rx * mx, dz = fz * mz + rz * mx;
         const l = Math.hypot(dx, dz);
-        st.px = Math.max(-AR_X + 0.5, Math.min(AR_X - 0.5, st.px + (dx / l) * 8.3 * dt));
-        st.pz = Math.max(-AR_Z + 0.5, Math.min(AR_Z - 0.5, st.pz + (dz / l) * 8.3 * dt));
+        dx /= l; dz /= l;
+        st.px = Math.max(-AR_X + 0.6, Math.min(AR_X - 0.6, st.px + dx * 8.6 * dt));
+        st.pz = Math.max(-AR_Z + 0.6, Math.min(AR_Z - 0.6, st.pz + dz * 8.6 * dt));
+        st.bobT += dt * 11;
       }
 
-      // fire
+      // fire along the camera ray
       st.fireCd -= dt;
       if (st.firing && st.fireCd <= 0 && st.pb.length < MAX_PB - 6) {
         st.fireCd = 1 / wp.rate;
-        const aim = Math.atan2(st.aimZ - st.pz, st.aimX - st.px);
+        st.gunKick = 0.16;
+        st.muzzleT = 0.06;
+        const cp = Math.cos(st.pitch), sp2 = Math.sin(st.pitch);
         for (let i = 0; i < wp.shots; i++) {
-          const off = wp.shots === 1 ? 0 : (i / (wp.shots - 1) - 0.5) * wp.spread;
-          st.pb.push({ x: st.px, z: st.pz, vx: Math.cos(aim + off) * 17.3, vz: Math.sin(aim + off) * 17.3, dmg: wp.dmg, pierce: wp.pierce, dead: false });
+          const off = wp.shots === 1 ? 0 : (i / (wp.shots - 1) - 0.5) * wp.spread * 0.55;
+          const ya = st.yaw + off;
+          const dx = -Math.sin(ya) * cp, dy = sp2, dz = -Math.cos(ya) * cp;
+          st.pb.push({
+            x: st.px + dx * 0.7, y: EYE - 0.12 + dy * 0.7, z: st.pz + dz * 0.7,
+            vx: dx * 24, vy: dy * 24, vz: dz * 24,
+            dmg: wp.dmg, pierce: wp.pierce, dead: false,
+          });
         }
-        burst(st.px + Math.cos(aim) * 0.5, st.pz + Math.sin(aim) * 0.5, 2, AMBER_HI, 2, 0.5);
       }
 
       updBoss(dt);
@@ -758,13 +813,15 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       // player bullets
       for (const b of st.pb) {
         if (b.dead) continue;
-        b.x += b.vx * dt; b.z += b.vz * dt;
-        if (Math.abs(b.x) > AR_X + 3 || Math.abs(b.z) > AR_Z + 3) { b.dead = true; continue; }
+        b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt;
+        if (b.y <= 0) { b.dead = true; burst(b.x, b.z, 2, AMBER, 1.5, 0.1); continue; }
+        if (b.y > 8 || Math.abs(b.x) > AR_X + 0.4 || Math.abs(b.z) > AR_Z + 0.4) { b.dead = true; burst(b.x, Math.max(-AR_Z, Math.min(AR_Z, b.z)), 2, AMBER, 1.5, b.y); continue; }
         for (const m of st.minions) {
           if (m.dead) continue;
-          if (Math.hypot(b.x - m.x, b.z - m.z) < 0.5) {
+          const d3 = Math.sqrt((b.x - m.x) ** 2 + (b.y - 1.1) ** 2 + (b.z - m.z) ** 2);
+          if (d3 < 0.6) {
             m.hp -= b.dmg;
-            if (m.hp <= 0) { m.dead = true; burst(m.x, m.z, 8, AMBER, 4, 1); }
+            if (m.hp <= 0) { m.dead = true; burst(m.x, m.z, 8, AMBER, 4, 1.1); }
             if (b.pierce > 0) b.pierce--; else { b.dead = true; break; }
           }
         }
@@ -772,24 +829,24 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         if (hitBoss(b)) b.dead = true;
       }
 
-      // enemy bullets
+      // enemy bullets (chest height, dodge by strafing)
       for (const b of st.eb) {
         if (b.dead) continue;
         b.x += b.vx * dt; b.z += b.vz * dt;
-        if (Math.abs(b.x) > AR_X + 3 || Math.abs(b.z) > AR_Z + 3) { b.dead = true; continue; }
-        if (st.invuln <= 0 && Math.hypot(b.x - st.px, b.z - st.pz) < b.r + 0.32) {
+        if (Math.abs(b.x) > AR_X + 1 || Math.abs(b.z) > AR_Z + 1) { b.dead = true; continue; }
+        if (st.invuln <= 0 && Math.hypot(b.x - st.px, b.z - st.pz) < b.r + 0.38) {
           b.dead = true;
           st.php -= 9; st.invuln = 1;
           st.shake = 1;
-          burst(st.px, st.pz, 10, REDC, 4);
+          burst(st.px, st.pz, 10, REDC, 4, 1.2);
         }
       }
 
       // minion contact
       for (const m of st.minions) {
         if (m.dead || st.invuln > 0) continue;
-        if (Math.hypot(m.x - st.px, m.z - st.pz) < 0.62) {
-          m.dead = true; st.php -= 12; st.invuln = 1; st.shake = 1.2; burst(st.px, st.pz, 10, REDC, 4);
+        if (Math.hypot(m.x - st.px, m.z - st.pz) < 0.7) {
+          m.dead = true; st.php -= 12; st.invuln = 1; st.shake = 1.2; burst(st.px, st.pz, 10, REDC, 4, 1.2);
         }
       }
 
@@ -801,18 +858,19 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       }
 
       // boss contact
-      if (st.invuln <= 0 && Math.hypot(st.bossX - st.px, st.bossZ - st.pz) < 1.75) {
-        st.php -= 14; st.invuln = 1.1; st.shake = 1.3; burst(st.px, st.pz, 12, REDC, 5);
+      if (st.invuln <= 0 && Math.hypot(st.bossX - st.px, st.bossZ - st.pz) < 1.9) {
+        st.php -= 14; st.invuln = 1.1; st.shake = 1.3; burst(st.px, st.pz, 12, REDC, 5, 1.2);
       }
 
-      // offer
-      if (ch === 5 && st.offer && Math.hypot(st.offer.x - st.px, st.offer.z - st.pz) < 1.05) {
+      // the offer
+      if (ch === 5 && st.offer && Math.hypot(st.offer.x - st.px, st.offer.z - st.pz) < 1.15) {
         st.cineT = 0;
         st.timeScale = 1;
         st.shake = 0;
         if (!st.fired) { st.fired = true; onEventRef.current("cine"); }
         burst(st.offer.x, st.offer.z, 30, GREENC, 6, 1);
         offerGroup.visible = false;
+        document.exitPointerLock();
       }
 
       st.pb = st.pb.filter(b => !b.dead);
@@ -823,7 +881,8 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         st.php = 0;
         st.deadT = 1.0;
         st.timeScale = 0.3;
-        burst(st.px, st.pz, 40, REDC, 7);
+        burst(st.px, st.pz, 40, REDC, 7, 1.2);
+        document.exitPointerLock();
         return;
       }
       if (ch < 5 && st.bossHp <= 0) {
@@ -833,28 +892,23 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         st.shake = 2;
         burst(st.bossX, st.bossZ, 60, AMBER, 8, 1.5);
         burst(st.bossX, st.bossZ, 40, 0xffffff, 5, 1.5);
+        document.exitPointerLock();
       }
     }
 
     // ── Visual sync ────────────────────────────────────────────────────────
     const camPos = new THREE.Vector3();
     const camLook = new THREE.Vector3();
-    const introFrom = new THREE.Vector3();
-    const introLook = new THREE.Vector3();
+    const tmpA = new THREE.Vector3();
+    const tmpB = new THREE.Vector3();
 
     function syncVisuals() {
-      // player
-      playerGroup.position.set(st.px, 0, st.pz);
-      const aimA = Math.atan2(st.aimX - st.px, st.aimZ - st.pz);
-      playerGroup.rotation.y = aimA + Math.PI;
-      playerGroup.visible = !(st.invuln > 0 && ((st.t * 14) | 0) % 2 === 0) && st.deadT < 0;
-
       // bullets
       let n = 0;
-      for (const b of st.pb) { m4.setPosition(b.x, 0.45, b.z); pbMesh.setMatrixAt(n++, m4); }
+      for (const b of st.pb) { m4.setPosition(b.x, b.y, b.z); pbMesh.setMatrixAt(n++, m4); }
       pbMesh.count = n; pbMesh.instanceMatrix.needsUpdate = true;
       n = 0;
-      for (const b of st.eb) { m4.setPosition(b.x, 0.45, b.z); ebMesh.setMatrixAt(n++, m4); }
+      for (const b of st.eb) { m4.setPosition(b.x, EB_Y, b.z); ebMesh.setMatrixAt(n++, m4); }
       ebMesh.count = n; ebMesh.instanceMatrix.needsUpdate = true;
 
       // particles
@@ -873,7 +927,7 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       for (const f of floaters) {
         if (!f.live) continue;
         f.t += 0.016;
-        f.s.position.y = 1.3 + f.t * 1.4;
+        f.s.position.y += 0.022;
         f.m.opacity = Math.max(0, 1 - f.t / f.max);
         if (f.t >= f.max) { f.live = false; f.s.visible = false; }
       }
@@ -884,7 +938,7 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         const sp = minionVis[i];
         if (m && !m.dead) {
           sp.visible = true;
-          sp.position.set(m.x, 1, m.z);
+          sp.position.set(m.x, 1.1, m.z);
           (sp.material as THREE.SpriteMaterial).color.setHex(m.diving ? REDC : AMBER);
         } else sp.visible = false;
       }
@@ -901,7 +955,7 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         } else v.g.visible = false;
       }
 
-      // boss common
+      // boss
       const pulse = 1 + (st.bossPulse > 0 ? st.bossPulse * 0.5 : 0);
       bossGroup.position.set(st.bossX, 0, st.bossZ);
       bossGroup.scale.setScalar(pulse);
@@ -915,6 +969,8 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         const open = st.shields.every(s => !s.alive);
         if (faceEdges) (faceEdges.material as THREE.LineBasicMaterial).color.setHex(open ? AMBER : 0x4a3828);
         if (checkSprite) (checkSprite.material as THREE.SpriteMaterial).map = textTexture(open ? "☑" : "☐", open ? "#ffb000" : "#c8b08a", 56);
+        // face the player
+        bossGroup.rotation.y = Math.atan2(st.px - st.bossX, st.pz - st.bossZ);
         const firstAlive = st.shields.findIndex(s => s.alive);
         st.shields.forEach((s, i) => {
           const sp = shieldSprites[i];
@@ -970,8 +1026,8 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
           v.g.rotation.y = -mo.ang;
         });
       } else {
-        // Anshul idle
         bossGroup.position.y = Math.sin(st.t * 2) * 0.08;
+        bossGroup.rotation.y = Math.atan2(st.px - st.bossX, st.pz - st.bossZ);
         if (screenMat) screenMat.opacity = 0.5 + Math.sin(st.t * 8) * 0.25;
         if (auraMat) auraMat.opacity = 0.1 + Math.sin(st.t * 3) * 0.06;
         if (offerGroup.visible) {
@@ -985,32 +1041,48 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         }
       }
 
-      // ── camera ──
-      const baseX = st.px * 0.15;
-      camPos.set(baseX, 15.2, 13.4);
-      camLook.set(st.px * 0.1, 0, -1.6);
+      // ── camera: first person ──
+      const cp = Math.cos(st.pitch), sp2 = Math.sin(st.pitch);
+      const dirX = -Math.sin(st.yaw) * cp, dirY = sp2, dirZ = -Math.cos(st.yaw) * cp;
+      const bob = Math.sin(st.bobT) * 0.035;
+      camPos.set(st.px, EYE + bob, st.pz);
+      camLook.set(st.px + dirX, EYE + bob + dirY, st.pz + dirZ);
+
       if (st.introT > 0) {
         const k = 1 - Math.max(0, Math.min(1, st.introT / 2.6));
-        const e = k * k * (3 - 2 * k); // smoothstep
-        introFrom.set(st.bossX + 2.5, 2.2, st.bossZ + 6);
-        introLook.set(st.bossX, 1.4, st.bossZ);
-        camPos.lerpVectors(introFrom, camPos, e);
-        camLook.lerpVectors(introLook, camLook, e);
+        const e = k * k * (3 - 2 * k);
+        tmpA.set(st.bossX + 2.5, 2.4, st.bossZ + 6);
+        tmpB.set(st.bossX, 1.6, st.bossZ);
+        camPos.lerpVectors(tmpA, camPos, e);
+        camLook.lerpVectors(tmpB, camLook, e);
       }
       if (st.cineT >= 0) {
         const k = Math.min(1, st.cineT / 1.2);
         const e = k * k * (3 - 2 * k);
-        introFrom.set(st.bossX + 3.4, 2.4, st.bossZ + 5.2);
-        introLook.set(st.bossX, 1.6, st.bossZ);
-        camPos.lerpVectors(camPos, introFrom, e);
-        camLook.lerpVectors(camLook, introLook, e);
+        tmpA.set(st.bossX + 3.4, 2.2, st.bossZ + 5.2);
+        tmpB.set(st.bossX, 1.6, st.bossZ);
+        camPos.lerpVectors(camPos, tmpA, e);
+        camLook.lerpVectors(camLook, tmpB, e);
+      }
+      if (st.deadT >= 0) {
+        const k = Math.min(1, (1.0 - st.deadT) * 1.6);
+        camPos.y = EYE - k * 0.9;
       }
       if (st.shake > 0) {
-        camPos.x += (Math.random() - 0.5) * st.shake * 0.35;
-        camPos.y += (Math.random() - 0.5) * st.shake * 0.25;
+        camPos.x += (Math.random() - 0.5) * st.shake * 0.22;
+        camPos.y += (Math.random() - 0.5) * st.shake * 0.16;
       }
       camera.position.copy(camPos);
       camera.lookAt(camLook);
+      if (st.deadT >= 0) camera.rotation.z = (1.0 - st.deadT) * 0.35;
+
+      // gun
+      gun.position.z = -0.65 + st.gunKick * 0.9;
+      gun.position.y = -0.27 + bob * 0.4;
+      gun.rotation.x = st.gunKick * 0.8;
+      muzzleMat.opacity = st.muzzleT > 0 ? 0.9 : 0;
+      gun.visible = st.cineT < 0 && st.introT <= 0;
+      muzzle.visible = gun.visible;
 
       // ── HUD ──
       if (hpFillRef.current) {
@@ -1026,13 +1098,19 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       }
       if (noteRef.current) noteRef.current.style.opacity = String(Math.max(0, Math.min(1, st.noteT)));
       if (flashRef.current) flashRef.current.style.opacity = String(Math.max(0, (st.invuln - 0.45)) * 0.5);
-      if (introRef.current) {
-        introRef.current.style.opacity = st.introT > 0.25 ? "1" : "0";
-        introRef.current.style.pointerEvents = "none";
+      if (introRef.current) introRef.current.style.opacity = st.introT > 0.25 ? "1" : "0";
+      if (crossRef.current) {
+        const spread = 1 + (st.firing ? 0.45 : 0) + (st.gunKick > 0.08 ? 0.25 : 0);
+        crossRef.current.style.transform = `translate(-50%, -50%) scale(${spread})`;
+        crossRef.current.style.opacity = st.locked && st.cineT < 0 && st.introT <= 0 ? "1" : "0";
+      }
+      if (lockHintRef.current) {
+        const show = !st.locked && st.introT <= 0 && !seqActive() && !pausedRef.current;
+        lockHintRef.current.style.opacity = show ? "1" : "0";
+        lockHintRef.current.style.pointerEvents = "none";
       }
     }
 
-    // particle sim uses real dt
     function updParts(rdt: number) {
       for (const p of parts) {
         p.t += rdt;
@@ -1061,14 +1139,17 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
     // ── Cleanup ────────────────────────────────────────────────────────────
     return () => {
       cancelAnimationFrame(raf);
-      renderer.domElement.removeEventListener("mousemove", onMove);
-      renderer.domElement.removeEventListener("mousedown", onDown);
+      if (document.pointerLockElement === canvas) document.exitPointerLock();
+      document.removeEventListener("pointerlockchange", onLockChange);
+      canvas.removeEventListener("click", onCanvasClick);
+      document.removeEventListener("mousemove", onMouseMove);
+      canvas.removeEventListener("mousedown", onDown);
       window.removeEventListener("mouseup", onUp);
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
       for (const d of disposables) d.dispose();
       renderer.dispose();
-      if (renderer.domElement.parentElement === mount) mount.removeChild(renderer.domElement);
+      if (canvas.parentElement === mount) mount.removeChild(canvas);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chapter]);
@@ -1076,7 +1157,7 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
   const chData = CHAPTERS[chapter];
   return (
     <div className="relative w-full h-full select-none">
-      <div ref={mountRef} className="absolute inset-0 cursor-crosshair" />
+      <div ref={mountRef} className="absolute inset-0" />
 
       {/* damage vignette */}
       <div
@@ -1084,6 +1165,32 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         className="absolute inset-0 pointer-events-none transition-opacity duration-150"
         style={{ opacity: 0, background: "radial-gradient(ellipse at center, transparent 45%, rgba(220,40,40,0.55) 100%)" }}
       />
+
+      {/* crosshair */}
+      <div
+        ref={crossRef}
+        className="absolute left-1/2 top-1/2 pointer-events-none transition-opacity duration-200"
+        style={{ transform: "translate(-50%, -50%)", opacity: 0 }}
+      >
+        <div className="relative w-[26px] h-[26px]">
+          <span className="absolute left-1/2 top-0 w-px h-[7px] bg-accent -translate-x-1/2" />
+          <span className="absolute left-1/2 bottom-0 w-px h-[7px] bg-accent -translate-x-1/2" />
+          <span className="absolute top-1/2 left-0 h-px w-[7px] bg-accent -translate-y-1/2" />
+          <span className="absolute top-1/2 right-0 h-px w-[7px] bg-accent -translate-y-1/2" />
+          <span className="absolute left-1/2 top-1/2 w-[2px] h-[2px] bg-accent -translate-x-1/2 -translate-y-1/2" />
+        </div>
+      </div>
+
+      {/* click-to-aim hint */}
+      <div
+        ref={lockHintRef}
+        className="absolute inset-0 flex items-center justify-center transition-opacity duration-300"
+        style={{ opacity: 0 }}
+      >
+        <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-accent border border-amber-500/40 bg-[#0d0a08]/80 px-6 py-3 animate-pulse">
+          click to take aim
+        </p>
+      </div>
 
       {/* HUD */}
       <div className="absolute top-2.5 left-4 font-mono text-[9px] uppercase tracking-[0.25em] text-zinc-600 pointer-events-none">
@@ -1107,7 +1214,7 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       </div>
 
       {/* boss intro splash */}
-      <div ref={introRef} className="absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-500" style={{ opacity: 1 }}>
+      <div ref={introRef} className="absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-500 pointer-events-none" style={{ opacity: 1 }}>
         <div className="absolute top-0 inset-x-0 h-[12%] bg-black/80" />
         <div className="absolute bottom-0 inset-x-0 h-[12%] bg-black/80" />
         <p className="font-mono text-[10px] uppercase tracking-[0.5em] text-red-400 mb-3 animate-pulse">⚠ warning ⚠</p>

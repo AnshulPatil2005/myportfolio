@@ -110,7 +110,11 @@ export default function CareerMode() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, startFight]);
 
-  const onEngineEvent = useCallback((e: "victory" | "dead" | "cine" | "ending") => {
+  const onEngineEvent = useCallback((e: "victory" | "dead" | "cine" | "ending" | "pause") => {
+    if (e === "pause") {
+      setPhase(p => (p === "fight" ? "pause" : p));
+      return;
+    }
     if (e === "victory") {
       const cleared = chapterRef.current + 1;
       const prev = parseInt(localStorage.getItem(PROGRESS_KEY) || "0", 10) || 0;
@@ -244,7 +248,7 @@ export default function CareerMode() {
                       </button>
                     )}
                   </div>
-                  <p className="font-mono text-[9px] text-zinc-700 mt-3">WASD move · mouse aim · hold click to shoot · esc exits · desktop recommended</p>
+                  <p className="font-mono text-[9px] text-zinc-700 mt-3">first-person · WASD move · mouse look · hold click to shoot · esc pauses · desktop only</p>
                 </motion.div>
               )}
 
