@@ -5,7 +5,8 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { useEffect, useRef } from "react";
 import { CHAPTERS, WEAPONS, IMMUNE_TEXTS, ANSHUL_TAUNTS, ROMAN } from "./data";
 
@@ -894,35 +895,176 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       m.receiveShadow = !glow;
     });
 
-    // real character model for the final meeting
-    // (KayKit Character Pack: Adventurers — CC0, kaylousberg.com)
-    const mixers: THREE.AnimationMixer[] = [];
-    const anshulActions: { idle?: THREE.AnimationAction; cheer?: THREE.AnimationAction } = {};
-    new GLTFLoader().load(
-      "/models/anshul.glb",
-      gltf => {
-        const model = gltf.scene;
-        model.scale.setScalar(1.4);
-        model.traverse(o => {
-          const mm = o as THREE.Mesh;
-          if (mm.isMesh) { mm.castShadow = true; mm.receiveShadow = false; }
-        });
-        const v = bossVis[FINAL];
-        if (v.protoBody) v.protoBody.visible = false;
-        v.group.add(model);
-        const mixer = new THREE.AnimationMixer(model);
-        mixers.push(mixer);
-        const idleClip = THREE.AnimationClip.findByName(gltf.animations, "Idle") || gltf.animations[0];
-        const cheerClip = THREE.AnimationClip.findByName(gltf.animations, "Cheer");
-        if (idleClip) {
-          anshulActions.idle = mixer.clipAction(idleClip);
-          anshulActions.idle.play();
+    // ── Model library — finished CC0 assets (KayKit), cloned per placement ──
+    const gltfLoader = new GLTFLoader();
+    const loadModel = (url: string) =>
+      new Promise<GLTF>((res, rej) => gltfLoader.load(url, res, undefined, rej));
+
+    function prepProp(root: THREE.Group, scale: number) {
+      root.scale.setScalar(scale);
+      root.traverse(o => {
+        const m = o as THREE.Mesh;
+        if (m.isMesh) { m.castShadow = true; m.receiveShadow = false; }
+      });
+      return root;
+    }
+    function scatterProp(url: string, scale: number, spots: [number, number, number][], glowTop = false) {
+      loadModel(url).then(g => {
+        const proto = prepProp(g.scene, scale);
+        const box = new THREE.Box3().setFromObject(proto);
+        const y0 = -box.min.y;
+        for (const [x, z, ry] of spots) {
+          const c = proto.clone(true);
+          c.position.set(x, y0, z);
+          c.rotation.y = ry;
+          scene.add(c);
+          if (glowTop) {
+            const gs = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: glowTexture(), color: 0xffc070, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending })));
+            gs.scale.setScalar(0.62);
+            gs.position.set(x, y0 + box.max.y + 0.05, z);
+            scene.add(gs);
+          }
         }
-        if (cheerClip) anshulActions.cheer = mixer.clipAction(cheerClip);
-      },
-      undefined,
-      () => { /* offline or missing asset — the procedural body stays */ }
-    );
+      }).catch(() => { /* offline — the procedural world still stands */ });
+    }
+
+    // set dressing: pillars ring every arena, torches mark gates and landmarks,
+    // supply clutter hugs the walls, and each zone flies its colored banners
+    {
+      const pillarSpots: [number, number, number][] = [];
+      ZC.forEach((zc, i) => {
+        const cz = i === FINAL ? zc : zc - 2;
+        for (let k = 0; k < 4; k++) {
+          const a = (k / 4) * Math.PI * 2 + Math.PI / 4;
+          pillarSpots.push([Math.cos(a) * 6.6, cz + Math.sin(a) * 6.6, -a]);
+        }
+      });
+      scatterProp("/models/pillar.glb", 0.85, pillarSpots);
+
+      const torchSpots: [number, number, number][] = [
+        [-3, 10.2, 0], [3, 10.2, 0],
+        [-2.6, ZC[FINAL] + 2.6, 0], [2.6, ZC[FINAL] + 2.6, 0],
+      ];
+      CORRS.forEach(cr => torchSpots.push([-2.4, cr.z2 + 0.6, 0], [2.4, cr.z2 + 0.6, 0]));
+      scatterProp("/models/torch.glb", 1.2, torchSpots, true);
+
+      const barrelSpots: [number, number, number][] = [];
+      const crateSpots: [number, number, number][] = [];
+      ZC.forEach((zc, i) => {
+        barrelSpots.push([-12.6, zc + 7.2, i * 1.3], [12.4, zc - 6.8, i * 2.1]);
+        crateSpots.push([12.6, zc + 6.4, i * 0.8]);
+      });
+      scatterProp("/models/barrel.glb", 1.15, barrelSpots);
+      scatterProp("/models/crates.glb", 1.05, crateSpots);
+      const boxSpots: [number, number, number][] = [[-6.5, 9.6, 0.4]];
+      CORRS.forEach((cr, i) => boxSpots.push([i % 2 === 0 ? 2.15 : -2.15, (cr.z1 + cr.z2) / 2, i]));
+      scatterProp("/models/boxes.glb", 1.0, boxSpots);
+
+      const bannerFiles = ["banner_green", "banner_blue", "banner_red", "banner_yellow"];
+      ZC.forEach((zc, i) => {
+        scatterProp(`/models/${bannerFiles[i]}.glb`, 0.72, [
+          [-ROOM_HW + 0.7, zc, Math.PI / 2],
+          [ROOM_HW - 0.7, zc, -Math.PI / 2],
+        ]);
+      });
+    }
+
+    // ── Animated characters (KayKit rigs share one animation library) ───────
+    const mixers: THREE.AnimationMixer[] = [];
+    interface CharRig { root: THREE.Group; actions: Record<string, THREE.AnimationAction>; current?: string }
+    const mobRigs: (CharRig | null)[] = [null, null, null];
+    function makeRig(root: THREE.Group, anims: THREE.AnimationClip[], scale: number): CharRig {
+      root.scale.setScalar(scale);
+      root.traverse(o => {
+        const m = o as THREE.Mesh;
+        if (m.isMesh) m.castShadow = true;
+      });
+      const mixer = new THREE.AnimationMixer(root);
+      mixers.push(mixer);
+      const actions: Record<string, THREE.AnimationAction> = {};
+      for (const nm of ["Idle", "Walking_A", "Running_A", "Jump_Idle", "Cheer", "Spellcasting", "Taunt"]) {
+        const clip = THREE.AnimationClip.findByName(anims, nm);
+        if (clip) actions[nm] = mixer.clipAction(clip);
+      }
+      return { root, actions };
+    }
+    function rigPlay(rig: CharRig | null, nm: string) {
+      if (!rig || rig.current === nm || !rig.actions[nm]) return;
+      if (rig.current) rig.actions[rig.current]?.fadeOut(0.25);
+      rig.actions[nm].reset().fadeIn(0.25).play();
+      rig.current = nm;
+    }
+    function setOpacityDeep(root: THREE.Object3D, op: number) {
+      root.traverse(o => {
+        const m = o as THREE.Mesh;
+        if (m.isMesh && m.material && !Array.isArray(m.material)) {
+          const mat = m.material as THREE.Material & { opacity: number };
+          mat.transparent = true;
+          mat.opacity = op;
+        }
+      });
+    }
+
+    // guardians become real animated creatures
+    loadModel("/models/skeleton_minion.glb").then(g => {
+      const rig = makeRig(g.scene, g.animations, 1.0);
+      mobRigs[0] = rig;
+      mobVis[0].g.children.forEach(c => (c.visible = false));
+      mobVis[0].g.add(rig.root);
+      rigPlay(rig, "Idle");
+    }).catch(() => {});
+    loadModel("/models/skeleton_rogue.glb").then(g => {
+      const rig = makeRig(g.scene, g.animations, 1.02);
+      mobRigs[2] = rig;
+      mobVis[2].g.children.forEach(c => (c.visible = false));
+      mobVis[2].g.add(rig.root);
+      rigPlay(rig, "Idle");
+    }).catch(() => {});
+    loadModel("/models/skeleton_mage.glb").then(g => {
+      // two copies of the same being — quantum superposition, one real
+      const rootB = cloneSkeleton(g.scene) as THREE.Group;
+      const rigA = makeRig(g.scene, g.animations, 1.0);
+      const rigB = makeRig(rootB, g.animations, 1.0);
+      for (const rt of [rigA.root, rigB.root]) {
+        rt.traverse(o => {
+          const m = o as THREE.Mesh;
+          if (m.isMesh && m.material && !Array.isArray(m.material)) {
+            m.material = (m.material as THREE.Material).clone();
+            (m.material as THREE.Material).transparent = true;
+          }
+        });
+      }
+      mobRigs[1] = rigA;
+      mobVis[1].shardA!.children.forEach(c => (c.visible = false));
+      mobVis[1].shardB!.children.forEach(c => (c.visible = false));
+      mobVis[1].shardA!.add(rigA.root);
+      mobVis[1].shardB!.add(rigB.root);
+      rigPlay(rigA, "Idle");
+      rigPlay(rigB, "Idle");
+    }).catch(() => {});
+
+    // Anshul — the Adventurers Mage (idles, then cheers at the offer)
+    const anshulActions: { idle?: THREE.AnimationAction; cheer?: THREE.AnimationAction } = {};
+    loadModel("/models/anshul.glb").then(gltf => {
+      const model = gltf.scene;
+      model.scale.setScalar(1.4);
+      model.traverse(o => {
+        const mm = o as THREE.Mesh;
+        if (mm.isMesh) { mm.castShadow = true; mm.receiveShadow = false; }
+      });
+      const v = bossVis[FINAL];
+      if (v.protoBody) v.protoBody.visible = false;
+      v.group.add(model);
+      const mixer = new THREE.AnimationMixer(model);
+      mixers.push(mixer);
+      const idleClip = THREE.AnimationClip.findByName(gltf.animations, "Idle") || gltf.animations[0];
+      const cheerClip = THREE.AnimationClip.findByName(gltf.animations, "Cheer");
+      if (idleClip) {
+        anshulActions.idle = mixer.clipAction(idleClip);
+        anshulActions.idle.play();
+      }
+      if (cheerClip) anshulActions.cheer = mixer.clipAction(cheerClip);
+    }).catch(() => { /* offline — procedural body stays */ });
 
     // ── State ──────────────────────────────────────────────────────────────
     const st = {
@@ -1777,37 +1919,54 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           return;
         }
         mv.g.visible = true;
+        const rig = mobRigs[i];
         if (ty === 0) {
-          mv.g.position.set(mb.x, Math.abs(Math.sin(mb.t * 5)) * 0.08, mb.z);
+          const dPl = Math.hypot(mb.x - st.px, mb.z - st.pz);
+          mv.g.position.set(mb.x, rig ? 0 : Math.abs(Math.sin(mb.t * 5)) * 0.08, mb.z);
           mv.g.rotation.y = Math.atan2(st.px - mb.x, st.pz - mb.z);
-          mv.g.rotation.z = Math.sin(mb.t * 7) * 0.06;
-          if (mv.eye) mv.eye.scale.setScalar(1 + Math.sin(mb.t * 6) * 0.15);
+          mv.g.rotation.z = rig ? 0 : Math.sin(mb.t * 7) * 0.06;
+          if (!rig && mv.eye) mv.eye.scale.setScalar(1 + Math.sin(mb.t * 6) * 0.15);
+          rigPlay(rig, dPl < 16 && dPl > 1.2 ? "Walking_A" : "Idle");
         } else if (ty === 1) {
-          mv.shardA!.position.set(mb.slotA.x, 1.3 + Math.sin(mb.t * 2) * 0.1, mb.slotA.z);
-          mv.shardB!.position.set(mb.slotB.x, 1.3 - Math.sin(mb.t * 2) * 0.1, mb.slotB.z);
-          mv.shardA!.rotation.y = st.t * 1.4;
-          mv.shardB!.rotation.y = -st.t * 1.4;
-          mv.shardA!.children.forEach(c => { const mm = (c as THREE.Mesh).material as THREE.Material & { opacity: number }; mm.opacity = mb.real === 0 ? 1 : 0.3; });
-          mv.shardB!.children.forEach(c => { const mm = (c as THREE.Mesh).material as THREE.Material & { opacity: number }; mm.opacity = mb.real === 1 ? 1 : 0.3; });
+          const yA = rig ? 0 : 1.3 + Math.sin(mb.t * 2) * 0.1;
+          const yB = rig ? 0 : 1.3 - Math.sin(mb.t * 2) * 0.1;
+          mv.shardA!.position.set(mb.slotA.x, yA, mb.slotA.z);
+          mv.shardB!.position.set(mb.slotB.x, yB, mb.slotB.z);
+          if (rig) {
+            mv.shardA!.rotation.y = Math.atan2(st.px - mb.slotA.x, st.pz - mb.slotA.z);
+            mv.shardB!.rotation.y = Math.atan2(st.px - mb.slotB.x, st.pz - mb.slotB.z);
+          } else {
+            mv.shardA!.rotation.y = st.t * 1.4;
+            mv.shardB!.rotation.y = -st.t * 1.4;
+          }
+          setOpacityDeep(mv.shardA!, mb.real === 0 ? 1 : 0.3);
+          setOpacityDeep(mv.shardB!, mb.real === 1 ? 1 : 0.3);
           mv.g.position.set(0, 0, 0);
         } else {
           if (mb.phase === 0) {
-            mv.g.position.set(MOB_SPAWNS[i].x, 1.2 + Math.sin(mb.t * 3) * 0.2, MOB_SPAWNS[i].z);
+            mv.g.position.set(MOB_SPAWNS[i].x, rig ? 0 : 1.2 + Math.sin(mb.t * 3) * 0.2, MOB_SPAWNS[i].z);
             if (mv.ring) mv.ring.visible = false;
+            rigPlay(rig, "Idle");
           } else if (mb.phase === 1) {
             const f = Math.max(0, mb.cd / 0.85);
-            mv.g.position.set(mb.teleX, 1 + 5 * f, mb.teleZ);
+            mv.g.position.set(mb.teleX, (rig ? 0.2 : 1) + 5 * f, mb.teleZ);
             if (mv.ring) {
               mv.ring.visible = true;
               mv.ring.position.set(mb.teleX, 0.03, mb.teleZ);
               (mv.ring.material as THREE.MeshBasicMaterial).opacity = 0.3 + Math.sin(st.t * 16) * 0.25;
             }
+            rigPlay(rig, "Jump_Idle");
           } else {
-            mv.g.position.set(mb.x, 1.0, mb.z);
+            mv.g.position.set(mb.x, rig ? 0 : 1.0, mb.z);
             if (mv.ring) mv.ring.visible = false;
+            rigPlay(rig, "Running_A");
           }
-          mv.g.rotation.y = st.t * 3;
-          if (mv.core) mv.core.rotation.x = st.t * 4;
+          if (rig) {
+            mv.g.rotation.y = Math.atan2(st.px - mv.g.position.x, st.pz - mv.g.position.z);
+          } else {
+            mv.g.rotation.y = st.t * 3;
+            if (mv.core) mv.core.rotation.x = st.t * 4;
+          }
         }
       });
 
