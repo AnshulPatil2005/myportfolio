@@ -1,7 +1,7 @@
 // Shared data for Career Mode — no three.js imports here so the menu
 // shell can use it without pulling in the 3D engine chunk.
 
-export const ROMAN = ["I", "II", "III", "IV", "V", "VI"];
+export const ROMAN = ["I", "II", "III", "IV"];
 
 export const CHAPTERS = [
   {
@@ -13,38 +13,10 @@ export const CHAPTERS = [
       "The database had become something else. Something slow. Something huge.",
     ],
     bossName: "THE MONOLITH", bossSub: "armored database titan — strike while it vents",
-    victory: "Reduced backend API latency by 40% through query optimization and caching.",
+    victory: "Reduced backend API latency by 40% through query optimization and caching, while processing 10K+ daily user events and 300K+ monthly records through AWS S3 pipelines.",
     quip: "weak point found: the queries nobody ever EXPLAIN'd.",
     unlock: "SQL BURST", unlockDesc: "shotgun — six pellets, close-range purge",
     exitTo: "jobs",
-  },
-  {
-    year: "2025", org: "sect_scrape", role: "Research Tooling · Gujarat eCourts",
-    story: [
-      "Thousands of disposed CRMA bail cases — CrPC 436, 437, 438, 439 —",
-      "locked behind the eCourts portal. Playwright automation, OCR,",
-      "structured JSONL, preserved source PDFs.",
-      "But the portal had a guardian. It demanded proof of humanity. Repeatedly.",
-    ],
-    bossName: "THE GATEKEEPER", bossSub: "shoot the highlighted glyph — sequence matters",
-    victory: "Automated the eCourts portal with Playwright + CAPTCHA/OCR handling, storing structured metadata in JSON/JSONL/SQLite with preserved source HTML/PDF orders.",
-    quip: "verification complete: he was human. the scraper wasn't. it won anyway.",
-    unlock: "HEADLESS AUTOMATION", unlockDesc: "full-auto — the browser never sleeps",
-    exitTo: "projects",
-  },
-  {
-    year: "2025–26", org: "Gujarati Legal NLP", role: "Independent Research",
-    story: [
-      "The scraped judgments should have been text. They weren't.",
-      "Legacy fonts — LMG-Arun, TERAFONT-VARUN — corrupted ToUnicode maps,",
-      "glyphs pretending to be letters. Valid-looking PDFs storing garbage.",
-      "The corpus itself was hostile.",
-    ],
-    bossName: "THE CORRUPTED SCRIPT", bossSub: "living mojibake — purify the swarm",
-    victory: "Built a multi-strategy extraction pipeline — legacy font conversion, Tesseract, SuryaOCR, Cloud Vision, glyph-to-Unicode mapping — turning corrupted court PDFs into an ML-ready Gujarati legal corpus.",
-    quip: "every glyph mapped. every conjunct restored. the text confessed.",
-    unlock: "OCR BEAM", unlockDesc: "continuous extraction beam — hold to melt",
-    exitTo: "research",
   },
   {
     year: "2026", org: "GSoC · BRL-CAD", role: "Selected Contributor · Manifold",
@@ -79,8 +51,8 @@ export const CHAPTERS = [
     story: [
       "You've cleared his history. Beaten every problem he ever beat.",
       "One obstacle remains between you and the end of this portfolio.",
-      "He is standing in the arena. He has seen everything you can do.",
-      "He built everything you just fought.",
+      "He is standing at the end of the path. He has seen everything",
+      "you can do. He built everything you just fought.",
     ],
     bossName: "ANSHUL PATIL", bossSub: "immune to conventional weapons — find another way",
     victory: "", quip: "", unlock: "", unlockDesc: "",
@@ -91,23 +63,22 @@ export const CHAPTERS = [
 export const WEAPONS = [
   { name: "CONSOLE.LOG" },
   { name: "SQL BURST" },
-  { name: "HEADLESS AUTOMATION" },
-  { name: "OCR BEAM" },
   { name: "DETERMINISTIC RAIL" },
   { name: "FULL STACK" },
 ];
 
-export const GLYPHS = ["અ", "ક", "ષ", "જ્ઞ", "ર", "૨", "Ø", "�", "Ξ", "ঌ"];
+// symbols that render on every platform — no tofu boxes
+export const GLYPHS = ["Ø", "Ξ", "Δ", "Ω", "§", "¶", "µ", "%"];
 
 export const IMMUNE_TEXTS = ["0", "IMMUNE", "0", "already fixed", "0", "skill issue", "0", "nice try"];
 
 export const ANSHUL_TAUNTS = [
   "You can't debug me.",
-  "I wrote the boss you fought two chapters ago.",
+  "I built everything you just fought.",
   "Your DPS is impressive. Irrelevant, but impressive.",
   "There is exactly one way to defeat me.",
   "Check my references. Then check your inventory.",
   "I am immune to bullets. Not to opportunities.",
 ];
 
-export const PROGRESS_KEY = "career-mode-progress";
+export const PROGRESS_KEY = "career-mode-progress-v2";

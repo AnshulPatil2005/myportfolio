@@ -98,8 +98,8 @@ export default function CareerMode() {
       return;
     }
     if (e === "ending") {
-      localStorage.setItem(PROGRESS_KEY, "6");
-      setSaved(6);
+      localStorage.setItem(PROGRESS_KEY, "4");
+      setSaved(4);
       setPhase("ending");
     }
   }, []);
@@ -156,7 +156,7 @@ export default function CareerMode() {
                     <p className="font-mono text-[9px] uppercase tracking-[0.35em] text-zinc-500 mb-1.5">anshulpatil.is-a.dev presents</p>
                     <h2 className="font-display text-5xl text-accent leading-none mb-2">Career Mode</h2>
                     <p className="font-mono text-[10px] text-zinc-500">
-                      one path · 5 boss gates · at the end of the road, him
+                      one path · 3 boss fights · at the end of the road, him
                     </p>
                   </div>
 
@@ -165,7 +165,7 @@ export default function CareerMode() {
                     {CHAPTERS.map((c, i) => {
                       const cleared = saved > i;
                       const unlocked = saved >= i;
-                      const isFinal = i === 5;
+                      const isFinal = i === CHAPTERS.length - 1;
                       return (
                         <div
                           key={i}
@@ -177,7 +177,7 @@ export default function CareerMode() {
                                 : unlocked ? (isFinal ? "border-red-500 text-red-400 bg-[#170d0d] animate-pulse" : "border-amber-500 text-accent bg-[#171208] animate-pulse")
                                 : "border-zinc-800 text-zinc-700 bg-[#0d0a08]"}`}
                           >
-                            {cleared ? "✓" : isFinal ? "☠" : ROMAN[i]}
+                            {cleared ? "✓" : isFinal ? "★" : ROMAN[i]}
                           </span>
                           <span className="flex-1 min-w-0">
                             <span className={`block font-mono text-[11px] font-bold tracking-wide truncate
@@ -201,10 +201,10 @@ export default function CareerMode() {
 
                   <div className="flex items-center gap-6 mt-6">
                     <button
-                      onClick={() => enterWorld(saved >= 6 ? 5 : Math.min(saved, 5))}
+                      onClick={() => enterWorld(saved >= 4 ? 3 : Math.min(saved, 3))}
                       className="font-mono text-xs uppercase tracking-[0.2em] text-ink bg-accent px-8 py-2.5 hover:opacity-85 transition-opacity"
                     >
-                      {saved === 0 ? "Begin the journey" : saved >= 6 ? "Walk it again" : "Continue the journey"}
+                      {saved === 0 ? "Begin the journey" : saved >= 4 ? "Walk it again" : "Continue the journey"}
                     </button>
                     {saved > 0 && (
                       <button
@@ -215,7 +215,7 @@ export default function CareerMode() {
                       </button>
                     )}
                   </div>
-                  <p className="font-mono text-[9px] text-zinc-700 mt-3">first person · WASD move · shift to sprint · mouse look · hold click to shoot · 1-6 weapons · E to interact · desktop only</p>
+                  <p className="font-mono text-[9px] text-zinc-700 mt-3">first person · WASD move · shift to sprint · mouse look · hold click to shoot · R reload · 1-4 weapons · E to interact · desktop only</p>
                 </motion.div>
               )}
 
@@ -277,7 +277,7 @@ export default function CareerMode() {
                     <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-green-400 mb-3">the only winning move</p>
                     <h3 className="font-display text-5xl text-zinc-100 mb-2">Offer Accepted</h3>
                     <p className="font-mono text-[11px] text-zinc-400 mb-8">
-                      You walked his whole path. Beat every problem he ever beat.<br />
+                      Three bosses. One path. Every bullet bounced off the last obstacle.<br />
                       And when you finally met him, he asked for the one thing that could end it — a job offer.
                     </p>
                     <div className="flex flex-wrap justify-center gap-4 mb-8">

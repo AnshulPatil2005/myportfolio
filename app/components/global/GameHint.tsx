@@ -3,19 +3,15 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// First-visit pill telling visitors the portfolio is playable.
+// Corner invitation: explore the résumé by playing the game.
 export default function GameHint() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (sessionStorage.getItem("game-hint-seen")) return;
     if (window.innerWidth < 768) return; // the game is desktop-only
-    const show = setTimeout(() => setVisible(true), 2600);
-    const hide = setTimeout(() => {
-      setVisible(false);
-      sessionStorage.setItem("game-hint-seen", "1");
-    }, 15000);
-    return () => { clearTimeout(show); clearTimeout(hide); };
+    const show = setTimeout(() => setVisible(true), 2200);
+    return () => clearTimeout(show);
   }, []);
 
   const dismiss = () => {
@@ -26,32 +22,38 @@ export default function GameHint() {
   return (
     <AnimatePresence>
       {visible && (
-        <motion.button
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 12 }}
-          transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
-          onClick={() => {
-            dismiss();
-            window.dispatchEvent(new KeyboardEvent("keydown", { key: "c", bubbles: true }));
-          }}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-2.5 border dark:border-zinc-700 border-zinc-300 dark:bg-ink/90 bg-paper/90 backdrop-blur-sm font-mono text-[11px] uppercase tracking-[0.18em] dark:text-zinc-300 text-zinc-600 hover:dark:border-amber-500/60 hover:border-amber-500/60 transition-colors duration-150 select-none shadow-lg shadow-black/20"
+        <motion.div
+          initial={{ opacity: 0, x: 24, y: 8 }}
+          animate={{ opacity: 1, x: 0, y: 0 }}
+          exit={{ opacity: 0, x: 24 }}
+          transition={{ duration: 0.4, ease: [0.25, 1, 0.5, 1] }}
+          className="fixed bottom-6 right-6 z-40 w-[290px] border dark:border-zinc-700 border-zinc-300 dark:bg-ink/95 bg-paper/95 backdrop-blur-sm p-5 shadow-xl shadow-black/25 select-none"
         >
-          <span className="text-[10px] animate-pulse dark:text-accent text-amber-600">▶</span>
-          <span>
-            this portfolio is playable — press{" "}
-            <kbd className="border dark:border-amber-500/50 border-amber-500/60 dark:text-accent text-amber-600 px-1.5 py-0.5 text-[10px]">C</kbd>{" "}
-            to fight my résumé
-          </span>
-          <span
-            role="button"
-            aria-label="dismiss"
-            onClick={e => { e.stopPropagation(); dismiss(); }}
-            className="ml-1 dark:text-zinc-600 text-zinc-400 hover:dark:text-zinc-300 hover:text-zinc-600"
-          >
-            ×
-          </span>
-        </motion.button>
+          <p className="font-mono text-[9px] uppercase tracking-[0.3em] dark:text-accent text-amber-600 mb-2">
+            ▶ this portfolio is playable
+          </p>
+          <p className="text-[13px] leading-relaxed dark:text-zinc-300 text-zinc-700 mb-4">
+            Want to explore the résumé as a game? A short 3D shooter — three bosses
+            from my career, and me waiting at the end.
+          </p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                dismiss();
+                window.dispatchEvent(new KeyboardEvent("keydown", { key: "c", bubbles: true }));
+              }}
+              className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink bg-accent px-4 py-2 hover:opacity-85 transition-opacity"
+            >
+              Play the game
+            </button>
+            <button
+              onClick={dismiss}
+              className="font-mono text-[10px] uppercase tracking-[0.18em] dark:text-zinc-500 text-zinc-500 hover:dark:text-zinc-300 hover:text-zinc-700 transition-colors"
+            >
+              just browse
+            </button>
+          </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );
