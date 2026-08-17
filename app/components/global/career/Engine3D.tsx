@@ -2,13 +2,16 @@
 
 import * as THREE from "three";
 import { useEffect, useRef } from "react";
-import { CHAPTERS, WEAPONS, GLYPHS, IMMUNE_TEXTS, ANSHUL_TAUNTS } from "./data";
+import { CHAPTERS, WEAPONS, GLYPHS, IMMUNE_TEXTS, ANSHUL_TAUNTS, ROMAN } from "./data";
 
-// First-person boss arena. 1 unit ≈ 30px of the original 2D layout.
-const AR_X = 15.5; // half-width
-const AR_Z = 8.8;  // half-depth
+// ── One continuous world. The player character walks a path through six
+//    zones; each zone's boss guards the gate to the next. Zone 6 is Anshul.
+const ZONE_GAP = 34;
+const ZC = [0, 1, 2, 3, 4, 5].map(i => -i * ZONE_GAP); // zone centers (z)
+const ROOM_HW = 14;   // room half-width
+const ROOM_HD = 11;   // room half-depth
+const CORR_HW = 3;    // corridor half-width
 const RW = 960, RH = 540;
-const EYE = 1.55;
 
 const AMBER = 0xffb000;
 const AMBER_HI = 0xffcf60;
@@ -17,17 +20,21 @@ const GREENC = 0x4ade80;
 const DARK = 0x1c1512;
 
 interface Props {
-  chapter: number;
+  initialCleared: number;
   paused: boolean;
-  onEvent: (e: "victory" | "dead" | "cine" | "ending" | "pause") => void;
+  onEvent: (e: "victory" | "ending" | "pause", data?: number) => void;
 }
 
 interface PB { x: number; y: number; z: number; vx: number; vy: number; vz: number; dmg: number; pierce: number; dead: boolean }
 interface EB { x: number; z: number; vx: number; vz: number; r: number; dead: boolean }
-interface MinionS { x: number; z: number; vx: number; vz: number; hp: number; t: number; ang: number; diving: boolean; dead: boolean; si: number }
+interface MinionS { x: number; z: number; vx: number; vz: number; hp: number; t: number; ang: number; diving: boolean; dead: boolean }
 interface Part { x: number; y: number; z: number; vx: number; vy: number; vz: number; t: number; max: number; r: number; g: number; b: number }
 
-export default function Engine3D({ chapter, paused, onEvent }: Props) {
+// walkable rectangles: rooms always; corridor i needs boss i beaten
+const ROOMS = ZC.map(zc => ({ x1: -ROOM_HW, x2: ROOM_HW, z1: zc - ROOM_HD, z2: zc + ROOM_HD }));
+const CORRS = [0, 1, 2, 3, 4].map(i => ({ x1: -CORR_HW, x2: CORR_HW, z1: ZC[i] - ROOM_HD - (ZONE_GAP - ROOM_HD * 2), z2: ZC[i] - ROOM_HD }));
+
+export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const pausedRef = useRef(paused);
   const onEventRef = useRef(onEvent);
@@ -36,19 +43,26 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
 
   // HUD refs
   const hpFillRef = useRef<HTMLDivElement>(null);
+  const bossWrapRef = useRef<HTMLDivElement>(null);
+  const bossNameRef = useRef<HTMLParagraphElement>(null);
   const bossFillRef = useRef<HTMLDivElement>(null);
   const noteRef = useRef<HTMLDivElement>(null);
   const flashRef = useRef<HTMLDivElement>(null);
+  const blackRef = useRef<HTMLDivElement>(null);
   const introRef = useRef<HTMLDivElement>(null);
+  const introNameRef = useRef<HTMLHeadingElement>(null);
+  const introSubRef = useRef<HTMLParagraphElement>(null);
   const crossRef = useRef<HTMLDivElement>(null);
   const lockHintRef = useRef<HTMLDivElement>(null);
+  const zoneRef = useRef<HTMLDivElement>(null);
+  const objRef = useRef<HTMLDivElement>(null);
+  const bannerRef = useRef<HTMLDivElement>(null);
+  const weaponRef = useRef<HTMLDivElement>(null);
+  const promptRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
-    const ch = chapter;
-    const tier = Math.min(ch, WEAPONS.length - 1);
-    const wp = WEAPONS[tier];
 
     // ── Renderer / scene / camera ──────────────────────────────────────────
     const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -62,15 +76,14 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0d0a08);
-    scene.fog = new THREE.Fog(0x0d0a08, 16, 46);
+    scene.fog = new THREE.Fog(0x0d0a08, 14, 44);
 
-    const camera = new THREE.PerspectiveCamera(72, RW / RH, 0.05, 120);
+    const camera = new THREE.PerspectiveCamera(62, RW / RH, 0.05, 140);
     scene.add(camera);
 
     // ── Helpers ────────────────────────────────────────────────────────────
     const disposables: { dispose: () => void }[] = [];
     const track = <T extends { dispose: () => void }>(d: T): T => { disposables.push(d); return d; };
-
     const bmat = (color: number, o: Partial<THREE.MeshBasicMaterialParameters> = {}) =>
       track(new THREE.MeshBasicMaterial({ color, ...o }));
     const lmat = (color: number, opacity = 1) =>
@@ -108,57 +121,145 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       return s;
     }
 
-    // ── Arena ──────────────────────────────────────────────────────────────
-    const ground = new THREE.Mesh(track(new THREE.PlaneGeometry(90, 60)), bmat(0x0b0908));
+    // ── Terrain ────────────────────────────────────────────────────────────
+    const ground = new THREE.Mesh(track(new THREE.PlaneGeometry(120, 300)), bmat(0x0b0908));
     ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.02;
+    ground.position.set(0, -0.02, -85);
     scene.add(ground);
-
-    const grid = new THREE.GridHelper(64, 64, 0x3a2a18, 0x211710);
+    const grid = new THREE.GridHelper(300, 150, 0x3a2a18, 0x1d1410);
     (grid.material as THREE.Material).transparent = true;
-    (grid.material as THREE.Material).opacity = 0.55;
+    (grid.material as THREE.Material).opacity = 0.5;
+    grid.position.z = -85;
     scene.add(grid);
 
-    // arena walls — dark slabs with amber rims so the space reads in first person
-    const wallH = 2.4;
-    const mkWall = (w: number, d: number, x: number, z: number) => {
-      const geo = track(new THREE.BoxGeometry(w, wallH, d));
+    const WALL_H = 2.6;
+    function mkWall(w: number, d: number, x: number, z: number) {
+      const geo = track(new THREE.BoxGeometry(w, WALL_H, d));
       const mesh = new THREE.Mesh(geo, bmat(0x0f0c0a));
-      mesh.position.set(x, wallH / 2, z);
-      const e = edgesOf(geo, AMBER, 0.35);
+      mesh.position.set(x, WALL_H / 2, z);
+      const e = edgesOf(geo, AMBER, 0.3);
       e.position.copy(mesh.position);
       scene.add(mesh, e);
+    }
+    // rooms with corridor gaps
+    const segW = (ROOM_HW - CORR_HW); // 11
+    ZC.forEach((zc, i) => {
+      // +Z wall (entry side): gap if a corridor comes in (i > 0)
+      if (i > 0) {
+        mkWall(segW, 0.5, -(CORR_HW + segW / 2), zc + ROOM_HD);
+        mkWall(segW, 0.5, CORR_HW + segW / 2, zc + ROOM_HD);
+      } else {
+        mkWall(ROOM_HW * 2 + 0.5, 0.5, 0, zc + ROOM_HD + 0.25);
+      }
+      // −Z wall (exit side): gap if corridor leaves (i < 5)
+      if (i < 5) {
+        mkWall(segW, 0.5, -(CORR_HW + segW / 2), zc - ROOM_HD);
+        mkWall(segW, 0.5, CORR_HW + segW / 2, zc - ROOM_HD);
+      } else {
+        mkWall(ROOM_HW * 2 + 0.5, 0.5, 0, zc - ROOM_HD - 0.25);
+      }
+      // side walls
+      mkWall(0.5, ROOM_HD * 2, -ROOM_HW - 0.25, zc);
+      mkWall(0.5, ROOM_HD * 2, ROOM_HW + 0.25, zc);
+      // corner pillars
+      const postGeo = track(new THREE.CylinderGeometry(0.09, 0.09, 3.6, 6));
+      for (const [sx, sz] of [[-ROOM_HW, zc - ROOM_HD], [ROOM_HW, zc - ROOM_HD], [ROOM_HW, zc + ROOM_HD], [-ROOM_HW, zc + ROOM_HD]] as [number, number][]) {
+        const post = new THREE.Mesh(postGeo, bmat(AMBER, { transparent: true, opacity: 0.75 }));
+        post.position.set(sx, 1.8, sz);
+        scene.add(post);
+      }
+    });
+    // corridor walls
+    CORRS.forEach(cr => {
+      const len = cr.z2 - cr.z1;
+      mkWall(0.5, len, -CORR_HW - 0.25, (cr.z1 + cr.z2) / 2);
+      mkWall(0.5, len, CORR_HW + 0.25, (cr.z1 + cr.z2) / 2);
+    });
+
+    // gates — sealed until the zone's boss dies
+    const gates = CORRS.map((cr, i) => {
+      const g = new THREE.Group();
+      const plane = new THREE.Mesh(track(new THREE.PlaneGeometry(CORR_HW * 2, WALL_H)), bmat(AMBER, { transparent: true, opacity: 0.16, side: THREE.DoubleSide }));
+      plane.position.y = WALL_H / 2;
+      const frame = edgesOf(track(new THREE.BoxGeometry(CORR_HW * 2, WALL_H, 0.06)), AMBER, 0.7);
+      frame.position.y = WALL_H / 2;
+      const lock = textSprite("⚠ GATE SEALED", "#ffb000", 0.34);
+      lock.position.y = WALL_H + 0.5;
+      g.add(plane, frame, lock);
+      g.position.set(0, 0, cr.z2); // at the room's exit
+      scene.add(g);
+      return { g, plane: plane.material as THREE.MeshBasicMaterial };
+    });
+
+    // story sign panels — chapter text stands along the path
+    function addSign(txt: string, x: number, y: number, z: number, color = "#c8b08a", h = 0.3) {
+      const s = textSprite(txt, color, h, 44);
+      s.position.set(x, y, z);
+      scene.add(s);
+    }
+    CHAPTERS[0].story.forEach((ln, k) => addSign(ln, k % 2 === 0 ? -5 : 5, 1.7, 8.5 - k * 1.3));
+    CORRS.forEach((cr, i) => {
+      const story = CHAPTERS[i + 1].story;
+      story.forEach((ln, k) => {
+        addSign(ln, k % 2 === 0 ? -2.1 : 2.1, 1.7, cr.z2 - 2 - k * 2.4);
+      });
+    });
+    addSign("↓ follow the path", 0, 1.2, ZC[0] - 9, "#8a7050");
+
+    // ambient zone props
+    const propRand = (seed: number) => {
+      let s = seed;
+      return () => { s = (s * 16807) % 2147483647; return (s % 1000) / 1000; };
     };
-    mkWall(AR_X * 2 + 1, 0.5, 0, -AR_Z - 0.25);
-    mkWall(AR_X * 2 + 1, 0.5, 0, AR_Z + 0.25);
-    mkWall(0.5, AR_Z * 2 + 1, -AR_X - 0.25, 0);
-    mkWall(0.5, AR_Z * 2 + 1, AR_X + 0.25, 0);
-    const postGeo = track(new THREE.CylinderGeometry(0.09, 0.09, 3.4, 6));
-    for (const [px2, pz2] of [[-AR_X, -AR_Z], [AR_X, -AR_Z], [AR_X, AR_Z], [-AR_X, AR_Z]] as [number, number][]) {
-      const post = new THREE.Mesh(postGeo, bmat(AMBER, { transparent: true, opacity: 0.85 }));
-      post.position.set(px2, 1.7, pz2);
-      scene.add(post);
-    }
+    ZC.forEach((zc, zi) => {
+      const rnd = propRand(zi * 977 + 13);
+      for (let k = 0; k < 7; k++) {
+        const px2 = (rnd() - 0.5) * 24;
+        const pz2 = zc + (rnd() - 0.5) * 17;
+        if (Math.abs(px2) < 4 && Math.abs(pz2 - zc) < 5) continue; // keep the arena center clear
+        if (zi === 0) {
+          const h = 0.6 + rnd() * 1.6;
+          const geo = track(new THREE.BoxGeometry(0.9, h, 0.9));
+          const e = edgesOf(geo, 0x4a3828, 0.8);
+          e.position.set(px2, h / 2, pz2);
+          scene.add(e);
+        } else if (zi === 1) {
+          const geo = track(new THREE.CylinderGeometry(0.16, 0.2, 2.4, 6));
+          const e = edgesOf(geo, 0x4a3828, 0.7);
+          e.position.set(px2, 1.2, pz2);
+          scene.add(e);
+        } else if (zi === 2) {
+          const sp = textSprite(GLYPHS[k % GLYPHS.length], k % 3 === 0 ? "#5a3030" : "#4a3828", 0.6);
+          sp.position.set(px2, 0.8 + rnd() * 1.6, pz2);
+          scene.add(sp);
+        } else if (zi === 3) {
+          const geo = track(new THREE.IcosahedronGeometry(0.5 + rnd() * 0.5, 0));
+          const m = new THREE.Mesh(geo, bmat(0x4a3828, { wireframe: true, transparent: true, opacity: 0.6 }));
+          m.position.set(px2, 0.7, pz2);
+          scene.add(m);
+        } else if (zi === 4) {
+          const h = 1 + rnd() * 2.4;
+          const geo = track(new THREE.BoxGeometry(1.1, h, 1.1));
+          const e = edgesOf(geo, 0x5a2a22, 0.75);
+          e.position.set(px2, h / 2, pz2);
+          scene.add(e);
+        } else {
+          const geo = track(new THREE.CylinderGeometry(0.14, 0.14, 2.8 + rnd() * 1.2, 6));
+          const m = new THREE.Mesh(geo, bmat(AMBER, { transparent: true, opacity: 0.5 }));
+          m.position.set(px2, 1.5, pz2);
+          scene.add(m);
+        }
+      }
+    });
 
-    // distant monoliths for depth
-    for (let i = 0; i < 9; i++) {
-      const h = 4 + Math.random() * 9;
-      const geo = track(new THREE.BoxGeometry(1.4 + Math.random() * 2, h, 1.4 + Math.random() * 2));
-      const ang = (i / 9) * Math.PI * 2 + Math.random() * 0.4;
-      const dist = 26 + Math.random() * 12;
-      const e = edgesOf(geo, 0x4a3520, 0.5);
-      e.position.set(Math.cos(ang) * dist, h / 2, Math.sin(ang) * dist);
-      scene.add(e);
-    }
-
-    // floating dust
+    // floating dust across the whole path
     {
-      const n = 240;
+      const n = 400;
       const pos = new Float32Array(n * 3);
       for (let i = 0; i < n; i++) {
-        pos[i * 3] = (Math.random() - 0.5) * 70;
-        pos[i * 3 + 1] = Math.random() * 12 + 0.5;
-        pos[i * 3 + 2] = (Math.random() - 0.5) * 50;
+        pos[i * 3] = (Math.random() - 0.5) * 60;
+        pos[i * 3 + 1] = Math.random() * 10 + 0.5;
+        pos[i * 3 + 2] = 20 - Math.random() * 220;
       }
       const g = track(new THREE.BufferGeometry());
       g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
@@ -168,28 +269,36 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       scene.add(pts);
     }
 
-    // ── Viewmodel gun ──────────────────────────────────────────────────────
-    const gun = new THREE.Group();
+    // ── Player character ───────────────────────────────────────────────────
+    const player = new THREE.Group();
     {
-      const bodyGeo = track(new THREE.BoxGeometry(0.15, 0.15, 0.5));
-      const body = new THREE.Mesh(bodyGeo, bmat(0x241c14));
-      const bodyE = edgesOf(bodyGeo, AMBER, 0.8);
-      const barrelGeo = track(new THREE.BoxGeometry(0.065, 0.065, 0.46));
-      const barrel = new THREE.Mesh(barrelGeo, bmat(0x38281a));
-      barrel.position.set(0, 0.035, -0.42);
-      const barrelE = edgesOf(barrelGeo, AMBER, 0.5);
-      barrelE.position.copy(barrel.position);
-      gun.add(body, bodyE, barrel, barrelE);
+      const bodyGeo = track(new THREE.CapsuleGeometry(0.3, 0.85, 4, 10));
+      const body = new THREE.Mesh(bodyGeo, bmat(0x14100d));
+      body.position.y = 1.02;
+      const bodyE = edgesOf(track(new THREE.CylinderGeometry(0.32, 0.32, 1.35, 8)), 0xffffff, 0.5);
+      bodyE.position.y = 1.02;
+      const head = new THREE.Mesh(track(new THREE.SphereGeometry(0.3, 16, 12)), bmat(0x14100d));
+      head.position.y = 1.95;
+      const headE = edgesOf(track(new THREE.BoxGeometry(0.44, 0.44, 0.44)), 0xffffff, 0.4);
+      headE.position.y = 1.95;
+      const gunGeo = track(new THREE.BoxGeometry(0.1, 0.1, 0.62));
+      const gunM = new THREE.Mesh(gunGeo, bmat(0x241c14));
+      gunM.position.set(0.34, 1.25, -0.3);
+      const gunE = edgesOf(gunGeo, AMBER, 0.9);
+      gunE.position.copy(gunM.position);
+      const ring = new THREE.Mesh(track(new THREE.RingGeometry(0.5, 0.6, 24)), bmat(AMBER, { transparent: true, opacity: 0.45, side: THREE.DoubleSide }));
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.03;
+      player.add(body, bodyE, head, headE, gunM, gunE, ring);
     }
-    gun.position.set(0.32, -0.27, -0.65);
-    camera.add(gun);
+    scene.add(player);
     const muzzleMat = track(new THREE.SpriteMaterial({ map: textTexture("✦", "#ffcf60", 64), transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
     const muzzle = new THREE.Sprite(muzzleMat);
-    muzzle.scale.setScalar(0.3);
-    muzzle.position.set(0.32, -0.22, -1.05);
-    camera.add(muzzle);
+    muzzle.scale.setScalar(0.34);
+    muzzle.position.set(0.34, 1.25, -0.75);
+    player.add(muzzle);
 
-    // ── Bullets (instanced) ────────────────────────────────────────────────
+    // ── Bullets / particles / floaters / zones / minions ──────────────────
     const MAX_PB = 160, MAX_EB = 340;
     const pbMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.11, 8, 8)), bmat(AMBER_HI), MAX_PB);
     const ebMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.17, 8, 8)), bmat(REDC), MAX_EB);
@@ -197,17 +306,15 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
     pbMesh.count = 0; ebMesh.count = 0;
     scene.add(pbMesh, ebMesh);
     const m4 = new THREE.Matrix4();
-    const EB_Y = 1.25; // enemy fire flies at chest height
+    const EB_Y = 1.25;
 
-    // ── Particles ──────────────────────────────────────────────────────────
     const MAXP = 500;
     const partPos = new Float32Array(MAXP * 3);
     const partCol = new Float32Array(MAXP * 3);
     const partGeo = track(new THREE.BufferGeometry());
     partGeo.setAttribute("position", new THREE.BufferAttribute(partPos, 3));
     partGeo.setAttribute("color", new THREE.BufferAttribute(partCol, 3));
-    const partMat = track(new THREE.PointsMaterial({ size: 0.24, vertexColors: true, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false }));
-    const partMesh = new THREE.Points(partGeo, partMat);
+    const partMesh = new THREE.Points(partGeo, track(new THREE.PointsMaterial({ size: 0.24, vertexColors: true, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false })));
     partMesh.frustumCulled = false;
     scene.add(partMesh);
     const parts: Part[] = [];
@@ -221,7 +328,6 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       }
     }
 
-    // ── Floaters ───────────────────────────────────────────────────────────
     const FLOATN = 8;
     const floaters = Array.from({ length: FLOATN }, () => {
       const m = track(new THREE.SpriteMaterial({ transparent: true, depthWrite: false, opacity: 0 }));
@@ -243,7 +349,6 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       f.t = 0; f.live = true;
     }
 
-    // ── Zones ──────────────────────────────────────────────────────────────
     const zoneVis = Array.from({ length: 3 }, () => {
       const g = new THREE.Group();
       const fill = new THREE.Mesh(track(new THREE.CircleGeometry(1.9, 28)), bmat(0xff3c3c, { transparent: true, opacity: 0.14, side: THREE.DoubleSide }));
@@ -256,7 +361,6 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       return { g, fill: fill.material as THREE.MeshBasicMaterial, rim: rim.material as THREE.MeshBasicMaterial };
     });
 
-    // ── Minions ────────────────────────────────────────────────────────────
     const MINN = 8;
     const minionVis = Array.from({ length: MINN }, (_, i) => {
       const s = textSprite(GLYPHS[i % GLYPHS.length], "#ffffff", 0.8);
@@ -265,31 +369,157 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       return s;
     });
 
+    // ── Boss visuals — all six live in the world ───────────────────────────
+    interface BossVis {
+      group: THREE.Group;
+      slabEdges?: THREE.LineSegments[]; vent?: THREE.Mesh;
+      faceEdges?: THREE.LineSegments; check?: THREE.Sprite; shields?: THREE.Sprite[];
+      deco?: THREE.Sprite[];
+      ghosts?: THREE.Group[]; hash?: THREE.Sprite; pin?: THREE.Mesh;
+      coreEdge?: THREE.LineSegments; mods?: THREE.Group[];
+      screen?: THREE.MeshBasicMaterial; aura?: THREE.MeshBasicMaterial;
+    }
+    const bossVis: BossVis[] = ZC.map((zc, zi) => {
+      const group = new THREE.Group();
+      group.position.set(0, 0, zc);
+      scene.add(group);
+      const v: BossVis = { group };
+      const name = textSprite(CHAPTERS[zi].bossName, zi === 5 ? "#ffb000" : "#ff8866", 0.44);
+      name.position.y = zi === 0 ? 5.4 : 4.1;
+      group.add(name);
+
+      if (zi === 0) {
+        v.slabEdges = [];
+        for (let i = 0; i < 5; i++) {
+          const geo = track(new THREE.BoxGeometry(4 - i * 0.27, 0.85, 2.3));
+          const slab = new THREE.Mesh(geo, bmat(DARK));
+          slab.position.y = 0.46 + i * 0.9;
+          const e = edgesOf(geo, 0x4a3828);
+          e.position.y = slab.position.y;
+          group.add(slab, e);
+          v.slabEdges.push(e);
+        }
+        v.vent = new THREE.Mesh(track(new THREE.BoxGeometry(2.6, 1.9, 2.45)), bmat(AMBER, { transparent: true, opacity: 0 }));
+        v.vent.position.y = 1.8;
+        group.add(v.vent);
+      } else if (zi === 1) {
+        const faceGeo = track(new THREE.BoxGeometry(2.5, 2.5, 0.55));
+        const face = new THREE.Mesh(faceGeo, bmat(DARK));
+        face.position.y = 1.6;
+        v.faceEdges = edgesOf(faceGeo, 0x4a3828);
+        v.faceEdges.position.y = 1.6;
+        const label = textSprite("I'M NOT A ROBOT", "#c8b08a", 0.34);
+        label.position.set(0, 2.15, 0.4);
+        v.check = textSprite("☐", "#c8b08a", 0.6);
+        v.check.position.set(0, 1.2, 0.4);
+        group.add(face, v.faceEdges, label, v.check);
+        v.shields = GLYPHS.slice(0, 5).map(gl => {
+          const sp = textSprite(gl, "#ffffff", 0.85);
+          scene.add(sp);
+          return sp;
+        });
+      } else if (zi === 2) {
+        const core = textSprite("�", "#ffffff", 2.0);
+        core.position.y = 1.5;
+        group.add(core);
+        v.deco = Array.from({ length: 10 }, (_, i) => {
+          const sp = textSprite(GLYPHS[i % GLYPHS.length], i % 3 === 0 ? "#ff5555" : "#ffb000", 0.55);
+          group.add(sp);
+          return sp;
+        });
+      } else if (zi === 3) {
+        v.ghosts = [0, 1, 2].map(() => {
+          const g = new THREE.Group();
+          const outer = new THREE.Mesh(track(new THREE.IcosahedronGeometry(1.35, 0)), bmat(AMBER, { wireframe: true, transparent: true, opacity: 1 }));
+          outer.position.y = 1.5;
+          const inner = new THREE.Mesh(track(new THREE.IcosahedronGeometry(0.72, 0)), bmat(AMBER, { transparent: true, opacity: 0.14 }));
+          inner.position.y = 1.5;
+          g.add(outer, inner);
+          g.position.set(0, 0, zc);
+          scene.add(g);
+          return g;
+        });
+        v.hash = textSprite("sha256: a3f9…", "#ffb000", 0.3);
+        v.hash.visible = false;
+        scene.add(v.hash);
+        v.pin = new THREE.Mesh(track(new THREE.RingGeometry(1.7, 1.85, 32)), bmat(GREENC, { transparent: true, opacity: 0.8, side: THREE.DoubleSide }));
+        v.pin.rotation.x = -Math.PI / 2;
+        v.pin.position.y = 0.04;
+        v.pin.visible = false;
+        scene.add(v.pin);
+      } else if (zi === 4) {
+        const coreGeo = track(new THREE.IcosahedronGeometry(1.4, 1));
+        const core = new THREE.Mesh(coreGeo, bmat(0x140e0c));
+        core.position.y = 1.6;
+        v.coreEdge = new THREE.LineSegments(track(new THREE.WireframeGeometry(coreGeo)), lmat(REDC, 0.9));
+        v.coreEdge.position.y = 1.6;
+        group.add(core, v.coreEdge);
+        v.mods = ["auth", "api", "billing", "config"].map(label => {
+          const g = new THREE.Group();
+          const geo = track(new THREE.BoxGeometry(1.6, 0.75, 1.0));
+          const box = new THREE.Mesh(geo, bmat(0x140e0c));
+          const edge = edgesOf(geo, REDC);
+          const lb = textSprite(label, "#ff5555", 0.34);
+          lb.position.y = 0.85;
+          g.add(box, edge, lb);
+          g.position.set(0, 0.6, zc);
+          scene.add(g);
+          return g;
+        });
+      } else {
+        const head = new THREE.Mesh(track(new THREE.SphereGeometry(0.42, 18, 14)), bmat(DARK));
+        head.position.y = 2.5;
+        const headE = edgesOf(track(new THREE.BoxGeometry(0.62, 0.62, 0.62)), AMBER, 0.35);
+        headE.position.y = 2.5;
+        const body = new THREE.Mesh(track(new THREE.CapsuleGeometry(0.34, 1.0, 4, 10)), bmat(DARK));
+        body.position.y = 1.45;
+        const bodyE = edgesOf(track(new THREE.CylinderGeometry(0.36, 0.36, 1.5, 8)), AMBER, 0.3);
+        bodyE.position.y = 1.45;
+        const lapGeo = track(new THREE.BoxGeometry(1.5, 0.09, 0.95));
+        const laptop = new THREE.Mesh(lapGeo, bmat(0x0f0c0a));
+        laptop.position.set(0, 1.1, 0.75);
+        const lapE = edgesOf(lapGeo, AMBER, 0.8);
+        lapE.position.copy(laptop.position);
+        v.screen = bmat(AMBER, { transparent: true, opacity: 0.7 });
+        const screen = new THREE.Mesh(track(new THREE.PlaneGeometry(1.32, 0.62)), v.screen);
+        screen.position.set(0, 1.5, 1.1);
+        screen.rotation.x = -0.5;
+        const sub = textSprite("FULL-STACK DEVELOPER", "#8a7050", 0.26);
+        sub.position.y = 3.5;
+        v.aura = bmat(AMBER, { transparent: true, opacity: 0.15, side: THREE.DoubleSide });
+        const aura = new THREE.Mesh(track(new THREE.RingGeometry(1.6, 1.85, 40)), v.aura);
+        aura.rotation.x = -Math.PI / 2;
+        aura.position.y = 0.03;
+        group.add(head, headE, body, bodyE, laptop, lapE, screen, sub, aura);
+      }
+      return v;
+    });
+
     // ── State ──────────────────────────────────────────────────────────────
     const st = {
-      t: 0, introT: 2.6, vicT: -1, deadT: -1, cineT: -1, timeScale: 1,
-      px: 0, pz: 6.5, php: 100, invuln: 1.4, fireCd: 0,
-      yaw: 0, pitch: 0, locked: false, firing: false,
-      gunKick: 0, muzzleT: 0, bobT: 0,
+      t: 0, timeScale: 1,
+      cleared: Math.max(0, Math.min(5, initialCleared)),
+      px: 0, pz: ZC[Math.max(0, Math.min(5, initialCleared))] + 8.5,
+      php: 100, invuln: 1.2, fireCd: 0,
+      yaw: 0, pitch: 0.32, locked: false, firing: false, muzzleT: 0, bobT: 0, moving: false,
       keys: new Set<string>(),
       pb: [] as PB[], eb: [] as EB[], minions: [] as MinionS[],
-      bossX: 0, bossZ: -4.3,
-      bossHp: [300, 340, 380, 420, 500, 999][ch],
-      bossMax: [300, 340, 380, 420, 500, 999][ch],
-      shake: 0, bossPulse: 0,
-      noteT: 0,
+      // fight
+      fightActive: false, fightZone: -1, introT: -1, vicT: -1, deadT: -1,
+      bossX: 0, bossZ: 0, bossHp: 0, bossMax: 1,
+      shake: 0, bossPulse: 0, noteT: 0,
       vented: false, ventT: 4, cdA: 1.2, cdB: 3.5, cdC: 6, burstN: 0,
-      shields: GLYPHS.slice(0, 5).map((g, i) => ({ ang: (i / 5) * Math.PI * 2, hp: 24, ch: g, alive: true })),
+      shieldSt: [] as { ang: number; hp: number; alive: boolean }[],
       openT: 0, spiralA: 0,
       ghosts: [] as { x: number; z: number }[], realIdx: 0, pinHits: 0, pinT: 0, shuffleT: 0,
-      mods: ["auth", "api", "billing", "config"].map((label, i) => ({ ang: (i / 4) * Math.PI * 2, hp: 55, label, cd: 1 + i * 0.6, alive: true })),
+      modSt: [] as { ang: number; hp: number; cd: number; alive: boolean }[],
       exposedT: 0,
-      zones: [] as { x: number; z: number; warm: number; life: number }[],
-      finalT: 0, tauntIdx: 0, offer: null as { x: number; z: number } | null, offerT: 0,
-      fired: false,
+      dzones: [] as { x: number; z: number; warm: number; life: number }[],
+      // final meeting
+      metAnshul: false, tauntT: 2, tauntIdx: 0, nearAnshul: false, canOffer: false, cineT: -1,
+      entered: new Set<number>(), bannerT: 0,
+      blackT: 0,
     };
-    // face the boss on spawn
-    st.yaw = Math.atan2(-(st.bossX - st.px), -(st.bossZ - st.pz));
 
     function note(txt: string, secs = 1.6) {
       if (noteRef.current) noteRef.current.textContent = txt;
@@ -308,177 +538,70 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       }
     }
 
-    // ── Boss visuals (same builds as before) ───────────────────────────────
-    const bossGroup = new THREE.Group();
-    scene.add(bossGroup);
-    let slabEdges: THREE.LineSegments[] = [];
-    let ventMesh: THREE.Mesh | null = null;
-    let faceEdges: THREE.LineSegments | null = null;
-    let checkSprite: THREE.Sprite | null = null;
-    let shieldSprites: THREE.Sprite[] = [];
-    let coreSprite: THREE.Sprite | null = null;
-    let decoSprites: THREE.Sprite[] = [];
-    let ghostGroups: THREE.Group[] = [];
-    let hashSprite: THREE.Sprite | null = null;
-    let pinRing: THREE.Mesh | null = null;
-    let coreEdge: THREE.LineSegments | null = null;
-    let modGroups: { g: THREE.Group; edge: THREE.LineSegments }[] = [];
-    let screenMat: THREE.MeshBasicMaterial | null = null;
-    let auraMat: THREE.MeshBasicMaterial | null = null;
-    const offerGroup = new THREE.Group();
-    offerGroup.visible = false;
-    scene.add(offerGroup);
-
-    if (ch === 0) {
-      for (let i = 0; i < 5; i++) {
-        const geo = track(new THREE.BoxGeometry(4 - i * 0.27, 0.85, 2.3));
-        const slab = new THREE.Mesh(geo, bmat(DARK));
-        slab.position.y = 0.46 + i * 0.9;
-        const e = edgesOf(geo, 0x4a3828);
-        e.position.y = slab.position.y;
-        bossGroup.add(slab, e);
-        slabEdges.push(e);
+    function canStand(x: number, z: number): boolean {
+      const M = 0.55;
+      for (let i = 0; i < ROOMS.length; i++) {
+        const r = ROOMS[i];
+        if (x > r.x1 + M && x < r.x2 - M && z > r.z1 + M && z < r.z2 - M) {
+          if (st.fightActive && i !== st.fightZone) continue; // sealed in during a fight
+          return true;
+        }
       }
-      ventMesh = new THREE.Mesh(track(new THREE.BoxGeometry(2.6, 1.9, 2.45)), bmat(AMBER, { transparent: true, opacity: 0.0 }));
-      ventMesh.position.y = 1.8;
-      bossGroup.add(ventMesh);
-      const db = textSprite("DB", "#8a7050", 0.55);
-      db.position.y = 5.1;
-      bossGroup.add(db);
-    } else if (ch === 1) {
-      const faceGeo = track(new THREE.BoxGeometry(2.5, 2.5, 0.55));
-      const face = new THREE.Mesh(faceGeo, bmat(DARK));
-      face.position.y = 1.6;
-      faceEdges = edgesOf(faceGeo, 0x4a3828);
-      faceEdges.position.y = 1.6;
-      const label = textSprite("I'M NOT A ROBOT", "#c8b08a", 0.34);
-      label.position.set(0, 2.15, 0.4);
-      checkSprite = textSprite("☐", "#c8b08a", 0.6);
-      checkSprite.position.set(0, 1.2, 0.4);
-      bossGroup.add(face, faceEdges, label, checkSprite);
-      shieldSprites = st.shields.map(s => {
-        const sp = textSprite(s.ch, "#ffffff", 0.85);
-        sp.position.y = 1.4;
-        scene.add(sp);
-        return sp;
-      });
-    } else if (ch === 2) {
-      coreSprite = textSprite("�", "#ffffff", 2.0);
-      coreSprite.position.y = 1.5;
-      bossGroup.add(coreSprite);
-      decoSprites = Array.from({ length: 10 }, (_, i) => {
-        const sp = textSprite(GLYPHS[i % GLYPHS.length], i % 3 === 0 ? "#ff5555" : "#ffb000", 0.55);
-        bossGroup.add(sp);
-        return sp;
-      });
-    } else if (ch === 3) {
-      ghostGroups = [0, 1, 2].map(() => {
-        const g = new THREE.Group();
-        const outer = new THREE.Mesh(track(new THREE.IcosahedronGeometry(1.35, 0)), bmat(AMBER, { wireframe: true, transparent: true, opacity: 1 }));
-        outer.position.y = 1.5;
-        const inner = new THREE.Mesh(track(new THREE.IcosahedronGeometry(0.72, 0)), bmat(AMBER, { transparent: true, opacity: 0.14 }));
-        inner.position.y = 1.5;
-        g.add(outer, inner);
-        scene.add(g);
-        return g;
-      });
-      hashSprite = textSprite("sha256: a3f9…", "#ffb000", 0.3);
-      scene.add(hashSprite);
-      pinRing = new THREE.Mesh(track(new THREE.RingGeometry(1.7, 1.85, 32)), bmat(GREENC, { transparent: true, opacity: 0.8, side: THREE.DoubleSide }));
-      pinRing.rotation.x = -Math.PI / 2;
-      pinRing.position.y = 0.04;
-      pinRing.visible = false;
-      scene.add(pinRing);
-      bossGroup.visible = false;
-    } else if (ch === 4) {
-      const coreGeo = track(new THREE.IcosahedronGeometry(1.4, 1));
-      const core = new THREE.Mesh(coreGeo, bmat(0x140e0c));
-      core.position.y = 1.6;
-      coreEdge = new THREE.LineSegments(track(new THREE.WireframeGeometry(coreGeo)), lmat(REDC, 0.9));
-      coreEdge.position.y = 1.6;
-      const lbl = textSprite("DRIFT", "#ff5555", 0.4);
-      lbl.position.y = 3.4;
-      bossGroup.add(core, coreEdge, lbl);
-      modGroups = st.mods.map(mo => {
-        const g = new THREE.Group();
-        const geo = track(new THREE.BoxGeometry(1.6, 0.75, 1.0));
-        const box = new THREE.Mesh(geo, bmat(0x140e0c));
-        const edge = edgesOf(geo, REDC);
-        const lb = textSprite(mo.label, "#ff5555", 0.34);
-        lb.position.y = 0.85;
-        g.add(box, edge, lb);
-        g.position.y = 0.6;
-        scene.add(g);
-        return { g, edge };
-      });
-    } else {
-      const head = new THREE.Mesh(track(new THREE.SphereGeometry(0.42, 18, 14)), bmat(DARK));
-      head.position.y = 2.5;
-      const headE = edgesOf(track(new THREE.BoxGeometry(0.62, 0.62, 0.62)), AMBER, 0.35);
-      headE.position.y = 2.5;
-      const body = new THREE.Mesh(track(new THREE.CapsuleGeometry(0.34, 1.0, 4, 10)), bmat(DARK));
-      body.position.y = 1.45;
-      const bodyE = edgesOf(track(new THREE.CylinderGeometry(0.36, 0.36, 1.5, 8)), AMBER, 0.3);
-      bodyE.position.y = 1.45;
-      const lapGeo = track(new THREE.BoxGeometry(1.5, 0.09, 0.95));
-      const laptop = new THREE.Mesh(lapGeo, bmat(0x0f0c0a));
-      laptop.position.set(0, 1.1, 0.75);
-      const lapE = edgesOf(lapGeo, AMBER, 0.8);
-      lapE.position.copy(laptop.position);
-      screenMat = bmat(AMBER, { transparent: true, opacity: 0.7 });
-      const screen = new THREE.Mesh(track(new THREE.PlaneGeometry(1.32, 0.62)), screenMat);
-      screen.position.set(0, 1.5, 1.1);
-      screen.rotation.x = -0.5;
-      const name = textSprite("ANSHUL PATIL", "#ffb000", 0.5);
-      name.position.y = 3.6;
-      const sub = textSprite("FULL-STACK DEVELOPER · FINAL BOSS", "#8a7050", 0.26);
-      sub.position.y = 3.15;
-      auraMat = bmat(AMBER, { transparent: true, opacity: 0.15, side: THREE.DoubleSide });
-      const aura = new THREE.Mesh(track(new THREE.RingGeometry(1.6, 1.85, 40)), auraMat);
-      aura.rotation.x = -Math.PI / 2;
-      aura.position.y = 0.03;
-      bossGroup.add(head, headE, body, bodyE, laptop, lapE, screen, name, sub, aura);
-
-      const envGeo = track(new THREE.BoxGeometry(0.95, 0.6, 0.09));
-      const env = new THREE.Mesh(envGeo, bmat(0x10160f));
-      env.position.y = 0.95;
-      const envE = edgesOf(envGeo, GREENC);
-      envE.position.y = 0.95;
-      const ring = new THREE.Mesh(track(new THREE.RingGeometry(0.95, 1.08, 32)), bmat(GREENC, { transparent: true, opacity: 0.6, side: THREE.DoubleSide }));
-      ring.rotation.x = -Math.PI / 2;
-      ring.position.y = 0.04;
-      const olbl = textSprite("[ JOB OFFER ]", "#4ade80", 0.34);
-      olbl.position.y = 1.7;
-      const olbl2 = textSprite("DELIVER IT", "#4ade80", 0.26);
-      olbl2.position.y = 2.05;
-      offerGroup.add(env, envE, ring, olbl, olbl2);
+      if (!st.fightActive) {
+        for (let i = 0; i < CORRS.length; i++) {
+          if (st.cleared < i + 1) continue;
+          const c = CORRS[i];
+          if (x > c.x1 + M && x < c.x2 - M && z > c.z1 - M && z < c.z2 + M) return true;
+        }
+      }
+      return false;
     }
 
-    // ── Input: pointer lock FPS controls ───────────────────────────────────
-    const seqActive = () => st.vicT >= 0 || st.deadT >= 0 || st.cineT >= 0;
+    function initFight(zone: number) {
+      st.fightActive = true;
+      st.fightZone = zone;
+      st.introT = 2.2;
+      st.vicT = -1;
+      st.bossX = 0;
+      st.bossZ = ZC[zone];
+      st.bossHp = st.bossMax = [300, 340, 380, 420, 500][zone];
+      st.eb = []; st.pb = []; st.minions = [];
+      st.vented = false; st.ventT = 4; st.cdA = 1.2; st.cdB = 3.5; st.cdC = 6; st.burstN = 0;
+      st.shieldSt = GLYPHS.slice(0, 5).map((_, i) => ({ ang: (i / 5) * Math.PI * 2, hp: 24, alive: true }));
+      st.openT = 0; st.spiralA = 0;
+      st.ghosts = []; st.realIdx = 0; st.pinHits = 0; st.pinT = 0; st.shuffleT = 0;
+      st.modSt = [0, 1, 2, 3].map(i => ({ ang: (i / 4) * Math.PI * 2, hp: 55, cd: 1 + i * 0.6, alive: true }));
+      st.exposedT = 0;
+      st.dzones = [];
+      if (introNameRef.current) introNameRef.current.textContent = CHAPTERS[zone].bossName;
+      if (introSubRef.current) introSubRef.current.textContent = CHAPTERS[zone].bossSub;
+      if (bossNameRef.current) bossNameRef.current.textContent = CHAPTERS[zone].bossName;
+    }
 
+    // ── Input ──────────────────────────────────────────────────────────────
+    const seqActive = () => st.vicT >= 0 || st.deadT >= 0 || st.cineT >= 0 || st.introT > 0;
     const onLockChange = () => {
       st.locked = document.pointerLockElement === canvas;
-      if (!st.locked && st.introT <= 0 && !seqActive() && !pausedRef.current) {
-        // player pressed Esc — browser released the lock
-        onEventRef.current("pause");
-      }
+      if (!st.locked && !seqActive() && !pausedRef.current) onEventRef.current("pause");
     };
     const onCanvasClick = () => {
-      if (!st.locked && st.introT <= 0 && !seqActive() && !pausedRef.current) {
-        canvas.requestPointerLock();
-      }
+      if (!st.locked && !seqActive() && !pausedRef.current) canvas.requestPointerLock();
     };
     const onMouseMove = (e: MouseEvent) => {
       if (!st.locked) return;
       st.yaw -= e.movementX * 0.0022;
-      st.pitch = Math.max(-1.35, Math.min(1.35, st.pitch - e.movementY * 0.0022));
+      st.pitch = Math.max(-0.15, Math.min(1.05, st.pitch + e.movementY * 0.0018));
     };
     const onDown = (e: MouseEvent) => { if (st.locked && e.button === 0) st.firing = true; };
     const onUp = () => { st.firing = false; };
     const onKeyDown = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
       if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) st.keys.add(k);
+      if (k === "e" && st.canOffer && st.cineT < 0) {
+        st.cineT = 0;
+        st.eb = []; st.pb = [];
+        document.exitPointerLock();
+      }
     };
     const onKeyUp = (e: KeyboardEvent) => st.keys.delete(e.key.toLowerCase());
 
@@ -490,10 +613,13 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
 
-    // ── Boss updates (identical mechanics) ─────────────────────────────────
+    // ── Boss AI (zone-local origins) ───────────────────────────────────────
     function updBoss(dt: number) {
-      if (ch === 0) {
+      const zone = st.fightZone;
+      const oz = ZC[zone];
+      if (zone === 0) {
         st.bossX = Math.sin(st.t * 0.5) * 4.7;
+        st.bossZ = oz - 2;
         st.ventT -= dt;
         if (st.ventT <= 0) {
           st.vented = !st.vented;
@@ -508,14 +634,14 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
           st.cdC -= dt;
           if (st.cdC <= 0) { st.cdC = 0.16; st.burstN--; aimShot(st.bossX, st.bossZ + 1, 7.7, 0.3); }
         }
-      } else if (ch === 1) {
+      } else if (zone === 1) {
         st.bossX = Math.sin(st.t * 0.7) * 6;
-        st.bossZ = -4.3 + Math.sin(st.t * 1.4) * 1.1;
-        const alive = st.shields.filter(s => s.alive);
+        st.bossZ = oz - 2 + Math.sin(st.t * 1.4) * 1.1;
+        const alive = st.shieldSt.filter(s => s.alive);
         if (alive.length === 0) {
           if (st.openT <= 0) { st.openT = 6; note("GATE OPEN", 1.4); }
           st.openT -= dt;
-          if (st.openT <= 0) { st.shields.forEach(s => { s.alive = true; s.hp = 24; }); note("SHIELDS RESTORED", 1.2); }
+          if (st.openT <= 0) { st.shieldSt.forEach(s => { s.alive = true; s.hp = 24; }); note("SHIELDS RESTORED", 1.2); }
         }
         st.cdA -= dt;
         if (st.cdA <= 0) {
@@ -524,9 +650,9 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         }
         st.cdB -= dt;
         if (st.cdB <= 0) { st.cdB = 4.4; ringShot(st.bossX, st.bossZ, 12, 4.3, st.t); }
-      } else if (ch === 2) {
+      } else if (zone === 2) {
         st.cdC -= dt;
-        if (st.cdC <= 0) { st.cdC = 2; st.bossX = (Math.random() - 0.5) * 12; st.bossZ = -5 + Math.random() * 3; burst(st.bossX, st.bossZ, 8, AMBER, 3, 1.5); }
+        if (st.cdC <= 0) { st.cdC = 2; st.bossX = (Math.random() - 0.5) * 12; st.bossZ = oz - 3 + Math.random() * 4; burst(st.bossX, st.bossZ, 8, AMBER, 3, 1.5); }
         st.spiralA += dt * 2.6;
         st.cdA -= dt;
         if (st.cdA <= 0) {
@@ -540,7 +666,7 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         st.cdB -= dt;
         if (st.cdB <= 0 && st.minions.filter(m => !m.dead).length < 6) {
           st.cdB = 1.5;
-          st.minions.push({ x: st.bossX, z: st.bossZ, vx: 0, vz: 0, hp: 10, t: 0, ang: Math.random() * Math.PI * 2, diving: false, dead: false, si: -1 });
+          st.minions.push({ x: st.bossX, z: st.bossZ, vx: 0, vz: 0, hp: 10, t: 0, ang: Math.random() * Math.PI * 2, diving: false, dead: false });
         }
         for (const m of st.minions) {
           if (m.dead) continue;
@@ -556,15 +682,15 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
             }
           } else {
             m.x += m.vx * dt; m.z += m.vz * dt;
-            if (Math.abs(m.x) > AR_X + 2 || Math.abs(m.z) > AR_Z + 2) m.dead = true;
+            if (Math.abs(m.x) > ROOM_HW + 2 || Math.abs(m.z - oz) > ROOM_HD + 2) m.dead = true;
           }
         }
-      } else if (ch === 3) {
+      } else if (zone === 3) {
         if (st.pinT > 0) {
           st.pinT -= dt;
-          st.ghosts = [{ x: 0, z: -4.3 }];
+          st.ghosts = [{ x: 0, z: oz - 2 }];
           st.realIdx = 0;
-          st.bossX = 0; st.bossZ = -4.3;
+          st.bossX = 0; st.bossZ = oz - 2;
           if (st.pinT <= 0) { st.pinHits = 0; st.shuffleT = 0; }
           return;
         }
@@ -572,10 +698,10 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         if (st.shuffleT <= 0 || st.ghosts.length < 3) {
           st.shuffleT = 3;
           const base = st.t * 0.4;
-          const old = st.ghosts[st.realIdx] || { x: 0, z: -4.3 };
+          const old = st.ghosts[st.realIdx] || { x: 0, z: oz - 2 };
           st.ghosts = [0, 1, 2].map(i => ({
             x: Math.cos(base + (i / 3) * Math.PI * 2) * 5.6,
-            z: -4.3 + Math.sin(base + (i / 3) * Math.PI * 2) * 2.1,
+            z: oz - 2 + Math.sin(base + (i / 3) * Math.PI * 2) * 2.1,
           }));
           st.realIdx = (Math.random() * 3) | 0;
           ringShot(old.x, old.z, 14, 5, st.t);
@@ -590,16 +716,16 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
             for (let k = -2; k <= 2; k++) aimShot(g.x, g.z, 5.5, 0.17, k * 0.13 + i * 0.03);
           });
         }
-      } else if (ch === 4) {
+      } else if (zone === 4) {
         st.bossX = Math.sin(st.t * 0.6) * 3;
-        st.bossZ = -4.16 + Math.cos(st.t * 0.8) * 0.87;
-        const anyMod = st.mods.some(m => m.alive);
+        st.bossZ = oz - 2 + Math.cos(st.t * 0.8) * 0.87;
+        const anyMod = st.modSt.some(m => m.alive);
         if (!anyMod) {
           if (st.exposedT <= 0) { st.exposedT = 8; note("CORE EXPOSED", 1.5); }
           st.exposedT -= dt;
-          if (st.exposedT <= 0) { st.mods.forEach(m => { m.alive = true; m.hp = 55; }); note("MODULES REDEPLOYED", 1.4); }
+          if (st.exposedT <= 0) { st.modSt.forEach(m => { m.alive = true; m.hp = 55; }); note("MODULES REDEPLOYED", 1.4); }
         }
-        for (const mo of st.mods) {
+        for (const mo of st.modSt) {
           if (!mo.alive) continue;
           mo.ang += dt * 0.5;
           mo.cd -= dt;
@@ -611,65 +737,28 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         st.cdA -= dt;
         if (st.cdA <= 0) {
           st.cdA = 6;
-          st.zones = Array.from({ length: 3 }, () => ({
-            x: Math.max(-AR_X + 2, Math.min(AR_X - 2, st.px + (Math.random() - 0.5) * 17)),
-            z: Math.max(-AR_Z + 2, Math.min(AR_Z - 2, st.pz + (Math.random() - 0.5) * 13)),
+          st.dzones = Array.from({ length: 3 }, () => ({
+            x: Math.max(-ROOM_HW + 2, Math.min(ROOM_HW - 2, st.px + (Math.random() - 0.5) * 15)),
+            z: Math.max(oz - ROOM_HD + 2, Math.min(oz + ROOM_HD - 2, st.pz + (Math.random() - 0.5) * 11)),
             warm: 1, life: 4,
           }));
         }
-        for (const z of st.zones) { if (z.warm > 0) z.warm -= dt; else z.life -= dt; }
-        st.zones = st.zones.filter(z => z.life > 0);
+        for (const z of st.dzones) { if (z.warm > 0) z.warm -= dt; else z.life -= dt; }
+        st.dzones = st.dzones.filter(z => z.life > 0);
         st.cdB -= dt;
         if (st.cdB <= 0) { st.cdB = 5; ringShot(st.bossX, st.bossZ, 16, 4, st.t); }
-      } else {
-        st.finalT += dt;
-        st.bossX = Math.sin(st.t * 0.5) * 4;
-        st.bossZ = -4.3 + Math.sin(st.t * 1.1) * 0.6;
-        st.cdC -= dt;
-        if (st.cdC <= 0) {
-          st.cdC = 5;
-          note(`ANSHUL: "${ANSHUL_TAUNTS[st.tauntIdx % ANSHUL_TAUNTS.length]}"`, 3.4);
-          st.tauntIdx++;
-        }
-        const phase = Math.floor(st.finalT / 10) % 4;
-        st.cdA -= dt;
-        if (st.cdA <= 0) {
-          if (phase === 0) { st.cdA = 1.1; ringShot(st.bossX, st.bossZ, 12, 4.3, st.t); }
-          else if (phase === 1) { st.cdA = 1.3; for (let i = 0; i < 3; i++) aimShot(st.bossX, st.bossZ, 6.7, 0.2, (i - 1) * 0.15); }
-          else if (phase === 2) {
-            st.cdA = 0.09;
-            const a = (st.spiralA += 0.42);
-            if (st.eb.length < MAX_EB - 2) st.eb.push({ x: st.bossX, z: st.bossZ, vx: Math.cos(a) * 4.7, vz: Math.sin(a) * 4.7, r: 0.17, dead: false });
-          } else { st.cdA = 2; for (let k = -3; k <= 3; k++) aimShot(st.bossX, st.bossZ, 5.8, 0.17, k * 0.11); }
-        }
-        if (!st.offer && (st.finalT > 22 || st.php <= 45)) {
-          st.offer = { x: (Math.random() - 0.5) * 22, z: 3 + Math.random() * 4 };
-          note("WEAKNESS FOUND: he is open to opportunities. DELIVER THE JOB OFFER.", 5);
-          offerGroup.position.set(st.offer.x, 0, st.offer.z);
-          offerGroup.visible = true;
-        }
-        if (st.offer) st.offerT += dt;
       }
     }
 
-    // ── Player-bullet hits (3D) ────────────────────────────────────────────
     function hitBoss(b: PB): boolean {
-      // vertical body extents per boss for cylinder tests
-      const bodyH = [4.8, 3.0, 3.0, 3.0, 3.2, 3.2][ch];
-      if (ch === 5) {
-        if (Math.hypot(b.x - st.bossX, b.z - st.bossZ) < 1.55 && b.y > 0 && b.y < bodyH) {
-          floatTxt(IMMUNE_TEXTS[(Math.random() * IMMUNE_TEXTS.length) | 0], "#999999", b.x, b.z, 0.42, b.y);
-          burst(b.x, b.z, 3, 0x777777, 2.5, b.y);
-          return true;
-        }
-        return false;
-      }
-      if (ch === 1) {
-        const anyShield = st.shields.some(s => s.alive);
+      const zone = st.fightZone;
+      const bodyH = [4.8, 3.0, 3.0, 3.0, 3.2][zone];
+      if (zone === 1) {
+        const anyShield = st.shieldSt.some(s => s.alive);
         if (anyShield) {
-          const firstAlive = st.shields.findIndex(q => q.alive);
-          for (let i = 0; i < st.shields.length; i++) {
-            const s = st.shields[i];
+          const firstAlive = st.shieldSt.findIndex(q => q.alive);
+          for (let i = 0; i < st.shieldSt.length; i++) {
+            const s = st.shieldSt[i];
             if (!s.alive) continue;
             const sx = st.bossX + Math.cos(s.ang + st.t) * 2.6;
             const sz = st.bossZ + Math.sin(s.ang + st.t) * 2.6;
@@ -678,7 +767,7 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
               if (i === firstAlive) {
                 s.hp -= b.dmg;
                 burst(sx, sz, 4, AMBER, 3, 1.3);
-                if (s.hp <= 0) { s.alive = false; floatTxt(s.ch + " ✓", "#4ade80", sx, sz); burst(sx, sz, 16, AMBER, 5, 1.3); }
+                if (s.hp <= 0) { s.alive = false; floatTxt(GLYPHS[i] + " ✓", "#4ade80", sx, sz); burst(sx, sz, 16, AMBER, 5, 1.3); }
               } else {
                 floatTxt("SEQ!", "#999999", sx, sz, 0.36);
               }
@@ -689,7 +778,7 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
           return false;
         }
       }
-      if (ch === 3 && st.pinT <= 0) {
+      if (zone === 3 && st.pinT <= 0) {
         for (let i = 0; i < st.ghosts.length; i++) {
           const g = st.ghosts[i];
           const d3 = Math.sqrt((b.x - g.x) ** 2 + (b.y - 1.5) ** 2 + (b.z - g.z) ** 2);
@@ -706,25 +795,26 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         }
         return false;
       }
-      if (ch === 4) {
-        for (const mo of st.mods) {
+      if (zone === 4) {
+        for (let i = 0; i < st.modSt.length; i++) {
+          const mo = st.modSt[i];
           if (!mo.alive) continue;
           const mx = st.bossX + Math.cos(mo.ang) * 5, mz = st.bossZ + Math.sin(mo.ang) * 5;
           const d3 = Math.sqrt((b.x - mx) ** 2 + (b.y - 0.98) ** 2 + (b.z - mz) ** 2);
           if (d3 < 0.85) {
             mo.hp -= b.dmg;
             burst(mx, mz, 3, REDC, 3, 1);
-            if (mo.hp <= 0) { mo.alive = false; floatTxt(mo.label + " refactored", "#4ade80", mx, mz, 0.5, 1.4); burst(mx, mz, 18, AMBER, 5, 1); }
+            if (mo.hp <= 0) { mo.alive = false; floatTxt(["auth", "api", "billing", "config"][i] + " refactored", "#4ade80", mx, mz, 0.5, 1.4); burst(mx, mz, 18, AMBER, 5, 1); }
             return true;
           }
         }
       }
-      const r = [2.3, 1.4, 1.5, 1.35, 1.55][ch] || 1.5;
+      const r = [2.3, 1.4, 1.5, 1.35, 1.55][zone];
       if (Math.hypot(b.x - st.bossX, b.z - st.bossZ) < r && b.y > 0 && b.y < bodyH) {
         let mult = 1;
-        if (ch === 0) mult = st.vented ? 1 : 0.25;
-        if (ch === 3) mult = st.pinT > 0 ? 2 : 1;
-        if (ch === 4) mult = st.mods.some(m => m.alive) ? 0.2 : 1;
+        if (zone === 0) mult = st.vented ? 1 : 0.25;
+        if (zone === 3) mult = st.pinT > 0 ? 2 : 1;
+        if (zone === 4) mult = st.modSt.some(m => m.alive) ? 0.2 : 1;
         st.bossHp -= b.dmg * mult;
         st.bossPulse = 0.14;
         burst(b.x, b.z, mult >= 1 ? 4 : 2, mult >= 1 ? AMBER : 0x666666, 3, b.y);
@@ -740,22 +830,40 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       if (st.noteT > 0) st.noteT -= rdt;
       if (st.shake > 0) st.shake = Math.max(0, st.shake - rdt * 5);
       if (st.bossPulse > 0) st.bossPulse -= rdt;
-      if (st.gunKick > 0) st.gunKick = Math.max(0, st.gunKick - rdt * 6);
       if (st.muzzleT > 0) st.muzzleT -= rdt;
+      if (st.bannerT > 0) st.bannerT -= rdt;
 
       if (st.vicT >= 0) {
         st.vicT -= rdt;
-        if (st.vicT <= 0) onEventRef.current("victory");
+        if (st.vicT <= 0) {
+          st.timeScale = 1;
+          st.fightActive = false;
+          st.cleared = st.fightZone + 1;
+          st.php = 100;
+          onEventRef.current("victory", st.fightZone);
+        }
         return;
       }
       if (st.deadT >= 0) {
         st.deadT -= rdt;
-        if (st.deadT <= 0) onEventRef.current("dead");
+        st.blackT = Math.min(1, st.blackT + rdt * 1.4);
+        if (st.deadT <= 0) {
+          // respawn at the entrance of the fight zone; the boss resets
+          const zone = st.fightZone;
+          st.timeScale = 1;
+          st.fightActive = false;
+          st.php = 100;
+          st.invuln = 2;
+          st.px = 0; st.pz = ZC[zone] + 9.3;
+          st.eb = []; st.pb = []; st.minions = [];
+          st.blackT = 0;
+          note("respawned — the boss awaits", 2);
+        }
         return;
       }
       if (st.cineT >= 0) {
         st.cineT += rdt;
-        st.eb = []; st.pb = []; st.minions.forEach(m => (m.dead = true));
+        st.eb = []; st.pb = [];
         if (st.cineT > 0.5 && Math.random() < 0.25) burst(st.bossX + (Math.random() - 0.5) * 2, st.bossZ + (Math.random() - 0.5) * 2, 8, Math.random() < 0.5 ? GREENC : AMBER, 4, 1.5);
         if (st.cineT > 0.4 && st.cineT < 0.5) note("He reads the offer…", 1.2);
         if (st.cineT > 1.7 && st.cineT < 1.8) note("CRITICAL HIT", 0.9);
@@ -767,55 +875,94 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         st.introT -= rdt;
         return;
       }
-      if (!st.locked) return; // wait for pointer lock before gameplay runs
+      if (!st.locked) return;
 
       if (st.invuln > 0) st.invuln -= dt;
 
-      // movement relative to look direction
+      // ── movement (camera-relative) ──
       let mx = 0, mz = 0;
       if (st.keys.has("w") || st.keys.has("arrowup")) mz += 1;
       if (st.keys.has("s") || st.keys.has("arrowdown")) mz -= 1;
       if (st.keys.has("a") || st.keys.has("arrowleft")) mx -= 1;
       if (st.keys.has("d") || st.keys.has("arrowright")) mx += 1;
-      const moving = mx !== 0 || mz !== 0;
-      if (moving) {
+      st.moving = mx !== 0 || mz !== 0;
+      if (st.moving) {
         const fx = -Math.sin(st.yaw), fz = -Math.cos(st.yaw);
         const rx = -fz, rz = fx;
         let dx = fx * mz + rx * mx, dz = fz * mz + rz * mx;
         const l = Math.hypot(dx, dz);
         dx /= l; dz /= l;
-        st.px = Math.max(-AR_X + 0.6, Math.min(AR_X - 0.6, st.px + dx * 8.6 * dt));
-        st.pz = Math.max(-AR_Z + 0.6, Math.min(AR_Z - 0.6, st.pz + dz * 8.6 * dt));
+        const nx = st.px + dx * 8.6 * dt;
+        const nz = st.pz + dz * 8.6 * dt;
+        if (canStand(nx, nz)) { st.px = nx; st.pz = nz; }
+        else if (canStand(nx, st.pz)) st.px = nx;
+        else if (canStand(st.px, nz)) st.pz = nz;
         st.bobT += dt * 11;
       }
 
-      // fire along the camera ray
+      // ── zone entry: banner + boss trigger ──
+      for (let i = 0; i < 6; i++) {
+        const inRoom = Math.abs(st.px) < ROOM_HW && Math.abs(st.pz - ZC[i]) < ROOM_HD;
+        if (inRoom && !st.entered.has(i)) {
+          st.entered.add(i);
+          st.bannerT = 3.2;
+          if (bannerRef.current) {
+            bannerRef.current.textContent = `CHAPTER ${ROMAN[i]} · ${CHAPTERS[i].year} — ${CHAPTERS[i].org}`;
+          }
+        }
+        if (i < 5 && inRoom && st.cleared === i && !st.fightActive && st.pz < ZC[i] + 7.5) {
+          initFight(i);
+        }
+      }
+
+      // ── the final meeting ──
+      if (st.cleared >= 5) {
+        const dAn = Math.hypot(st.px - 0, st.pz - ZC[5]);
+        st.nearAnshul = dAn < 9;
+        st.canOffer = dAn < 3.8;
+        if (st.nearAnshul) {
+          st.tauntT -= dt;
+          if (st.tauntT <= 0) {
+            st.tauntT = 4.4;
+            if (!st.metAnshul) {
+              st.metAnshul = true;
+              note(`ANSHUL: "You've beaten everything I ever fought. One way to finish this — offer me the job."`, 4.2);
+            } else {
+              note(`ANSHUL: "${ANSHUL_TAUNTS[st.tauntIdx % ANSHUL_TAUNTS.length]}"`, 3.2);
+              st.tauntIdx++;
+            }
+          }
+        }
+      } else {
+        st.canOffer = false;
+      }
+
+      // ── fire ──
+      const wp = WEAPONS[Math.min(st.cleared, WEAPONS.length - 1)];
       st.fireCd -= dt;
       if (st.firing && st.fireCd <= 0 && st.pb.length < MAX_PB - 6) {
         st.fireCd = 1 / wp.rate;
-        st.gunKick = 0.16;
         st.muzzleT = 0.06;
-        const cp = Math.cos(st.pitch), sp2 = Math.sin(st.pitch);
         for (let i = 0; i < wp.shots; i++) {
           const off = wp.shots === 1 ? 0 : (i / (wp.shots - 1) - 0.5) * wp.spread * 0.55;
           const ya = st.yaw + off;
-          const dx = -Math.sin(ya) * cp, dy = sp2, dz = -Math.cos(ya) * cp;
+          const dx = -Math.sin(ya), dz = -Math.cos(ya);
           st.pb.push({
-            x: st.px + dx * 0.7, y: EYE - 0.12 + dy * 0.7, z: st.pz + dz * 0.7,
-            vx: dx * 24, vy: dy * 24, vz: dz * 24,
+            x: st.px + dx * 0.7, y: 1.25, z: st.pz + dz * 0.7,
+            vx: dx * 24, vy: 0, vz: dz * 24,
             dmg: wp.dmg, pierce: wp.pierce, dead: false,
           });
         }
       }
 
-      updBoss(dt);
+      if (st.fightActive) updBoss(dt);
 
-      // player bullets
+      // ── player bullets ──
       for (const b of st.pb) {
         if (b.dead) continue;
         b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt;
-        if (b.y <= 0) { b.dead = true; burst(b.x, b.z, 2, AMBER, 1.5, 0.1); continue; }
-        if (b.y > 8 || Math.abs(b.x) > AR_X + 0.4 || Math.abs(b.z) > AR_Z + 0.4) { b.dead = true; burst(b.x, Math.max(-AR_Z, Math.min(AR_Z, b.z)), 2, AMBER, 1.5, b.y); continue; }
+        const range2 = (b.x - st.px) ** 2 + (b.z - st.pz) ** 2;
+        if (range2 > 1600 || !insideWorld(b.x, b.z)) { b.dead = true; burst(b.x, b.z, 2, AMBER, 1.5, b.y); continue; }
         for (const m of st.minions) {
           if (m.dead) continue;
           const d3 = Math.sqrt((b.x - m.x) ** 2 + (b.y - 1.1) ** 2 + (b.z - m.z) ** 2);
@@ -826,14 +973,20 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
           }
         }
         if (b.dead) continue;
-        if (hitBoss(b)) b.dead = true;
+        if (st.fightActive && hitBoss(b)) { b.dead = true; continue; }
+        // shooting Anshul is futile
+        if (st.cleared >= 5 && Math.hypot(b.x - 0, b.z - ZC[5]) < 1.55 && b.y > 0 && b.y < 3.2) {
+          floatTxt(IMMUNE_TEXTS[(Math.random() * IMMUNE_TEXTS.length) | 0], "#999999", b.x, b.z, 0.42, b.y);
+          burst(b.x, b.z, 3, 0x777777, 2.5, b.y);
+          b.dead = true;
+        }
       }
 
-      // enemy bullets (chest height, dodge by strafing)
+      // ── enemy bullets ──
       for (const b of st.eb) {
         if (b.dead) continue;
         b.x += b.vx * dt; b.z += b.vz * dt;
-        if (Math.abs(b.x) > AR_X + 1 || Math.abs(b.z) > AR_Z + 1) { b.dead = true; continue; }
+        if (!insideWorld(b.x, b.z)) { b.dead = true; continue; }
         if (st.invuln <= 0 && Math.hypot(b.x - st.px, b.z - st.pz) < b.r + 0.38) {
           b.dead = true;
           st.php -= 9; st.invuln = 1;
@@ -842,7 +995,6 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         }
       }
 
-      // minion contact
       for (const m of st.minions) {
         if (m.dead || st.invuln > 0) continue;
         if (Math.hypot(m.x - st.px, m.z - st.pz) < 0.7) {
@@ -850,42 +1002,28 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         }
       }
 
-      // zones
-      if (ch === 4) {
-        for (const z of st.zones) {
+      if (st.fightActive && st.fightZone === 4) {
+        for (const z of st.dzones) {
           if (z.warm <= 0 && Math.hypot(z.x - st.px, z.z - st.pz) < 1.9) st.php -= 18 * dt;
         }
       }
 
-      // boss contact
-      if (st.invuln <= 0 && Math.hypot(st.bossX - st.px, st.bossZ - st.pz) < 1.9) {
+      if (st.fightActive && st.invuln <= 0 && Math.hypot(st.bossX - st.px, st.bossZ - st.pz) < 1.9) {
         st.php -= 14; st.invuln = 1.1; st.shake = 1.3; burst(st.px, st.pz, 12, REDC, 5, 1.2);
-      }
-
-      // the offer
-      if (ch === 5 && st.offer && Math.hypot(st.offer.x - st.px, st.offer.z - st.pz) < 1.15) {
-        st.cineT = 0;
-        st.timeScale = 1;
-        st.shake = 0;
-        if (!st.fired) { st.fired = true; onEventRef.current("cine"); }
-        burst(st.offer.x, st.offer.z, 30, GREENC, 6, 1);
-        offerGroup.visible = false;
-        document.exitPointerLock();
       }
 
       st.pb = st.pb.filter(b => !b.dead);
       st.eb = st.eb.filter(b => !b.dead);
       st.minions = st.minions.filter(m => !m.dead);
 
-      if (st.php <= 0) {
+      if (st.php <= 0 && st.deadT < 0) {
         st.php = 0;
-        st.deadT = 1.0;
+        st.deadT = 1.4;
         st.timeScale = 0.3;
         burst(st.px, st.pz, 40, REDC, 7, 1.2);
-        document.exitPointerLock();
-        return;
+        note("you died", 1.5);
       }
-      if (ch < 5 && st.bossHp <= 0) {
+      if (st.fightActive && st.bossHp <= 0 && st.vicT < 0) {
         st.bossHp = 0;
         st.vicT = 1.5;
         st.timeScale = 0.22;
@@ -896,6 +1034,12 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       }
     }
 
+    function insideWorld(x: number, z: number): boolean {
+      for (const r of ROOMS) if (x > r.x1 - 1 && x < r.x2 + 1 && z > r.z1 - 1 && z < r.z2 + 1) return true;
+      for (const c of CORRS) if (x > c.x1 - 1 && x < c.x2 + 1 && z > c.z1 - 1 && z < c.z2 + 1) return true;
+      return false;
+    }
+
     // ── Visual sync ────────────────────────────────────────────────────────
     const camPos = new THREE.Vector3();
     const camLook = new THREE.Vector3();
@@ -903,6 +1047,25 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
     const tmpB = new THREE.Vector3();
 
     function syncVisuals() {
+      // character — faces movement direction while running, camera direction while firing/idle
+      player.position.set(st.px, 0, st.pz);
+      if (st.moving && !st.firing) {
+        let mx = 0, mz = 0;
+        if (st.keys.has("w") || st.keys.has("arrowup")) mz += 1;
+        if (st.keys.has("s") || st.keys.has("arrowdown")) mz -= 1;
+        if (st.keys.has("a") || st.keys.has("arrowleft")) mx -= 1;
+        if (st.keys.has("d") || st.keys.has("arrowright")) mx += 1;
+        const fx = -Math.sin(st.yaw), fz = -Math.cos(st.yaw);
+        const rx = -fz, rz = fx;
+        const dx = fx * mz + rx * mx, dz = fz * mz + rz * mx;
+        if (dx || dz) player.rotation.y = Math.atan2(dx, dz) + Math.PI;
+      } else {
+        player.rotation.y = st.yaw + Math.PI;
+      }
+      player.position.y = st.moving ? Math.abs(Math.sin(st.bobT)) * 0.07 : 0;
+      player.visible = !(st.invuln > 0 && ((st.t * 14) | 0) % 2 === 0) && st.deadT < 0;
+      muzzleMat.opacity = st.muzzleT > 0 ? 0.9 : 0;
+
       // bullets
       let n = 0;
       for (const b of st.pb) { m4.setPosition(b.x, b.y, b.z); pbMesh.setMatrixAt(n++, m4); }
@@ -923,7 +1086,6 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       partGeo.attributes.position.needsUpdate = true;
       partGeo.attributes.color.needsUpdate = true;
 
-      // floaters
       for (const f of floaters) {
         if (!f.live) continue;
         f.t += 0.016;
@@ -932,7 +1094,6 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         if (f.t >= f.max) { f.live = false; f.s.visible = false; }
       }
 
-      // minions
       for (let i = 0; i < MINN; i++) {
         const m = st.minions[i];
         const sp = minionVis[i];
@@ -943,11 +1104,10 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         } else sp.visible = false;
       }
 
-      // zones
       for (let i = 0; i < 3; i++) {
-        const z = st.zones[i];
+        const z = st.dzones[i];
         const v = zoneVis[i];
-        if (z && ch === 4) {
+        if (z && st.fightActive && st.fightZone === 4) {
           v.g.visible = true;
           v.g.position.set(z.x, 0, z.z);
           if (z.warm > 0) { v.fill.opacity = 0.04; v.rim.opacity = 0.4 + Math.sin(st.t * 12) * 0.3; }
@@ -955,101 +1115,136 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         } else v.g.visible = false;
       }
 
-      // boss
-      const pulse = 1 + (st.bossPulse > 0 ? st.bossPulse * 0.5 : 0);
-      bossGroup.position.set(st.bossX, 0, st.bossZ);
-      bossGroup.scale.setScalar(pulse);
-      if (st.vicT >= 0) bossGroup.scale.setScalar(Math.max(0.01, st.vicT / 1.5));
+      // gates
+      gates.forEach((g, i) => {
+        const openGate = st.cleared >= i + 1;
+        g.g.visible = !openGate;
+        if (!openGate) g.plane.opacity = 0.1 + Math.sin(st.t * 3 + i) * 0.05;
+      });
 
-      if (ch === 0) {
-        for (const e of slabEdges) (e.material as THREE.LineBasicMaterial).color.setHex(st.vented ? AMBER : 0x4a3828);
-        if (ventMesh) (ventMesh.material as THREE.MeshBasicMaterial).opacity = st.vented ? 0.25 + Math.sin(st.t * 10) * 0.12 : 0;
-        bossGroup.rotation.y = Math.sin(st.t * 0.7) * 0.08;
-      } else if (ch === 1) {
-        const open = st.shields.every(s => !s.alive);
-        if (faceEdges) (faceEdges.material as THREE.LineBasicMaterial).color.setHex(open ? AMBER : 0x4a3828);
-        if (checkSprite) (checkSprite.material as THREE.SpriteMaterial).map = textTexture(open ? "☑" : "☐", open ? "#ffb000" : "#c8b08a", 56);
-        // face the player
-        bossGroup.rotation.y = Math.atan2(st.px - st.bossX, st.pz - st.bossZ);
-        const firstAlive = st.shields.findIndex(s => s.alive);
-        st.shields.forEach((s, i) => {
-          const sp = shieldSprites[i];
-          if (!s.alive) { sp.visible = false; return; }
-          sp.visible = true;
-          sp.position.set(st.bossX + Math.cos(s.ang + st.t) * 2.6, 1.4, st.bossZ + Math.sin(s.ang + st.t) * 2.6);
-          (sp.material as THREE.SpriteMaterial).color.setHex(i === firstAlive ? AMBER : 0x555555);
-          const sc = i === firstAlive ? 1 + Math.sin(st.t * 6) * 0.1 : 0.8;
-          sp.scale.setScalar(0.85 * sc);
-        });
-      } else if (ch === 2) {
-        decoSprites.forEach((sp, i) => {
-          const a = (i / 10) * Math.PI * 2 + st.t;
-          const rr = 0.7 + Math.sin(st.t * 3 + i) * 0.4;
-          sp.position.set(Math.cos(a) * rr + (Math.random() - 0.5) * 0.15, 1.5 + Math.sin(st.t * 2 + i) * 0.4, Math.sin(a) * rr + (Math.random() - 0.5) * 0.15);
-        });
-        if (coreSprite) coreSprite.position.x = (Math.random() - 0.5) * 0.1;
-      } else if (ch === 3) {
-        ghostGroups.forEach((g, i) => {
-          const gh = st.ghosts[i];
-          if (!gh) { g.visible = false; return; }
-          g.visible = true;
-          g.position.set(gh.x, 0, gh.z);
-          g.rotation.y = st.t * (0.6 + i * 0.2);
-          g.rotation.x = st.t * 0.3;
-          const real = i === st.realIdx;
-          g.children.forEach(c => {
-            const mm = (c as THREE.Mesh).material as THREE.MeshBasicMaterial;
-            if (mm.wireframe) mm.opacity = real ? 1 : 0.22 + Math.random() * 0.08;
-            else mm.opacity = real ? 0.16 : 0.04;
+      // ── bosses ──
+      for (let zi = 0; zi < 6; zi++) {
+        const v = bossVis[zi];
+        const defeated = zi < 5 && st.cleared > zi;
+        const activeFight = st.fightActive && st.fightZone === zi;
+        if (defeated) {
+          v.group.visible = false;
+          v.shields?.forEach(s => (s.visible = false));
+          v.ghosts?.forEach(g => (g.visible = false));
+          if (v.hash) v.hash.visible = false;
+          if (v.pin) v.pin.visible = false;
+          v.mods?.forEach(m => (m.visible = false));
+          continue;
+        }
+        v.group.visible = true;
+        const oz = ZC[zi];
+        const bx = activeFight ? st.bossX : 0;
+        const bz = activeFight ? st.bossZ : (zi === 5 ? oz : oz - 2);
+        if (zi !== 3) v.group.position.set(bx, 0, bz);
+
+        const pulse = 1 + (activeFight && st.bossPulse > 0 ? st.bossPulse * 0.5 : 0);
+        v.group.scale.setScalar(pulse);
+        if (activeFight && st.vicT >= 0) v.group.scale.setScalar(Math.max(0.01, st.vicT / 1.5));
+
+        if (zi === 0) {
+          v.slabEdges!.forEach(e => (e.material as THREE.LineBasicMaterial).color.setHex(activeFight && st.vented ? AMBER : 0x4a3828));
+          if (v.vent) (v.vent.material as THREE.MeshBasicMaterial).opacity = activeFight && st.vented ? 0.25 + Math.sin(st.t * 10) * 0.12 : 0;
+          v.group.rotation.y = Math.sin(st.t * 0.7) * 0.08;
+        } else if (zi === 1) {
+          const open = activeFight && st.shieldSt.every(s => !s.alive);
+          if (v.faceEdges) (v.faceEdges.material as THREE.LineBasicMaterial).color.setHex(open ? AMBER : 0x4a3828);
+          if (v.check) (v.check.material as THREE.SpriteMaterial).map = textTexture(open ? "☑" : "☐", open ? "#ffb000" : "#c8b08a", 56);
+          v.group.rotation.y = Math.atan2(st.px - bx, st.pz - bz);
+          const firstAlive = activeFight ? st.shieldSt.findIndex(s => s.alive) : -2;
+          v.shields!.forEach((sp, i) => {
+            const aliveNow = activeFight ? st.shieldSt[i]?.alive : true;
+            if (!aliveNow) { sp.visible = false; return; }
+            sp.visible = true;
+            const ang = (activeFight ? st.shieldSt[i].ang : (i / 5) * Math.PI * 2) + st.t * (activeFight ? 1 : 0.4);
+            sp.position.set(bx + Math.cos(ang) * 2.6, 1.4, bz + Math.sin(ang) * 2.6);
+            (sp.material as THREE.SpriteMaterial).color.setHex(i === firstAlive ? AMBER : 0x555555);
+            sp.scale.setScalar(0.85 * (i === firstAlive ? 1 + Math.sin(st.t * 6) * 0.1 : 0.8));
           });
-        });
-        if (st.pinT > 0 && st.ghosts.length === 1) {
-          ghostGroups[1].visible = false; ghostGroups[2].visible = false;
-          if (pinRing) { pinRing.visible = true; pinRing.position.set(st.bossX, 0.04, st.bossZ); }
-          if (hashSprite) hashSprite.visible = false;
-        } else {
-          if (pinRing) pinRing.visible = false;
-          if (hashSprite && st.ghosts[st.realIdx]) {
-            hashSprite.visible = true;
-            hashSprite.position.set(st.ghosts[st.realIdx].x, 0.5, st.ghosts[st.realIdx].z + 1.7);
+        } else if (zi === 2) {
+          v.deco!.forEach((sp, i) => {
+            const a = (i / 10) * Math.PI * 2 + st.t;
+            const rr = 0.7 + Math.sin(st.t * 3 + i) * 0.4;
+            sp.position.set(Math.cos(a) * rr, 1.5 + Math.sin(st.t * 2 + i) * 0.4, Math.sin(a) * rr);
+          });
+        } else if (zi === 3) {
+          if (activeFight) {
+            v.ghosts!.forEach((g, i) => {
+              const gh = st.ghosts[i];
+              if (!gh) { g.visible = false; return; }
+              g.visible = true;
+              g.position.set(gh.x, 0, gh.z);
+              g.rotation.y = st.t * (0.6 + i * 0.2);
+              g.rotation.x = st.t * 0.3;
+              const real = i === st.realIdx;
+              g.children.forEach(c => {
+                const mm = (c as THREE.Mesh).material as THREE.MeshBasicMaterial;
+                if (mm.wireframe) mm.opacity = real ? 1 : 0.22 + Math.random() * 0.08;
+                else mm.opacity = real ? 0.16 : 0.04;
+              });
+            });
+            if (st.pinT > 0 && st.ghosts.length === 1) {
+              v.ghosts![1].visible = false; v.ghosts![2].visible = false;
+              if (v.pin) { v.pin.visible = true; v.pin.position.set(st.bossX, 0.04, st.bossZ); }
+              if (v.hash) v.hash.visible = false;
+            } else {
+              if (v.pin) v.pin.visible = false;
+              if (v.hash && st.ghosts[st.realIdx]) {
+                v.hash.visible = true;
+                v.hash.position.set(st.ghosts[st.realIdx].x, 0.5, st.ghosts[st.realIdx].z + 1.7);
+              }
+            }
+          } else {
+            // idle: one polyhedron at rest
+            v.ghosts!.forEach((g, i) => {
+              g.visible = i === 0;
+              if (i === 0) { g.position.set(0, 0, oz - 2); g.rotation.y = st.t * 0.4; g.rotation.x = st.t * 0.2; }
+            });
+            if (v.hash) v.hash.visible = false;
+            if (v.pin) v.pin.visible = false;
           }
-        }
-      } else if (ch === 4) {
-        const exposed = !st.mods.some(m => m.alive);
-        if (coreEdge) (coreEdge.material as THREE.LineBasicMaterial).color.setHex(exposed ? AMBER : REDC);
-        bossGroup.rotation.y = st.t * 0.5;
-        st.mods.forEach((mo, i) => {
-          const v = modGroups[i];
-          if (!mo.alive) { v.g.visible = false; return; }
-          v.g.visible = true;
-          v.g.position.set(st.bossX + Math.cos(mo.ang) * 5, 0.6, st.bossZ + Math.sin(mo.ang) * 5);
-          v.g.rotation.y = -mo.ang;
-        });
-      } else {
-        bossGroup.position.y = Math.sin(st.t * 2) * 0.08;
-        bossGroup.rotation.y = Math.atan2(st.px - st.bossX, st.pz - st.bossZ);
-        if (screenMat) screenMat.opacity = 0.5 + Math.sin(st.t * 8) * 0.25;
-        if (auraMat) auraMat.opacity = 0.1 + Math.sin(st.t * 3) * 0.06;
-        if (offerGroup.visible) {
-          offerGroup.rotation.y = st.t * 1.2;
-          const p2 = 1 + Math.sin(st.offerT * 5) * 0.08;
-          offerGroup.scale.setScalar(p2);
-        }
-        if (st.cineT >= 0) {
-          bossGroup.rotation.y = 0;
-          if (screenMat) screenMat.opacity = 1;
+          // ghost zone name sprite rides on group — place group for the label
+          v.group.visible = true;
+          v.group.position.set(0, 0, oz - 2);
+        } else if (zi === 4) {
+          const exposed = activeFight && !st.modSt.some(m => m.alive);
+          if (v.coreEdge) (v.coreEdge.material as THREE.LineBasicMaterial).color.setHex(exposed ? AMBER : REDC);
+          v.group.rotation.y = st.t * 0.5;
+          v.mods!.forEach((mg, i) => {
+            const aliveNow = activeFight ? st.modSt[i]?.alive : true;
+            if (!aliveNow) { mg.visible = false; return; }
+            mg.visible = true;
+            const ang = (activeFight ? st.modSt[i].ang : (i / 4) * Math.PI * 2 + st.t * 0.15);
+            mg.position.set(bx + Math.cos(ang) * 5, 0.6, bz + Math.sin(ang) * 5);
+            mg.rotation.y = -ang;
+          });
+        } else {
+          // Anshul waits at the end
+          v.group.position.y = Math.sin(st.t * 2) * 0.08;
+          v.group.rotation.y = Math.atan2(st.px - bx, st.pz - bz);
+          if (v.screen) v.screen.opacity = 0.5 + Math.sin(st.t * 8) * 0.25;
+          if (v.aura) v.aura.opacity = 0.1 + Math.sin(st.t * 3) * 0.06;
+          if (st.cineT >= 0 && v.screen) v.screen.opacity = 1;
         }
       }
 
-      // ── camera: first person ──
-      const cp = Math.cos(st.pitch), sp2 = Math.sin(st.pitch);
-      const dirX = -Math.sin(st.yaw) * cp, dirY = sp2, dirZ = -Math.cos(st.yaw) * cp;
-      const bob = Math.sin(st.bobT) * 0.035;
-      camPos.set(st.px, EYE + bob, st.pz);
-      camLook.set(st.px + dirX, EYE + bob + dirY, st.pz + dirZ);
+      // ── camera: third person orbit ──
+      const cosP = Math.cos(st.pitch), sinP = Math.sin(st.pitch);
+      const dist = 5.4;
+      camPos.set(
+        st.px + Math.sin(st.yaw) * cosP * dist,
+        1.5 + sinP * dist,
+        st.pz + Math.cos(st.yaw) * cosP * dist
+      );
+      const fx = -Math.sin(st.yaw), fz = -Math.cos(st.yaw);
+      camLook.set(st.px + fx * 2.2, 1.55, st.pz + fz * 2.2);
 
-      if (st.introT > 0) {
-        const k = 1 - Math.max(0, Math.min(1, st.introT / 2.6));
+      if (st.introT > 0 && st.fightActive) {
+        const k = 1 - Math.max(0, Math.min(1, st.introT / 2.2));
         const e = k * k * (3 - 2 * k);
         tmpA.set(st.bossX + 2.5, 2.4, st.bossZ + 6);
         tmpB.set(st.bossX, 1.6, st.bossZ);
@@ -1059,14 +1254,10 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       if (st.cineT >= 0) {
         const k = Math.min(1, st.cineT / 1.2);
         const e = k * k * (3 - 2 * k);
-        tmpA.set(st.bossX + 3.4, 2.2, st.bossZ + 5.2);
-        tmpB.set(st.bossX, 1.6, st.bossZ);
+        tmpA.set(3.4, 2.2, ZC[5] + 5.2);
+        tmpB.set(0, 1.6, ZC[5]);
         camPos.lerpVectors(camPos, tmpA, e);
         camLook.lerpVectors(camLook, tmpB, e);
-      }
-      if (st.deadT >= 0) {
-        const k = Math.min(1, (1.0 - st.deadT) * 1.6);
-        camPos.y = EYE - k * 0.9;
       }
       if (st.shake > 0) {
         camPos.x += (Math.random() - 0.5) * st.shake * 0.22;
@@ -1074,15 +1265,6 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       }
       camera.position.copy(camPos);
       camera.lookAt(camLook);
-      if (st.deadT >= 0) camera.rotation.z = (1.0 - st.deadT) * 0.35;
-
-      // gun
-      gun.position.z = -0.65 + st.gunKick * 0.9;
-      gun.position.y = -0.27 + bob * 0.4;
-      gun.rotation.x = st.gunKick * 0.8;
-      muzzleMat.opacity = st.muzzleT > 0 ? 0.9 : 0;
-      gun.visible = st.cineT < 0 && st.introT <= 0;
-      muzzle.visible = gun.visible;
 
       // ── HUD ──
       if (hpFillRef.current) {
@@ -1090,24 +1272,30 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         hpFillRef.current.style.width = `${f * 100}%`;
         hpFillRef.current.style.background = f > 0.5 ? "#4ade80" : f > 0.25 ? "#ffb000" : "#ff5555";
       }
-      if (bossFillRef.current) {
-        let f = ch === 5 ? 1 : Math.max(0, st.bossHp) / st.bossMax;
-        if (ch === 5 && st.cineT >= 0) f = Math.max(0, 1 - st.cineT / 2.4);
-        bossFillRef.current.style.width = `${f * 100}%`;
-        bossFillRef.current.style.background = ch === 5 && st.cineT >= 0 ? "#4ade80" : "#ffb000";
+      if (bossWrapRef.current) bossWrapRef.current.style.opacity = st.fightActive ? "1" : "0";
+      if (bossFillRef.current && st.fightActive) {
+        bossFillRef.current.style.width = `${Math.max(0, st.bossHp / st.bossMax) * 100}%`;
       }
       if (noteRef.current) noteRef.current.style.opacity = String(Math.max(0, Math.min(1, st.noteT)));
       if (flashRef.current) flashRef.current.style.opacity = String(Math.max(0, (st.invuln - 0.45)) * 0.5);
-      if (introRef.current) introRef.current.style.opacity = st.introT > 0.25 ? "1" : "0";
-      if (crossRef.current) {
-        const spread = 1 + (st.firing ? 0.45 : 0) + (st.gunKick > 0.08 ? 0.25 : 0);
-        crossRef.current.style.transform = `translate(-50%, -50%) scale(${spread})`;
-        crossRef.current.style.opacity = st.locked && st.cineT < 0 && st.introT <= 0 ? "1" : "0";
+      if (blackRef.current) blackRef.current.style.opacity = String(st.blackT);
+      if (introRef.current) introRef.current.style.opacity = st.introT > 0.25 && st.fightActive ? "1" : "0";
+      if (crossRef.current) crossRef.current.style.opacity = st.locked && st.cineT < 0 && st.introT <= 0 ? "1" : "0";
+      if (lockHintRef.current) lockHintRef.current.style.opacity = !st.locked && !seqActive() && !pausedRef.current ? "1" : "0";
+      if (bannerRef.current) bannerRef.current.style.opacity = st.bannerT > 0.4 ? "1" : "0";
+      if (promptRef.current) promptRef.current.style.opacity = st.canOffer && st.cineT < 0 ? "1" : "0";
+      if (weaponRef.current) weaponRef.current.textContent = WEAPONS[Math.min(st.cleared, WEAPONS.length - 1)].name;
+      if (zoneRef.current) {
+        const zi = Math.max(0, Math.min(5, Math.round(-st.pz / ZONE_GAP)));
+        const dots = Array.from({ length: 6 }, (_, i) => (i < st.cleared ? "◆" : i === 5 ? "☠" : "◇")).join(" ");
+        zoneRef.current.textContent = `${dots}   zone ${ROMAN[zi]} — ${CHAPTERS[zi].bossName}`;
       }
-      if (lockHintRef.current) {
-        const show = !st.locked && st.introT <= 0 && !seqActive() && !pausedRef.current;
-        lockHintRef.current.style.opacity = show ? "1" : "0";
-        lockHintRef.current.style.pointerEvents = "none";
+      if (objRef.current) {
+        objRef.current.textContent = st.fightActive
+          ? `defeat ${CHAPTERS[st.fightZone].bossName}`
+          : st.cleared >= 5
+            ? "he's waiting at the end of the path — press E near him"
+            : `follow the path — ${CHAPTERS[st.cleared].bossName} guards the way`;
       }
     }
 
@@ -1152,26 +1340,21 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
       if (canvas.parentElement === mount) mount.removeChild(canvas);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chapter]);
+  }, []);
 
-  const chData = CHAPTERS[chapter];
   return (
     <div className="relative w-full h-full select-none">
       <div ref={mountRef} className="absolute inset-0" />
 
-      {/* damage vignette */}
       <div
         ref={flashRef}
         className="absolute inset-0 pointer-events-none transition-opacity duration-150"
         style={{ opacity: 0, background: "radial-gradient(ellipse at center, transparent 45%, rgba(220,40,40,0.55) 100%)" }}
       />
+      <div ref={blackRef} className="absolute inset-0 pointer-events-none bg-black transition-opacity duration-200" style={{ opacity: 0 }} />
 
       {/* crosshair */}
-      <div
-        ref={crossRef}
-        className="absolute left-1/2 top-1/2 pointer-events-none transition-opacity duration-200"
-        style={{ transform: "translate(-50%, -50%)", opacity: 0 }}
-      >
+      <div ref={crossRef} className="absolute left-1/2 top-1/2 pointer-events-none transition-opacity duration-200" style={{ transform: "translate(-50%, -50%)", opacity: 0 }}>
         <div className="relative w-[26px] h-[26px]">
           <span className="absolute left-1/2 top-0 w-px h-[7px] bg-accent -translate-x-1/2" />
           <span className="absolute left-1/2 bottom-0 w-px h-[7px] bg-accent -translate-x-1/2" />
@@ -1181,23 +1364,30 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
         </div>
       </div>
 
-      {/* click-to-aim hint */}
-      <div
-        ref={lockHintRef}
-        className="absolute inset-0 flex items-center justify-center transition-opacity duration-300"
-        style={{ opacity: 0 }}
-      >
+      <div ref={lockHintRef} className="absolute inset-0 flex items-center justify-center transition-opacity duration-300 pointer-events-none" style={{ opacity: 0 }}>
         <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-accent border border-amber-500/40 bg-[#0d0a08]/80 px-6 py-3 animate-pulse">
-          click to take aim
+          click to take control
+        </p>
+      </div>
+
+      {/* zone banner */}
+      <div
+        ref={bannerRef}
+        className="absolute top-[18%] inset-x-0 text-center font-display text-3xl text-accent pointer-events-none transition-opacity duration-700"
+        style={{ opacity: 0, textShadow: "0 0 24px rgba(255,176,0,0.35)" }}
+      />
+
+      {/* E prompt */}
+      <div ref={promptRef} className="absolute bottom-[22%] inset-x-0 flex justify-center pointer-events-none transition-opacity duration-300" style={{ opacity: 0 }}>
+        <p className="font-mono text-[12px] uppercase tracking-[0.25em] text-green-400 border border-green-500/50 bg-[#0d0a08]/85 px-5 py-2.5 animate-pulse">
+          [ E ] extend the job offer
         </p>
       </div>
 
       {/* HUD */}
-      <div className="absolute top-2.5 left-4 font-mono text-[9px] uppercase tracking-[0.25em] text-zinc-600 pointer-events-none">
-        Chapter {["I", "II", "III", "IV", "V", "VI"][chapter]} · {chData.year}
-      </div>
-      <div className="absolute top-2.5 inset-x-0 flex flex-col items-center pointer-events-none">
-        <p className="font-mono text-[10px] font-bold tracking-[0.25em] text-[#c8b08a] mb-1.5">{chData.bossName}{chapter === 5 ? " · ∞" : ""}</p>
+      <div ref={zoneRef} className="absolute top-2.5 left-4 font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-500 pointer-events-none" />
+      <div ref={bossWrapRef} className="absolute top-2.5 inset-x-0 flex flex-col items-center pointer-events-none transition-opacity duration-300" style={{ opacity: 0 }}>
+        <p ref={bossNameRef} className="font-mono text-[10px] font-bold tracking-[0.25em] text-[#c8b08a] mb-1.5" />
         <div className="w-[340px] max-w-[50vw] h-[7px] bg-[#241a10] border border-black/40">
           <div ref={bossFillRef} className="h-full" style={{ width: "100%", background: "#ffb000" }} />
         </div>
@@ -1209,17 +1399,16 @@ export default function Engine3D({ chapter, paused, onEvent }: Props) {
           <div ref={hpFillRef} className="h-full" style={{ width: "100%", background: "#4ade80" }} />
         </div>
       </div>
-      <div className="absolute bottom-3 right-4 font-mono text-[10px] font-bold tracking-[0.2em] text-accent pointer-events-none">
-        {WEAPONS[Math.min(chapter, WEAPONS.length - 1)].name}
-      </div>
+      <div ref={weaponRef} className="absolute bottom-3 right-4 font-mono text-[10px] font-bold tracking-[0.2em] text-accent pointer-events-none" />
+      <div ref={objRef} className="absolute bottom-3 inset-x-0 text-center font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-600 pointer-events-none" />
 
       {/* boss intro splash */}
-      <div ref={introRef} className="absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-500 pointer-events-none" style={{ opacity: 1 }}>
+      <div ref={introRef} className="absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-500 pointer-events-none" style={{ opacity: 0 }}>
         <div className="absolute top-0 inset-x-0 h-[12%] bg-black/80" />
         <div className="absolute bottom-0 inset-x-0 h-[12%] bg-black/80" />
         <p className="font-mono text-[10px] uppercase tracking-[0.5em] text-red-400 mb-3 animate-pulse">⚠ warning ⚠</p>
-        <h3 className="font-display text-5xl md:text-6xl text-accent mb-2" style={{ textShadow: "0 0 30px rgba(255,176,0,0.4)" }}>{chData.bossName}</h3>
-        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-zinc-500">{chData.bossSub}</p>
+        <h3 ref={introNameRef} className="font-display text-5xl md:text-6xl text-accent mb-2" style={{ textShadow: "0 0 30px rgba(255,176,0,0.4)" }} />
+        <p ref={introSubRef} className="font-mono text-[10px] uppercase tracking-[0.25em] text-zinc-500" />
       </div>
     </div>
   );
