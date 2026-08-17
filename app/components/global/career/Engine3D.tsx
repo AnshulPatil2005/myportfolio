@@ -45,21 +45,12 @@ const ZONE_HEX = ["#ffb000", "#2dd4bf", "#e879f9", "#38bdf8", "#f87171", "#ffd88
 // weird mobs — a different creature type haunts each zone
 // 0 query leech · 1 captcha mimic · 2 encoding worm · 3 quantum shard · 4 incident spark
 type MobType = 0 | 1 | 2 | 3 | 4;
-const MOB_SPAWNS: { type: MobType; x: number; z: number }[] = [];
-for (let zi = 0; zi < 5; zi++) {
-  const zc = ZC[zi];
-  const t = zi as MobType;
-  MOB_SPAWNS.push(
-    { type: t, x: -9, z: zc + 6 },
-    { type: t, x: 9, z: zc + 5 },
-    { type: t, x: -8, z: zc - 4 },
-    { type: t, x: 8, z: zc - 5 },
-    { type: t, x: -4, z: zc + 1 },
-  );
-}
-CORRS.forEach((cr, i) => {
-  MOB_SPAWNS.push({ type: Math.min(4, i + 1) as MobType, x: 0, z: (cr.z1 + cr.z2) / 2 });
-});
+// one guardian creature per zone — met before the boss, no swarms
+const MOB_SPAWNS: { type: MobType; x: number; z: number }[] = [0, 1, 2, 3, 4].map(zi => ({
+  type: zi as MobType,
+  x: zi % 2 === 0 ? -3.5 : 3.5,
+  z: ZC[zi] + 8.2,
+}));
 
 export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -101,9 +92,23 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     mount.appendChild(renderer.domElement);
     const canvas = renderer.domElement;
 
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0d0a08);
-    scene.fog = new THREE.Fog(0x0d0a08, 14, 44);
+    scene.background = new THREE.Color(0x161129);
+    scene.fog = new THREE.Fog(0x161129, 16, 54);
+
+    // real lighting — filled surfaces get shape and warmth
+    scene.add(new THREE.HemisphereLight(0xbfd4ff, 0x3a2450, 0.9));
+    const sun = new THREE.DirectionalLight(0xfff2e0, 1.6);
+    sun.position.set(18, 30, 10);
+    scene.add(sun);
+    ZC.forEach((zc, i) => {
+      const pl = new THREE.PointLight(ZONE_COL[i], 70, 32, 1.8);
+      pl.position.set(0, 6.5, i === 5 ? zc : zc - 2);
+      scene.add(pl);
+    });
 
     const camera = new THREE.PerspectiveCamera(62, RW / RH, 0.05, 300);
     scene.add(camera);
@@ -113,13 +118,16 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     composer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     composer.setSize(RW, RH);
     composer.addPass(new RenderPass(scene, camera));
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(RW, RH), 0.72, 0.45, 0.5));
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(RW, RH), 0.55, 0.4, 0.72));
     composer.addPass(new OutputPass());
 
     // ── Helpers ────────────────────────────────────────────────────────────
     const disposables: { dispose: () => void }[] = [];
     const track = <T extends { dispose: () => void }>(d: T): T => { disposables.push(d); return d; };
-    const bmat = (color: number, o: Partial<THREE.MeshBasicMaterialParameters> = {}) =>
+    // bmat = lit filled surfaces (the world) · emat = self-glowing (energy, bullets, UI)
+    const bmat = (color: number, o: Partial<THREE.MeshLambertMaterialParameters> = {}) =>
+      track(new THREE.MeshLambertMaterial({ color, ...o }));
+    const emat = (color: number, o: Partial<THREE.MeshBasicMaterialParameters> = {}) =>
       track(new THREE.MeshBasicMaterial({ color, ...o }));
     const lmat = (color: number, opacity = 1) =>
       track(new THREE.LineBasicMaterial({ color, transparent: opacity < 1, opacity }));
@@ -156,23 +164,42 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       return s;
     }
 
-    // ── Terrain ────────────────────────────────────────────────────────────
-    const ground = new THREE.Mesh(track(new THREE.PlaneGeometry(120, 300)), bmat(0x0b0908));
+    // ── Terrain — colorful filled floors ───────────────────────────────────
+    const ground = new THREE.Mesh(track(new THREE.PlaneGeometry(140, 320)), bmat(0x1b1433));
     ground.rotation.x = -Math.PI / 2;
-    ground.position.set(0, -0.02, -85);
+    ground.position.set(0, -0.04, -85);
     scene.add(ground);
-    const grid = new THREE.GridHelper(300, 150, 0x3a2a18, 0x1d1410);
+    const tint = (hex: number, k: number) => new THREE.Color(hex).multiplyScalar(k).getHex();
+    ZC.forEach((zc, i) => {
+      const floor = new THREE.Mesh(
+        track(new THREE.PlaneGeometry(ROOM_HW * 2, ROOM_HD * 2)),
+        bmat(tint(ZONE_COL[i], 0.16), { emissive: tint(ZONE_COL[i], 0.04) })
+      );
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.set(0, -0.02, zc);
+      scene.add(floor);
+    });
+    CORRS.forEach((cr, i) => {
+      const floor = new THREE.Mesh(
+        track(new THREE.PlaneGeometry(CORR_HW * 2, cr.z2 - cr.z1)),
+        bmat(tint(ZONE_COL[i + 1], 0.14), { emissive: tint(ZONE_COL[i + 1], 0.03) })
+      );
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.set(0, -0.02, (cr.z1 + cr.z2) / 2);
+      scene.add(floor);
+    });
+    const grid = new THREE.GridHelper(300, 150, 0x6a5a9a, 0x2e2450);
     (grid.material as THREE.Material).transparent = true;
-    (grid.material as THREE.Material).opacity = 0.5;
+    (grid.material as THREE.Material).opacity = 0.22;
     grid.position.z = -85;
     scene.add(grid);
 
     const WALL_H = 2.6;
     function mkWall(w: number, d: number, x: number, z: number, accent = AMBER) {
       const geo = track(new THREE.BoxGeometry(w, WALL_H, d));
-      const mesh = new THREE.Mesh(geo, bmat(0x0f0c0a));
+      const mesh = new THREE.Mesh(geo, bmat(tint(accent, 0.42), { emissive: tint(accent, 0.06) }));
       mesh.position.set(x, WALL_H / 2, z);
-      const e = edgesOf(geo, accent, 0.32);
+      const e = edgesOf(geo, accent, 0.5);
       e.position.copy(mesh.position);
       scene.add(mesh, e);
     }
@@ -200,12 +227,12 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       // corner pillars
       const postGeo = track(new THREE.CylinderGeometry(0.09, 0.09, 3.6, 6));
       for (const [sx, sz] of [[-ROOM_HW, zc - ROOM_HD], [ROOM_HW, zc - ROOM_HD], [ROOM_HW, zc + ROOM_HD], [-ROOM_HW, zc + ROOM_HD]] as [number, number][]) {
-        const post = new THREE.Mesh(postGeo, bmat(col, { transparent: true, opacity: 0.75 }));
+        const post = new THREE.Mesh(postGeo, emat(col, { transparent: true, opacity: 0.85 }));
         post.position.set(sx, 1.8, sz);
         scene.add(post);
       }
       // arena floor ring in the zone's color
-      const ring = new THREE.Mesh(track(new THREE.RingGeometry(5.1, 5.24, 48)), bmat(col, { transparent: true, opacity: 0.22, side: THREE.DoubleSide }));
+      const ring = new THREE.Mesh(track(new THREE.RingGeometry(5.1, 5.24, 48)), emat(col, { transparent: true, opacity: 0.35, side: THREE.DoubleSide }));
       ring.rotation.x = -Math.PI / 2;
       ring.position.set(0, 0.02, i === 5 ? zc : zc - 2);
       scene.add(ring);
@@ -239,7 +266,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     // gates — sealed until the zone's boss dies, tinted by the guarding zone
     const gates = CORRS.map((cr, i) => {
       const g = new THREE.Group();
-      const plane = new THREE.Mesh(track(new THREE.PlaneGeometry(CORR_HW * 2, WALL_H)), bmat(ZONE_COL[i], { transparent: true, opacity: 0.16, side: THREE.DoubleSide }));
+      const plane = new THREE.Mesh(track(new THREE.PlaneGeometry(CORR_HW * 2, WALL_H)), emat(ZONE_COL[i], { transparent: true, opacity: 0.18, side: THREE.DoubleSide }));
       plane.position.y = WALL_H / 2;
       const frame = edgesOf(track(new THREE.BoxGeometry(CORR_HW * 2, WALL_H, 0.06)), ZONE_COL[i], 0.7);
       frame.position.y = WALL_H / 2;
@@ -266,48 +293,33 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     });
     addSign("↓ follow the path", 0, 1.2, ZC[0] - 9, "#8a7050");
 
-    // ambient zone props
+    // ambient zone props — filled, colorful low-poly crystals and pillars
     const propRand = (seed: number) => {
       let s = seed;
       return () => { s = (s * 16807) % 2147483647; return (s % 1000) / 1000; };
     };
     ZC.forEach((zc, zi) => {
       const rnd = propRand(zi * 977 + 13);
-      for (let k = 0; k < 7; k++) {
+      const col = ZONE_COL[zi];
+      for (let k = 0; k < 9; k++) {
         const px2 = (rnd() - 0.5) * 24;
         const pz2 = zc + (rnd() - 0.5) * 17;
-        if (Math.abs(px2) < 4 && Math.abs(pz2 - zc) < 5) continue; // keep the arena center clear
-        if (zi === 0) {
-          const h = 0.6 + rnd() * 1.6;
-          const geo = track(new THREE.BoxGeometry(0.9, h, 0.9));
-          const e = edgesOf(geo, 0x4a3828, 0.8);
-          e.position.set(px2, h / 2, pz2);
-          scene.add(e);
-        } else if (zi === 1) {
-          const geo = track(new THREE.CylinderGeometry(0.16, 0.2, 2.4, 6));
-          const e = edgesOf(geo, 0x4a3828, 0.7);
-          e.position.set(px2, 1.2, pz2);
-          scene.add(e);
-        } else if (zi === 2) {
-          const sp = textSprite(GLYPHS[k % GLYPHS.length], k % 3 === 0 ? "#5a3030" : "#4a3828", 0.6);
-          sp.position.set(px2, 0.8 + rnd() * 1.6, pz2);
+        if (Math.abs(px2) < 4.5 && Math.abs(pz2 - zc) < 6) continue; // keep the arena clear
+        const h = 0.7 + rnd() * 2.2;
+        let geo: THREE.BufferGeometry;
+        let py = h / 2;
+        if (zi === 0 || zi === 4) geo = track(new THREE.ConeGeometry(0.42 + rnd() * 0.3, h, 5));
+        else if (zi === 1 || zi === 5) geo = track(new THREE.CylinderGeometry(0.2, 0.32, h, 6));
+        else { geo = track(new THREE.IcosahedronGeometry(0.5 + rnd() * 0.45, 0)); py = 0.55; }
+        const m = new THREE.Mesh(geo, bmat(tint(col, 0.6), { flatShading: true, emissive: tint(col, 0.14) }));
+        m.position.set(px2, py, pz2);
+        m.rotation.y = rnd() * Math.PI;
+        scene.add(m);
+        // a few floating glyphs keep zone III weird
+        if (zi === 2 && k % 3 === 0) {
+          const sp = textSprite(GLYPHS[k % GLYPHS.length], "#c86ad4", 0.55);
+          sp.position.set(px2, h + 0.9, pz2);
           scene.add(sp);
-        } else if (zi === 3) {
-          const geo = track(new THREE.IcosahedronGeometry(0.5 + rnd() * 0.5, 0));
-          const m = new THREE.Mesh(geo, bmat(0x4a3828, { wireframe: true, transparent: true, opacity: 0.6 }));
-          m.position.set(px2, 0.7, pz2);
-          scene.add(m);
-        } else if (zi === 4) {
-          const h = 1 + rnd() * 2.4;
-          const geo = track(new THREE.BoxGeometry(1.1, h, 1.1));
-          const e = edgesOf(geo, 0x5a2a22, 0.75);
-          e.position.set(px2, h / 2, pz2);
-          scene.add(e);
-        } else {
-          const geo = track(new THREE.CylinderGeometry(0.14, 0.14, 2.8 + rnd() * 1.2, 6));
-          const m = new THREE.Mesh(geo, bmat(AMBER, { transparent: true, opacity: 0.5 }));
-          m.position.set(px2, 1.5, pz2);
-          scene.add(m);
         }
       }
     });
@@ -323,7 +335,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       }
       const g = track(new THREE.BufferGeometry());
       g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-      const ptsm = track(new THREE.PointsMaterial({ color: 0x6a5030, size: 0.09, transparent: true, opacity: 0.6, depthWrite: false }));
+      const ptsm = track(new THREE.PointsMaterial({ color: 0x9a7fd6, size: 0.09, transparent: true, opacity: 0.55, depthWrite: false }));
       const pts = new THREE.Points(g, ptsm);
       pts.frustumCulled = false;
       scene.add(pts);
@@ -333,20 +345,20 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     const player = new THREE.Group();
     {
       const bodyGeo = track(new THREE.CapsuleGeometry(0.3, 0.85, 4, 10));
-      const body = new THREE.Mesh(bodyGeo, bmat(0x14100d));
+      const body = new THREE.Mesh(bodyGeo, bmat(0xe9eef6, { emissive: 0x223040 }));
       body.position.y = 1.02;
-      const bodyE = edgesOf(track(new THREE.CylinderGeometry(0.32, 0.32, 1.35, 8)), 0xffffff, 0.5);
+      const bodyE = edgesOf(track(new THREE.CylinderGeometry(0.32, 0.32, 1.35, 8)), 0x67e8f9, 0.35);
       bodyE.position.y = 1.02;
-      const head = new THREE.Mesh(track(new THREE.SphereGeometry(0.3, 16, 12)), bmat(0x14100d));
+      const head = new THREE.Mesh(track(new THREE.SphereGeometry(0.3, 16, 12)), bmat(0xf3f6fa, { emissive: 0x223040 }));
       head.position.y = 1.95;
-      const headE = edgesOf(track(new THREE.BoxGeometry(0.44, 0.44, 0.44)), 0xffffff, 0.4);
+      const headE = edgesOf(track(new THREE.BoxGeometry(0.44, 0.44, 0.44)), 0x67e8f9, 0.3);
       headE.position.y = 1.95;
       const gunGeo = track(new THREE.BoxGeometry(0.1, 0.1, 0.62));
-      const gunM = new THREE.Mesh(gunGeo, bmat(0x241c14));
+      const gunM = new THREE.Mesh(gunGeo, bmat(0x3a4a58));
       gunM.position.set(0.34, 1.25, -0.3);
       const gunE = edgesOf(gunGeo, 0x67e8f9, 0.9);
       gunE.position.copy(gunM.position);
-      const ring = new THREE.Mesh(track(new THREE.RingGeometry(0.5, 0.6, 24)), bmat(0x67e8f9, { transparent: true, opacity: 0.45, side: THREE.DoubleSide }));
+      const ring = new THREE.Mesh(track(new THREE.RingGeometry(0.5, 0.6, 24)), emat(0x67e8f9, { transparent: true, opacity: 0.5, side: THREE.DoubleSide }));
       ring.rotation.x = -Math.PI / 2;
       ring.position.y = 0.03;
       player.add(body, bodyE, head, headE, gunM, gunE, ring);
@@ -360,8 +372,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
 
     // ── Bullets / particles / floaters / zones / minions ──────────────────
     const MAX_PB = 160, MAX_EB = 340;
-    const pbMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.11, 8, 8)), bmat(0xe8fbff), MAX_PB);
-    const ebMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.17, 8, 8)), bmat(REDC), MAX_EB);
+    const pbMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.11, 8, 8)), emat(0xe8fbff), MAX_PB);
+    const ebMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.17, 8, 8)), emat(0xff6b6b), MAX_EB);
     pbMesh.frustumCulled = false; ebMesh.frustumCulled = false;
     pbMesh.count = 0; ebMesh.count = 0;
     scene.add(pbMesh, ebMesh);
@@ -369,14 +381,14 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     const EB_Y = 1.25;
 
     // homing orbs + beam/rail meshes
-    const obMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.16, 8, 8)), bmat(0xffd88a), 24);
+    const obMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.16, 8, 8)), emat(0xffd88a), 24);
     obMesh.frustumCulled = false; obMesh.count = 0;
     scene.add(obMesh);
-    const beamMat = bmat(0xe879f9, { transparent: true, opacity: 0.85 });
+    const beamMat = emat(0xe879f9, { transparent: true, opacity: 0.85 });
     const beamMesh = new THREE.Mesh(track(new THREE.BoxGeometry(0.055, 0.055, 1)), beamMat);
     beamMesh.visible = false;
     scene.add(beamMesh);
-    const railMat = bmat(0x9beeff, { transparent: true, opacity: 0.9 });
+    const railMat = emat(0x9beeff, { transparent: true, opacity: 0.9 });
     const railMesh = new THREE.Mesh(track(new THREE.BoxGeometry(0.07, 0.07, 1)), railMat);
     railMesh.visible = false;
     scene.add(railMesh);
@@ -424,9 +436,9 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
 
     const zoneVis = Array.from({ length: 3 }, () => {
       const g = new THREE.Group();
-      const fill = new THREE.Mesh(track(new THREE.CircleGeometry(1.9, 28)), bmat(0xff3c3c, { transparent: true, opacity: 0.14, side: THREE.DoubleSide }));
+      const fill = new THREE.Mesh(track(new THREE.CircleGeometry(1.9, 28)), emat(0xff3c3c, { transparent: true, opacity: 0.14, side: THREE.DoubleSide }));
       fill.rotation.x = -Math.PI / 2; fill.position.y = 0.03;
-      const rim = new THREE.Mesh(track(new THREE.RingGeometry(1.8, 1.9, 28)), bmat(REDC, { transparent: true, opacity: 0.7, side: THREE.DoubleSide }));
+      const rim = new THREE.Mesh(track(new THREE.RingGeometry(1.8, 1.9, 28)), emat(REDC, { transparent: true, opacity: 0.7, side: THREE.DoubleSide }));
       rim.rotation.x = -Math.PI / 2; rim.position.y = 0.04;
       g.add(fill, rim);
       g.visible = false;
@@ -451,20 +463,21 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         // query leech — a wobbling stack of drive platters with an antenna
         [0.52, 0.42, 0.32].forEach((r, k) => {
           const geo = track(new THREE.CylinderGeometry(r, r + 0.05, 0.26, 10));
-          const m = new THREE.Mesh(geo, bmat(0x14100d));
+          const m = new THREE.Mesh(geo, bmat(0xc4622e, { emissive: 0x3a1408 }));
           m.position.y = 0.2 + k * 0.28;
-          const e = edgesOf(geo, 0xff7755, 0.85);
+          const e = edgesOf(geo, 0xff9060, 0.85);
           e.position.y = m.position.y;
           g.add(m, e);
         });
-        const ant = new THREE.Mesh(track(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 4)), bmat(0xff5555));
+        const ant = new THREE.Mesh(track(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 4)), emat(0xff5555));
         ant.position.y = 1.2;
         g.add(ant);
         g.position.set(ms.x, 0, ms.z);
+        g.scale.setScalar(1.3);
       } else if (ms.type === 1) {
         // captcha mimic — a floating verification panel with two faces
         const pGeo = track(new THREE.BoxGeometry(1.15, 1.15, 0.12));
-        const panel = new THREE.Mesh(pGeo, bmat(0x0f1413));
+        const panel = new THREE.Mesh(pGeo, bmat(0x0e6a5e, { emissive: 0x06322c }));
         v.edge = edgesOf(pGeo, 0x2dd4bf);
         v.face = textSprite("☐", "#2dd4bf", 0.6);
         v.face.position.z = 0.16;
@@ -490,7 +503,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         // incident spark — a production error looking for you
         v.face = textSprite("ERR", "#ff5555", 0.7);
         g.add(v.face);
-        v.ring = new THREE.Mesh(track(new THREE.RingGeometry(0.8, 0.95, 20)), bmat(0xff5555, { transparent: true, opacity: 0.6, side: THREE.DoubleSide }));
+        v.ring = new THREE.Mesh(track(new THREE.RingGeometry(0.8, 0.95, 20)), emat(0xff5555, { transparent: true, opacity: 0.6, side: THREE.DoubleSide }));
         v.ring.rotation.x = -Math.PI / 2;
         v.ring.visible = false;
         scene.add(v.ring);
@@ -522,19 +535,19 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         v.slabEdges = [];
         for (let i = 0; i < 5; i++) {
           const geo = track(new THREE.BoxGeometry(4 - i * 0.27, 0.85, 2.3));
-          const slab = new THREE.Mesh(geo, bmat(DARK));
+          const slab = new THREE.Mesh(geo, bmat(0x8a5a26, { emissive: 0x241505 }));
           slab.position.y = 0.46 + i * 0.9;
-          const e = edgesOf(geo, 0x4a3828);
+          const e = edgesOf(geo, 0xd89040);
           e.position.y = slab.position.y;
           group.add(slab, e);
           v.slabEdges.push(e);
         }
-        v.vent = new THREE.Mesh(track(new THREE.BoxGeometry(2.6, 1.9, 2.45)), bmat(AMBER, { transparent: true, opacity: 0 }));
+        v.vent = new THREE.Mesh(track(new THREE.BoxGeometry(2.6, 1.9, 2.45)), emat(AMBER, { transparent: true, opacity: 0 }));
         v.vent.position.y = 1.8;
         group.add(v.vent);
       } else if (zi === 1) {
         const faceGeo = track(new THREE.BoxGeometry(2.5, 2.5, 0.55));
-        const face = new THREE.Mesh(faceGeo, bmat(DARK));
+        const face = new THREE.Mesh(faceGeo, bmat(0x11635a, { emissive: 0x06322c }));
         face.position.y = 1.6;
         v.faceEdges = edgesOf(faceGeo, 0x4a3828);
         v.faceEdges.position.y = 1.6;
@@ -560,9 +573,9 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       } else if (zi === 3) {
         v.ghosts = [0, 1, 2].map(() => {
           const g = new THREE.Group();
-          const outer = new THREE.Mesh(track(new THREE.IcosahedronGeometry(1.35, 0)), bmat(AMBER, { wireframe: true, transparent: true, opacity: 1 }));
+          const outer = new THREE.Mesh(track(new THREE.IcosahedronGeometry(1.35, 0)), emat(0x5fd0ff, { wireframe: true, transparent: true, opacity: 1 }));
           outer.position.y = 1.5;
-          const inner = new THREE.Mesh(track(new THREE.IcosahedronGeometry(0.72, 0)), bmat(AMBER, { transparent: true, opacity: 0.14 }));
+          const inner = new THREE.Mesh(track(new THREE.IcosahedronGeometry(0.72, 0)), emat(0x5fd0ff, { transparent: true, opacity: 0.14 }));
           inner.position.y = 1.5;
           g.add(outer, inner);
           g.position.set(0, 0, zc);
@@ -572,14 +585,14 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         v.hash = textSprite("sha256: a3f9…", "#ffb000", 0.3);
         v.hash.visible = false;
         scene.add(v.hash);
-        v.pin = new THREE.Mesh(track(new THREE.RingGeometry(1.7, 1.85, 32)), bmat(GREENC, { transparent: true, opacity: 0.8, side: THREE.DoubleSide }));
+        v.pin = new THREE.Mesh(track(new THREE.RingGeometry(1.7, 1.85, 32)), emat(GREENC, { transparent: true, opacity: 0.8, side: THREE.DoubleSide }));
         v.pin.rotation.x = -Math.PI / 2;
         v.pin.position.y = 0.04;
         v.pin.visible = false;
         scene.add(v.pin);
       } else if (zi === 4) {
         const coreGeo = track(new THREE.IcosahedronGeometry(1.4, 1));
-        const core = new THREE.Mesh(coreGeo, bmat(0x140e0c));
+        const core = new THREE.Mesh(coreGeo, bmat(0x7e2a36, { emissive: 0x300c12, flatShading: true }));
         core.position.y = 1.6;
         v.coreEdge = new THREE.LineSegments(track(new THREE.WireframeGeometry(coreGeo)), lmat(REDC, 0.9));
         v.coreEdge.position.y = 1.6;
@@ -587,7 +600,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         v.mods = ["auth", "api", "billing", "config"].map(label => {
           const g = new THREE.Group();
           const geo = track(new THREE.BoxGeometry(1.6, 0.75, 1.0));
-          const box = new THREE.Mesh(geo, bmat(0x140e0c));
+          const box = new THREE.Mesh(geo, bmat(0x7e2a36, { emissive: 0x300c12 }));
           const edge = edgesOf(geo, REDC);
           const lb = textSprite(label, "#ff5555", 0.34);
           lb.position.y = 0.85;
@@ -597,26 +610,26 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           return g;
         });
       } else {
-        const head = new THREE.Mesh(track(new THREE.SphereGeometry(0.42, 18, 14)), bmat(DARK));
+        const head = new THREE.Mesh(track(new THREE.SphereGeometry(0.42, 18, 14)), bmat(0x9a7440, { emissive: 0x2a1c08 }));
         head.position.y = 2.5;
         const headE = edgesOf(track(new THREE.BoxGeometry(0.62, 0.62, 0.62)), AMBER, 0.35);
         headE.position.y = 2.5;
-        const body = new THREE.Mesh(track(new THREE.CapsuleGeometry(0.34, 1.0, 4, 10)), bmat(DARK));
+        const body = new THREE.Mesh(track(new THREE.CapsuleGeometry(0.34, 1.0, 4, 10)), bmat(0x8a6636, { emissive: 0x241a08 }));
         body.position.y = 1.45;
         const bodyE = edgesOf(track(new THREE.CylinderGeometry(0.36, 0.36, 1.5, 8)), AMBER, 0.3);
         bodyE.position.y = 1.45;
         const lapGeo = track(new THREE.BoxGeometry(1.5, 0.09, 0.95));
-        const laptop = new THREE.Mesh(lapGeo, bmat(0x0f0c0a));
+        const laptop = new THREE.Mesh(lapGeo, bmat(0x3a2e20));
         laptop.position.set(0, 1.1, 0.75);
         const lapE = edgesOf(lapGeo, AMBER, 0.8);
         lapE.position.copy(laptop.position);
-        v.screen = bmat(AMBER, { transparent: true, opacity: 0.7 });
+        v.screen = emat(AMBER, { transparent: true, opacity: 0.7 });
         const screen = new THREE.Mesh(track(new THREE.PlaneGeometry(1.32, 0.62)), v.screen);
         screen.position.set(0, 1.5, 1.1);
         screen.rotation.x = -0.5;
         const sub = textSprite("FULL-STACK DEVELOPER", "#8a7050", 0.26);
         sub.position.y = 3.5;
-        v.aura = bmat(AMBER, { transparent: true, opacity: 0.15, side: THREE.DoubleSide });
+        v.aura = emat(AMBER, { transparent: true, opacity: 0.15, side: THREE.DoubleSide });
         const aura = new THREE.Mesh(track(new THREE.RingGeometry(1.6, 1.85, 40)), v.aura);
         aura.rotation.x = -Math.PI / 2;
         aura.position.y = 0.03;
@@ -656,7 +669,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       // mobs
       mobs: MOB_SPAWNS.map(ms => ({
         x: ms.x, z: ms.z,
-        hp: [26, 24, 30, 20, 16][ms.type],
+        hp: [46, 40, 48, 34, 30][ms.type],
         alive: true,
         t: Math.random() * 10,
         cd: 1 + Math.random() * 2,
@@ -1040,7 +1053,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           }
         } else {
           if (ty === 4 && mb.phase < 2) continue;
-          const hy = ty === 0 ? 0.55 : 1.0, rr = ty === 0 ? 0.72 : 0.55;
+          const hy = ty === 0 ? 0.7 : 1.0, rr = ty === 0 ? 0.92 : 0.55;
           if (Math.sqrt((b.x - mb.x) ** 2 + (b.y - hy) ** 2 + (b.z - mb.z) ** 2) < rr) {
             seen?.add(mi);
             mb.hp -= b.dmg;
@@ -1214,7 +1227,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           }
           mb.cd -= dt;
           if (mb.cd <= 0) { mb.cd = 3; ringShot(mb.x, mb.z, 8, 3, mb.t); }
-          if (st.invuln <= 0 && dP < 0.95) {
+          if (st.invuln <= 0 && dP < 1.2) {
             st.php -= 8; st.invuln = 1; st.slowT = 2.2; st.shake = 1;
             burst(st.px, st.pz, 8, REDC, 3, 1);
             note("query leech attached — slowed!", 1.4);
@@ -1451,6 +1464,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     const camLook = new THREE.Vector3();
     const tmpA = new THREE.Vector3();
     const tmpB = new THREE.Vector3();
+    const colA = new THREE.Color();
+    const colB = new THREE.Color();
 
     function syncVisuals() {
       // character — faces movement direction while running, camera direction while firing/idle
@@ -1750,6 +1765,13 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       }
       camera.position.copy(camPos);
       camera.lookAt(camLook);
+
+      // atmosphere drifts toward the current zone's palette
+      const zAt = Math.max(0, Math.min(5, Math.round(-st.pz / ZONE_GAP)));
+      colA.setHex(ZONE_COL[zAt]).multiplyScalar(0.075);
+      colB.setHex(0x120e24).add(colA);
+      (scene.background as THREE.Color).lerp(colB, 0.025);
+      (scene.fog as THREE.Fog).color.copy(scene.background as THREE.Color);
 
       // ── HUD ──
       if (hpFillRef.current) {
