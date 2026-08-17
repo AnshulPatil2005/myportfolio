@@ -650,6 +650,11 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       return ring;
     });
 
+    // objective beacon — a slowly spinning marker over the next destination
+    const beacon = new THREE.Mesh(track(new THREE.ConeGeometry(0.3, 0.65, 6)), emat(0xffffff, { transparent: true, opacity: 0.85 }));
+    beacon.rotation.x = Math.PI;
+    scene.add(beacon);
+
     // ── Guardian creatures — rounded, finished little machines ─────────────
     interface MobVis { g: THREE.Group; eye?: THREE.Mesh; shardA?: THREE.Group; shardB?: THREE.Group; ring?: THREE.Mesh; core?: THREE.Mesh }
     const mobVis: MobVis[] = MOB_SPAWNS.map(ms => {
@@ -728,9 +733,11 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       const name = plateSprite(CHAPTERS[zi].bossName, zi === FINAL ? "#8a6a20" : "#a63030", "rgba(252,252,254,0.92)", 0.42);
       name.position.y = zi === 0 ? 6.3 : 4.3;
       group.add(name);
-      const orgPlate = plateSprite(`${CHAPTERS[zi].org} · ${CHAPTERS[zi].year}`, "#3a4560", "rgba(252,252,254,0.88)", 0.28, 38);
-      orgPlate.position.y = name.position.y - 0.52;
-      group.add(orgPlate);
+      if (zi !== FINAL) {
+        const orgPlate = plateSprite(`${CHAPTERS[zi].org} · ${CHAPTERS[zi].year}`, "#3a4560", "rgba(252,252,254,0.88)", 0.28, 38);
+        orgPlate.position.y = name.position.y - 0.52;
+        group.add(orgPlate);
+      }
 
       if (zi === 0) {
         // THE MONOLITH — octagonal drive tower with glowing seams + satellites
@@ -1001,6 +1008,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           const mat = m.material as THREE.Material & { opacity: number };
           mat.transparent = true;
           mat.opacity = op;
+          mat.depthWrite = op >= 0.99; // ghosts must not occlude what's behind them
         }
       });
     }
@@ -1599,8 +1607,9 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           if (mb.cd <= 0 && dP > 3.2) {
             mb.cd = 4;
             const a = Math.atan2(st.pz - mb.homeZ, st.px - mb.homeX);
-            mb.homeX += Math.cos(a) * 2.4;
-            mb.homeZ += Math.sin(a) * 2.4;
+            // the anchor blinks toward you but never leaves its own room
+            mb.homeX = Math.max(-11, Math.min(11, mb.homeX + Math.cos(a) * 2.4));
+            mb.homeZ = Math.max(ZC[ty] - 8.5, Math.min(ZC[ty] + 9, mb.homeZ + Math.sin(a) * 2.4));
             spawnHazard(mb.homeX, mb.homeZ, 1.5, 0.6);
             burst(mb.homeX, mb.homeZ, 8, 0x66e0ff, 3, 1.3);
           }
@@ -2106,6 +2115,16 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
 
       sun.position.set(st.px + 18, 30, st.pz + 10);
       sun.target.position.set(st.px, 0, st.pz);
+
+      // objective beacon
+      if (!st.fightActive && st.cineT < 0 && st.deadT < 0) {
+        const zi2 = Math.min(st.cleared, FINAL);
+        const bz2 = zi2 === FINAL ? ZC[FINAL] : ZC[zi2] - 2;
+        beacon.visible = true;
+        beacon.position.set(0, 5.6 + Math.sin(st.t * 2.4) * 0.25, bz2);
+        beacon.rotation.y = st.t * 1.5;
+        (beacon.material as THREE.MeshBasicMaterial).color.setHex(ZONE_COL[zi2]);
+      } else beacon.visible = false;
 
       // drifting clouds + bobbing islands
       cloudSprites.forEach((c2, i) => {
