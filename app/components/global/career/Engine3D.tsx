@@ -8,7 +8,7 @@ import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { useEffect, useRef } from "react";
-import { CHAPTERS, WEAPONS, IMMUNE_TEXTS, ANSHUL_TAUNTS, ROMAN } from "./data";
+import { CHAPTERS, WEAPONS, IMMUNE_TEXTS, ANSHUL_DIALOGUE, SUMMON_NAMES, ROMAN } from "./data";
 
 // ── World: four zones — three boss arenas, then Anshul at the end ─────────────
 const ZONE_GAP = 34;
@@ -42,14 +42,7 @@ interface Wave { x: number; z: number; R: number; speed: number; max: number; de
 const ROOMS = ZC.map(zc => ({ x1: -ROOM_HW, x2: ROOM_HW, z1: zc - ROOM_HD, z2: zc + ROOM_HD }));
 const CORRS = [0, 1, 2].map(i => ({ x1: -CORR_HW, x2: CORR_HW, z1: ZC[i] - ROOM_HD - (ZONE_GAP - ROOM_HD * 2), z2: ZC[i] - ROOM_HD }));
 
-// one guardian creature per zone, met before the boss
-// 0 query leech · 1 quantum shard · 2 incident spark
-const MOB_SPAWNS = [0, 1, 2].map(zi => ({
-  type: zi,
-  x: zi % 2 === 0 ? -3.5 : 3.5,
-  z: ZC[zi] + 8.2,
-}));
-const MOB_NAMES = ["QUERY LEECH", "QUANTUM SHARD", "INCIDENT SPARK"];
+// no roaming guardians — each arena holds one boss who raises named skeletons
 
 const MAGS = [12, 6, 4, 8];
 const RELOAD_T = [1.0, 1.4, 2.0, 1.6];
@@ -655,73 +648,9 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     beacon.rotation.x = Math.PI;
     scene.add(beacon);
 
-    // ── Guardian creatures — rounded, finished little machines ─────────────
-    interface MobVis { g: THREE.Group; eye?: THREE.Mesh; shardA?: THREE.Group; shardB?: THREE.Group; ring?: THREE.Mesh; core?: THREE.Mesh }
-    const mobVis: MobVis[] = MOB_SPAWNS.map(ms => {
-      const g = new THREE.Group();
-      const v: MobVis = { g };
-      if (ms.type === 0) {
-        // query leech — squat rounded drive-bot with one glowing eye
-        const body = new THREE.Mesh(track(new THREE.SphereGeometry(0.72, 20, 14)), bmat(0xd07038, { emissive: 0x2a1004 }));
-        body.scale.y = 0.62;
-        body.position.y = 0.6;
-        const skirt = new THREE.Mesh(track(new THREE.ConeGeometry(0.78, 0.5, 18)), bmat(0xb05a28));
-        skirt.position.y = 0.28;
-        const eye = new THREE.Mesh(track(new THREE.SphereGeometry(0.16, 12, 10)), emat(0xff4040));
-        eye.position.set(0, 0.68, 0.62);
-        v.eye = eye;
-        const ant = new THREE.Mesh(track(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 6)), bmat(0x7a4a20));
-        ant.position.y = 1.25;
-        const tip = new THREE.Mesh(track(new THREE.SphereGeometry(0.06, 8, 8)), emat(0xff8060));
-        tip.position.y = 1.52;
-        const treadL = new THREE.Mesh(track(new THREE.BoxGeometry(0.28, 0.18, 0.95)), bmat(0x6a4428));
-        treadL.position.set(-0.52, 0.1, 0);
-        const treadR = treadL.clone();
-        treadR.position.x = 0.52;
-        g.add(body, skirt, eye, ant, tip, treadL, treadR);
-        g.position.set(ms.x, 0, ms.z);
-        g.scale.setScalar(1.2);
-      } else if (ms.type === 1) {
-        // quantum shard — crystal in two places, each with an orbit ring
-        const mkShard = () => {
-          const sg = new THREE.Group();
-          const outer = new THREE.Mesh(track(new THREE.IcosahedronGeometry(0.55, 0)), bmat(0x9fdcff, { flatShading: true, emissive: 0x1a4a66 }));
-          const core = new THREE.Mesh(track(new THREE.SphereGeometry(0.2, 10, 8)), emat(0x66e0ff));
-          const ring = new THREE.Mesh(track(new THREE.TorusGeometry(0.85, 0.035, 10, 32)), emat(0x38bdf8, { transparent: true, opacity: 0.8 }));
-          ring.rotation.x = Math.PI / 2.6;
-          sg.add(outer, core, ring);
-          sg.position.y = 1.3;
-          return sg;
-        };
-        v.shardA = mkShard();
-        v.shardB = mkShard();
-        g.add(v.shardA, v.shardB);
-      } else {
-        // incident spark — spiky red star that falls from the sky
-        const core = new THREE.Mesh(track(new THREE.OctahedronGeometry(0.4, 0)), emat(0xff5050));
-        const spike = new THREE.Mesh(track(new THREE.OctahedronGeometry(0.4, 0)), emat(0xff9060, { transparent: true, opacity: 0.7 }));
-        spike.scale.set(1.5, 0.5, 0.5);
-        const spike2 = spike.clone();
-        spike2.scale.set(0.5, 1.5, 0.5);
-        v.core = core;
-        const glowS = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: glowTexture(), color: 0xff6050, transparent: true, opacity: 0.75, depthWrite: false, blending: THREE.AdditiveBlending })));
-        glowS.scale.setScalar(1.7);
-        g.add(core, spike, spike2, glowS);
-        v.ring = new THREE.Mesh(track(new THREE.RingGeometry(0.8, 0.95, 20)), emat(0xff5555, { transparent: true, opacity: 0.6, side: THREE.DoubleSide }));
-        v.ring.rotation.x = -Math.PI / 2;
-        v.ring.visible = false;
-        scene.add(v.ring);
-      }
-      scene.add(g);
-      return v;
-    });
-
-    // ── Bosses — finished multi-part models ────────────────────────────────
+    // ── Bosses — one individual per arena, character models on top ─────────
     interface BossVis {
       group: THREE.Group;
-      seams?: THREE.Mesh[]; sats?: THREE.Mesh[];
-      ghosts?: THREE.Group[]; hash?: THREE.Sprite; pin?: THREE.Mesh;
-      rings?: THREE.Mesh[]; mods?: THREE.Group[]; caps?: THREE.MeshBasicMaterial[];
       screen?: THREE.MeshBasicMaterial; aura?: THREE.MeshBasicMaterial; halo?: THREE.Mesh;
       protoBody?: THREE.Group;
     }
@@ -731,7 +660,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       scene.add(group);
       const v: BossVis = { group };
       const name = plateSprite(CHAPTERS[zi].bossName, zi === FINAL ? "#8a6a20" : "#a63030", "rgba(252,252,254,0.92)", 0.42);
-      name.position.y = zi === 0 ? 6.3 : 4.3;
+      name.position.y = zi === FINAL ? 4.3 : 4.0;
       group.add(name);
       if (zi !== FINAL) {
         const orgPlate = plateSprite(`${CHAPTERS[zi].org} · ${CHAPTERS[zi].year}`, "#3a4560", "rgba(252,252,254,0.88)", 0.28, 38);
@@ -739,89 +668,17 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         group.add(orgPlate);
       }
 
-      if (zi === 0) {
-        // THE MONOLITH — octagonal drive tower with glowing seams + satellites
-        const seams: THREE.Mesh[] = [];
-        const sats: THREE.Mesh[] = [];
-        const radii = [2.2, 2.0, 1.85, 1.7, 1.5];
-        radii.forEach((r, i) => {
-          const slabGeo = track(new THREE.CylinderGeometry(r, r + 0.08, 0.8, 8));
-          const slab = new THREE.Mesh(slabGeo, bmat(0x5a7a4a, { flatShading: true, emissive: 0x101c0a }));
-          slab.position.y = 0.45 + i * 0.95;
-          group.add(slab);
-          const seam = new THREE.Mesh(track(new THREE.CylinderGeometry(r - 0.05, r - 0.05, 0.12, 8)), emat(0x9fffb0, { transparent: true, opacity: 0.25 }));
-          seam.position.y = 0.95 + i * 0.95;
-          seams.push(seam);
-          group.add(seam);
-        });
-        for (let i = 0; i < 3; i++) {
-          const sat = new THREE.Mesh(track(new THREE.OctahedronGeometry(0.28, 0)), emat(0x4ade80));
-          sats.push(sat);
-          group.add(sat);
-        }
-        v.seams = seams;
-        v.sats = sats;
-        const baseRing = new THREE.Mesh(track(new THREE.TorusGeometry(2.55, 0.1, 10, 40)), bmat(0x4a6a3e));
-        baseRing.rotation.x = Math.PI / 2;
-        baseRing.position.y = 0.12;
-        const dishPole = new THREE.Mesh(track(new THREE.CylinderGeometry(0.06, 0.06, 0.8, 6)), bmat(0x4a6a3e));
-        dishPole.position.y = 5.1;
-        const dish = new THREE.Mesh(track(new THREE.ConeGeometry(0.5, 0.35, 10)), bmat(0x7a9a6a, { flatShading: true }));
-        dish.rotation.x = Math.PI;
-        dish.position.y = 5.5;
-        group.add(baseRing, dishPole, dish);
-      } else if (zi === 1) {
-        // NON-DETERMINISM — three ringed crystals, one real
-        v.ghosts = [0, 1, 2].map(() => {
-          const g = new THREE.Group();
-          const outer = new THREE.Mesh(track(new THREE.IcosahedronGeometry(1.25, 0)), bmat(0x8fd4ff, { flatShading: true, transparent: true, opacity: 1, emissive: 0x14405c }));
-          outer.position.y = 1.5;
-          const core = new THREE.Mesh(track(new THREE.SphereGeometry(0.45, 12, 10)), emat(0x66e0ff, { transparent: true, opacity: 0.9 }));
-          core.position.y = 1.5;
-          const ring = new THREE.Mesh(track(new THREE.TorusGeometry(1.7, 0.05, 10, 40)), emat(0x38bdf8, { transparent: true, opacity: 0.7 }));
-          ring.position.y = 1.5;
-          ring.rotation.x = Math.PI / 2.4;
-          g.add(outer, core, ring);
-          g.position.set(0, 0, zc - 2);
-          scene.add(g);
-          return g;
-        });
-        v.hash = plateSprite("sha256: a3f9…", "#1a5276", "rgba(252,252,254,0.9)", 0.3, 40);
-        v.hash.visible = false;
-        scene.add(v.hash);
-        v.pin = new THREE.Mesh(track(new THREE.RingGeometry(1.7, 1.85, 32)), emat(GREENC, { transparent: true, opacity: 0.8, side: THREE.DoubleSide }));
-        v.pin.rotation.x = -Math.PI / 2;
-        v.pin.position.y = 0.04;
-        v.pin.visible = false;
-        scene.add(v.pin);
-      } else if (zi === 2) {
-        // ARCHITECTURE DRIFT — gyroscope core with hex modules
-        const core = new THREE.Mesh(track(new THREE.IcosahedronGeometry(1.3, 1)), bmat(0xb04858, { flatShading: true, emissive: 0x300c12 }));
-        core.position.y = 1.7;
-        v.rings = [0, 1].map(k => {
-          const ring = new THREE.Mesh(track(new THREE.TorusGeometry(1.9 - k * 0.35, 0.06, 10, 44)), emat(0xff7080, { transparent: true, opacity: 0.85 }));
-          ring.position.y = 1.7;
-          group.add(ring);
-          return ring;
-        });
-        group.add(core);
-        v.mods = [];
-        v.caps = [];
-        ["auth", "api", "billing", "config"].forEach(label => {
-          const g = new THREE.Group();
-          const prism = new THREE.Mesh(track(new THREE.CylinderGeometry(0.72, 0.78, 0.9, 6)), bmat(0xc25868, { flatShading: true, emissive: 0x2a0c12 }));
-          prism.position.y = 0.45;
-          const capMat = emat(0xff8090, { transparent: true, opacity: 0.9 });
-          const cap = new THREE.Mesh(track(new THREE.CylinderGeometry(0.6, 0.6, 0.08, 6)), capMat);
-          cap.position.y = 0.94;
-          v.caps!.push(capMat);
-          const lb = plateSprite(label, "#8a2030", "rgba(252,252,254,0.9)", 0.26, 38);
-          lb.position.y = 1.5;
-          g.add(prism, cap, lb);
-          g.position.set(0, 0, zc - 2);
-          scene.add(g);
-          v.mods!.push(g);
-        });
+      if (zi !== FINAL) {
+        // simple stand-in figure until the character model loads
+        const col = [0x7a8f4a, 0x4a6a8f, 0x8f4a55][zi];
+        const proto = new THREE.Group();
+        const body = new THREE.Mesh(track(new THREE.CapsuleGeometry(0.5, 1.2, 4, 12)), bmat(col, { flatShading: true }));
+        body.position.y = 1.5;
+        const head = new THREE.Mesh(track(new THREE.SphereGeometry(0.4, 14, 12)), bmat(col));
+        head.position.y = 2.7;
+        proto.add(body, head);
+        v.protoBody = proto;
+        group.add(proto);
       } else {
         // ANSHUL — a properly built character, not a stick figure
         const skin = 0xe8c39a, outfit = 0x33415c, trim = 0xffd88a;
@@ -979,7 +836,6 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     // ── Animated characters (KayKit rigs share one animation library) ───────
     const mixers: THREE.AnimationMixer[] = [];
     interface CharRig { root: THREE.Group; actions: Record<string, THREE.AnimationAction>; current?: string }
-    const mobRigs: (CharRig | null)[] = [null, null, null];
     function makeRig(root: THREE.Group, anims: THREE.AnimationClip[], scale: number): CharRig {
       root.scale.setScalar(scale);
       root.traverse(o => {
@@ -1001,55 +857,50 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       rig.actions[nm].reset().fadeIn(0.25).play();
       rig.current = nm;
     }
-    function setOpacityDeep(root: THREE.Object3D, op: number) {
-      root.traverse(o => {
-        const m = o as THREE.Mesh;
-        if (m.isMesh && m.material && !Array.isArray(m.material)) {
-          const mat = m.material as THREE.Material & { opacity: number };
-          mat.transparent = true;
-          mat.opacity = op;
-          mat.depthWrite = op >= 0.99; // ghosts must not occlude what's behind them
-        }
+    // boss characters — one individual per arena
+    const bossRigs: (CharRig | null)[] = [null, null, null];
+    (["knight", "rogue_hooded", "barbarian"] as const).forEach((file, zi) => {
+      loadModel(`/models/${file}.glb`).then(g => {
+        const rig = makeRig(g.scene, g.animations, [1.5, 1.4, 1.55][zi]);
+        bossRigs[zi] = rig;
+        const v = bossVis[zi];
+        if (v.protoBody) v.protoBody.visible = false;
+        v.group.add(rig.root);
+        rigPlay(rig, "Idle");
+      }).catch(() => {});
+    });
+
+    // summon pools — the boss raises named skeletons (2 per fight max)
+    const summonPools: (CharRig | null)[][] = [[null, null], [null, null], [null, null]];
+    (["skeleton_minion", "skeleton_mage", "skeleton_rogue"] as const).forEach((file, zi) => {
+      loadModel(`/models/${file}.glb`).then(g => {
+        const roots = [g.scene, cloneSkeleton(g.scene) as THREE.Group];
+        roots.forEach((root, k) => {
+          const rig = makeRig(root, g.animations, 0.95);
+          rig.root.visible = false;
+          scene.add(rig.root);
+          summonPools[zi][k] = rig;
+          rigPlay(rig, "Walking_A");
+        });
+      }).catch(() => {});
+    });
+    // fallback capsules + name labels for summons
+    const summonProtos = [0, 1].map(() => {
+      const m = new THREE.Mesh(track(new THREE.CapsuleGeometry(0.32, 0.9, 4, 10)), bmat(0xcfd6de, { flatShading: true }));
+      m.castShadow = true;
+      m.visible = false;
+      scene.add(m);
+      return m;
+    });
+    function clearSummons() {
+      st.summons.forEach((s, i) => {
+        s.active = false;
+        if (s.rig) s.rig.root.visible = false;
+        s.rig = null;
+        summonProtos[i].visible = false;
+        if (s.label) { scene.remove(s.label); s.label = null; }
       });
     }
-
-    // guardians become real animated creatures
-    loadModel("/models/skeleton_minion.glb").then(g => {
-      const rig = makeRig(g.scene, g.animations, 1.0);
-      mobRigs[0] = rig;
-      mobVis[0].g.children.forEach(c => (c.visible = false));
-      mobVis[0].g.add(rig.root);
-      rigPlay(rig, "Idle");
-    }).catch(() => {});
-    loadModel("/models/skeleton_rogue.glb").then(g => {
-      const rig = makeRig(g.scene, g.animations, 1.02);
-      mobRigs[2] = rig;
-      mobVis[2].g.children.forEach(c => (c.visible = false));
-      mobVis[2].g.add(rig.root);
-      rigPlay(rig, "Idle");
-    }).catch(() => {});
-    loadModel("/models/skeleton_mage.glb").then(g => {
-      // two copies of the same being — quantum superposition, one real
-      const rootB = cloneSkeleton(g.scene) as THREE.Group;
-      const rigA = makeRig(g.scene, g.animations, 1.0);
-      const rigB = makeRig(rootB, g.animations, 1.0);
-      for (const rt of [rigA.root, rigB.root]) {
-        rt.traverse(o => {
-          const m = o as THREE.Mesh;
-          if (m.isMesh && m.material && !Array.isArray(m.material)) {
-            m.material = (m.material as THREE.Material).clone();
-            (m.material as THREE.Material).transparent = true;
-          }
-        });
-      }
-      mobRigs[1] = rigA;
-      mobVis[1].shardA!.children.forEach(c => (c.visible = false));
-      mobVis[1].shardB!.children.forEach(c => (c.visible = false));
-      mobVis[1].shardA!.add(rigA.root);
-      mobVis[1].shardB!.add(rigB.root);
-      rigPlay(rigA, "Idle");
-      rigPlay(rigB, "Idle");
-    }).catch(() => {});
 
     // Anshul — the Adventurers Mage (idles, then cheers at the offer)
     const anshulActions: { idle?: THREE.AnimationAction; cheer?: THREE.AnimationAction } = {};
@@ -1093,29 +944,16 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       fightActive: false, fightZone: -1, introT: -1, vicT: -1, deadT: -1,
       bossX: 0, bossZ: 0, bossHp: 0, bossMax: 1,
       shake: 0, bossPulse: 0, noteT: 0,
-      vented: false, ventT: 4, cdA: 1.2, cdB: 3.5,
-      ghosts: [] as { x: number; z: number }[], realIdx: 0, pinHits: 0, pinT: 0, shuffleT: 0,
-      modSt: [] as { ang: number; hp: number; cd: number; alive: boolean }[],
-      exposedT: 0,
+      cdA: 2.4, cdB: 3.5,
+      sumT: 4, sumIdx: 0, blinkT: 3, enraged: false, bossMoving: false,
+      summons: [0, 1].map(() => ({ active: false, x: 0, z: 0, hp: 0, name: "", rig: null as CharRig | null, label: null as THREE.Sprite | null })),
       weaponSel: Math.max(0, Math.min(3, initialCleared)),
-      slowT: 0, railT: 0, railLen: 0, railYaw: 0, railPitch: 0,
+      railT: 0, railLen: 0, railYaw: 0, railPitch: 0,
       orbs: [] as { x: number; z: number; a: number; t: number; dead: boolean }[],
-      metAnshul: false, tauntT: 2, tauntIdx: 0, nearAnshul: false, canOffer: false, cineT: -1,
+      dlgIdx: 0, dlgT: 1.2, nearAnshul: false, canOffer: false, cineT: -1,
       entered: new Set<number>(), introduced: new Set<number>(), bannerT: 0,
       hitSfxT: 0,
       blackT: 0,
-      mobs: MOB_SPAWNS.map(ms => ({
-        x: ms.x, z: ms.z,
-        homeX: ms.x, homeZ: ms.z,
-        hp: [24, 20, 18][ms.type],
-        alive: true,
-        t: Math.random() * 10,
-        cd: 1 + Math.random() * 2,
-        phase: 0,
-        real: 0,
-        slotA: { x: ms.x + 2.4, z: ms.z }, slotB: { x: ms.x - 2.4, z: ms.z },
-        teleX: 0, teleZ: 0,
-      })),
     };
 
     function note(txt: string, secs = 1.6) {
@@ -1186,10 +1024,9 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       st.pb = [];
       st.hazards = [];
       st.waves = [];
-      st.vented = false; st.ventT = 4; st.cdA = 2.4; st.cdB = 3.5;
-      st.ghosts = []; st.realIdx = 0; st.pinHits = 0; st.pinT = 0; st.shuffleT = 0;
-      st.modSt = [0, 1, 2, 3].map(i => ({ ang: (i / 4) * Math.PI * 2, hp: 40, cd: 2 + i * 1.1, alive: true }));
-      st.exposedT = 0;
+      st.cdA = 2.6; st.cdB = 3.8;
+      st.sumT = 4; st.blinkT = 3; st.enraged = false; st.bossMoving = false;
+      clearSummons();
       if (introNameRef.current) introNameRef.current.textContent = CHAPTERS[zone].bossName;
       if (introSubRef.current) introSubRef.current.textContent = CHAPTERS[zone].bossSub;
       if (bossNameRef.current) bossNameRef.current.textContent = CHAPTERS[zone].bossName;
@@ -1226,6 +1063,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       if (k === "e" && st.canOffer && st.cineT < 0) {
         st.cineT = 0;
         st.pb = [];
+        clearSummons();
         document.exitPointerLock();
         // he celebrates the offer
         if (anshulActions.cheer) {
@@ -1244,47 +1082,37 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
 
-    // ── Boss AI — telegraphed area attacks, no projectile spam ─────────────
+    // ── Boss AI — one individual per arena, plus the skeletons he raises ───
     function updBoss(dt: number) {
       const zone = st.fightZone;
       const oz = ZC[zone];
+      const dP = Math.hypot(st.bossX - st.px, st.bossZ - st.pz);
+      st.bossMoving = false;
+
       if (zone === 0) {
-        st.bossX = Math.sin(st.t * 0.5) * 4.7;
-        st.bossZ = oz - 2;
-        st.ventT -= dt;
-        if (st.ventT <= 0) {
-          st.vented = !st.vented;
-          st.ventT = st.vented ? 3.0 : 3.6;
-          if (st.vented) note("VENTING — STRIKE NOW", 1.4);
+        // the Monolith: a heavy knight — slow relentless advance, slams
+        if (dP > 2.6) {
+          const a = Math.atan2(st.pz - st.bossZ, st.px - st.bossX);
+          st.bossX = Math.max(-11.5, Math.min(11.5, st.bossX + Math.cos(a) * 1.25 * dt));
+          st.bossZ = Math.max(oz - 9.5, Math.min(oz + 9.5, st.bossZ + Math.sin(a) * 1.25 * dt));
+          st.bossMoving = true;
         }
         st.cdA -= dt;
-        if (st.cdA <= 0) { st.cdA = 3.4; spawnWave(st.bossX, st.bossZ, 5.5, 10); }
+        if (st.cdA <= 0) { st.cdA = 3.6; spawnWave(st.bossX, st.bossZ, 5.5, 9); }
         st.cdB -= dt;
-        if (st.cdB <= 0) { st.cdB = 4.2; spawnHazard(st.px, st.pz, 2.1); }
+        if (st.cdB <= 0) { st.cdB = 4.4; spawnHazard(st.px, st.pz, 2.1); }
       } else if (zone === 1) {
-        if (st.pinT > 0) {
-          st.pinT -= dt;
-          st.ghosts = [{ x: 0, z: oz - 2 }];
-          st.realIdx = 0;
-          st.bossX = 0; st.bossZ = oz - 2;
-          if (st.pinT <= 0) { st.pinHits = 0; st.shuffleT = 0; }
-          return;
+        // Non-determinism: a hooded rogue who blinks across the arena
+        st.blinkT -= dt;
+        if (st.blinkT <= 0) {
+          st.blinkT = 3.6;
+          burst(st.bossX, st.bossZ, 12, 0x66e0ff, 4, 1.4);
+          const a = Math.random() * Math.PI * 2;
+          st.bossX = Math.cos(a) * (4 + Math.random() * 3.5);
+          st.bossZ = oz - 2 + Math.sin(a) * (2 + Math.random() * 4);
+          burst(st.bossX, st.bossZ, 12, 0x66e0ff, 4, 1.4);
+          spawnWave(st.bossX, st.bossZ, 6, 6.5);
         }
-        st.shuffleT -= dt;
-        if (st.shuffleT <= 0 || st.ghosts.length < 3) {
-          st.shuffleT = 3.2;
-          const base = st.t * 0.4;
-          const old = st.ghosts[st.realIdx] || { x: 0, z: oz - 2 };
-          st.ghosts = [0, 1, 2].map(i => ({
-            x: Math.cos(base + (i / 3) * Math.PI * 2) * 5.6,
-            z: oz - 2 + Math.sin(base + (i / 3) * Math.PI * 2) * 2.1,
-          }));
-          st.realIdx = (Math.random() * 3) | 0;
-          spawnWave(old.x, old.z, 6, 8);
-          burst(old.x, old.z, 10, 0x66e0ff, 4, 1.5);
-        }
-        const real = st.ghosts[st.realIdx];
-        st.bossX = real.x; st.bossZ = real.z;
         st.cdA -= dt;
         if (st.cdA <= 0) {
           st.cdA = 3.4;
@@ -1293,121 +1121,96 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           spawnHazard(st.px + Math.cos(a) * 2.6, st.pz + Math.sin(a) * 2.6, 1.9);
         }
       } else {
-        st.bossX = Math.sin(st.t * 0.6) * 3;
-        st.bossZ = oz - 2 + Math.cos(st.t * 0.8) * 0.87;
-        const anyMod = st.modSt.some(m => m.alive);
-        if (!anyMod) {
-          if (st.exposedT <= 0) { st.exposedT = 9; note("CORE EXPOSED", 1.5); }
-          st.exposedT -= dt;
-          if (st.exposedT <= 0) { st.modSt.forEach(m => { m.alive = true; m.hp = 40; }); note("MODULES REDEPLOYED", 1.4); }
+        // Drift: a barbarian who enrages as he breaks
+        if (!st.enraged && st.bossHp < st.bossMax * 0.4) {
+          st.enraged = true;
+          note("ARCHITECTURE DRIFT ENRAGES", 1.8);
+          burst(st.bossX, st.bossZ, 24, 0xff8080, 6, 1.5);
         }
-        for (const mo of st.modSt) {
-          if (!mo.alive) continue;
-          mo.ang += dt * 0.5;
-          mo.cd -= dt;
-          if (mo.cd <= 0) {
-            mo.cd = 4.6;
-            spawnHazard(st.px + (Math.random() - 0.5) * 3, st.pz + (Math.random() - 0.5) * 3, 2.0);
-          }
+        const spd = st.enraged ? 2.6 : 1.6;
+        if (dP > 2.4) {
+          const a = Math.atan2(st.pz - st.bossZ, st.px - st.bossX);
+          st.bossX = Math.max(-11.5, Math.min(11.5, st.bossX + Math.cos(a) * spd * dt));
+          st.bossZ = Math.max(oz - 9.5, Math.min(oz + 9.5, st.bossZ + Math.sin(a) * spd * dt));
+          st.bossMoving = true;
         }
+        st.cdA -= dt;
+        if (st.cdA <= 0) { st.cdA = st.enraged ? 3 : 4.4; spawnHazard(st.px, st.pz, 2.0); }
         st.cdB -= dt;
-        if (st.cdB <= 0) { st.cdB = 6; spawnWave(st.bossX, st.bossZ, 5, 9.5); }
+        if (st.cdB <= 0) { st.cdB = st.enraged ? 3.8 : 5.4; spawnWave(st.bossX, st.bossZ, 5, 8.5); }
+      }
+
+      // he raises named skeletons — two at most, cut them down for HP
+      st.sumT -= dt;
+      if (st.sumT <= 0) {
+        st.sumT = 8.5;
+        const slot = st.summons.findIndex(s => !s.active);
+        if (slot >= 0) {
+          const s = st.summons[slot];
+          const names = SUMMON_NAMES[zone];
+          s.active = true;
+          s.hp = 14;
+          s.name = names[st.sumIdx++ % names.length];
+          const a = Math.random() * Math.PI * 2;
+          s.x = st.bossX + Math.cos(a) * 2.2;
+          s.z = st.bossZ + Math.sin(a) * 2.2;
+          s.rig = summonPools[zone][slot];
+          if (s.rig) { s.rig.root.visible = true; rigPlay(s.rig, "Walking_A"); }
+          else summonProtos[slot].visible = true;
+          if (s.label) scene.remove(s.label);
+          s.label = plateSprite(s.name, "#a63030", "rgba(252,252,254,0.92)", 0.3, 40);
+          scene.add(s.label);
+          burst(s.x, s.z, 14, 0xcfd6de, 4, 1);
+          note(`${CHAPTERS[zone].bossName} raises ${s.name}`, 1.6);
+        }
+      }
+      for (const s of st.summons) {
+        if (!s.active) continue;
+        const d = Math.hypot(s.x - st.px, s.z - st.pz);
+        if (d > 1.0) {
+          const a = Math.atan2(st.pz - s.z, st.px - s.x);
+          s.x += Math.cos(a) * 2.2 * dt;
+          s.z += Math.sin(a) * 2.2 * dt;
+        } else if (st.invuln <= 0) {
+          st.php -= 8; st.invuln = 1; st.shake = 1;
+          sfx("hurt");
+          burst(st.px, st.pz, 8, REDC, 3, 1);
+        }
       }
     }
 
     function hitBoss(b: PB): boolean {
-      const zone = st.fightZone;
-      const bodyH = [5.2, 3.0, 3.4][zone];
-      if (zone === 1 && st.pinT <= 0) {
-        for (let i = 0; i < st.ghosts.length; i++) {
-          const g = st.ghosts[i];
-          const d3 = Math.sqrt((b.x - g.x) ** 2 + (b.y - 1.5) ** 2 + (b.z - g.z) ** 2);
-          if (d3 < 1.4) {
-            if (i === st.realIdx) {
-              st.bossHp -= b.dmg; st.pinHits++; st.bossPulse = 0.14;
-              burst(b.x, b.z, 3, 0x66e0ff, 3, b.y);
-              if (st.pinHits >= 8) { st.pinT = 3.2; note("PINNED — HASHES MATCH", 1.6); }
-            } else {
-              floatTxt("MISMATCH", "#8aa0b8", b.x, b.z, 0.36, b.y);
-            }
-            return true;
-          }
-        }
-        return false;
-      }
-      if (zone === 2) {
-        for (let i = 0; i < st.modSt.length; i++) {
-          const mo = st.modSt[i];
-          if (!mo.alive) continue;
-          const mx = st.bossX + Math.cos(mo.ang) * 5, mz = st.bossZ + Math.sin(mo.ang) * 5;
-          const d3 = Math.sqrt((b.x - mx) ** 2 + (b.y - 0.9) ** 2 + (b.z - mz) ** 2);
-          if (d3 < 0.95) {
-            mo.hp -= b.dmg;
-            burst(mx, mz, 3, REDC, 3, 1);
-            if (mo.hp <= 0) { mo.alive = false; floatTxt(["auth", "api", "billing", "config"][i] + " refactored", "#2f8f4f", mx, mz, 0.5, 1.6); burst(mx, mz, 18, 0xffb0b8, 5, 1); }
-            return true;
-          }
-        }
-      }
-      const r = [2.4, 1.3, 1.5][zone];
-      if (Math.hypot(b.x - st.bossX, b.z - st.bossZ) < r && b.y > 0 && b.y < bodyH) {
-        let mult = 1;
-        if (zone === 0) mult = st.vented ? 1 : 0.3;
-        if (zone === 1) mult = st.pinT > 0 ? 2 : 1;
-        if (zone === 2) mult = st.modSt.some(m => m.alive) ? 0.25 : 1;
-        st.bossHp -= b.dmg * mult;
+      if (Math.hypot(b.x - st.bossX, b.z - st.bossZ) < 1.2 && b.y > 0 && b.y < 3.2) {
+        st.bossHp -= b.dmg;
         st.bossPulse = 0.14;
-        burst(b.x, b.z, mult >= 1 ? 4 : 2, mult >= 1 ? 0xffffff : 0x888888, 3, b.y);
+        burst(b.x, b.z, 4, 0xffffff, 3, b.y);
         return true;
       }
       return false;
     }
 
-    // ── Mob combat ─────────────────────────────────────────────────────────
-    function killMob(mi: number) {
-      const mb = st.mobs[mi];
-      mb.alive = false;
-      const cols = [0xffa060, 0x66e0ff, 0xff8080];
-      burst(mb.x, mb.z, 20, cols[MOB_SPAWNS[mi].type], 5, 1.2);
-      sfx("boom");
-      feedKill(MOB_NAMES[MOB_SPAWNS[mi].type]);
-      st.php = Math.min(100, st.php + 10);
-      floatTxt("+10 HP", "#2f8f4f", mb.x, mb.z, 0.4, 2);
-    }
-    function mobBulletHit(b: PB, seen?: Set<number>): boolean {
-      for (let mi = 0; mi < st.mobs.length; mi++) {
-        if (seen?.has(mi)) continue;
-        const mb = st.mobs[mi];
-        if (!mb.alive) continue;
-        const ty = MOB_SPAWNS[mi].type;
-        if (ty === 1) {
-          const other = mb.real === 0 ? mb.slotB : mb.slotA;
-          if (Math.sqrt((b.x - mb.x) ** 2 + (b.y - 1.3) ** 2 + (b.z - mb.z) ** 2) < 0.75) {
-            seen?.add(mi);
-            mb.hp -= b.dmg;
-            burst(b.x, b.z, 2, 0x66e0ff, 3, b.y);
-            if (mb.hp <= 0) killMob(mi);
-            return true;
+    // ── Summon combat ──────────────────────────────────────────────────────
+    function summonHit(b: PB, seen?: Set<number>): boolean {
+      for (let i = 0; i < st.summons.length; i++) {
+        if (seen?.has(i)) continue;
+        const s = st.summons[i];
+        if (!s.active) continue;
+        if (Math.sqrt((b.x - s.x) ** 2 + (b.y - 1.1) ** 2 + (b.z - s.z) ** 2) < 0.75) {
+          seen?.add(i);
+          s.hp -= b.dmg;
+          burst(b.x, b.z, 2, REDC, 3, b.y);
+          if (s.hp <= 0) {
+            s.active = false;
+            if (s.rig) { s.rig.root.visible = false; s.rig = null; }
+            summonProtos[i].visible = false;
+            if (s.label) { scene.remove(s.label); s.label = null; }
+            burst(s.x, s.z, 18, 0xcfd6de, 5, 1.2);
+            sfx("boom");
+            feedKill(s.name);
+            st.php = Math.min(100, st.php + 4);
+            floatTxt("+4 HP", "#2f8f4f", s.x, s.z, 0.4, 2);
           }
-          if (Math.sqrt((b.x - other.x) ** 2 + (b.y - 1.3) ** 2 + (b.z - other.z) ** 2) < 0.75) {
-            seen?.add(mi);
-            if (b.dmg > 2) {
-              mb.real = 1 - mb.real;
-              burst(other.x, other.z, 6, 0x66e0ff, 3, 1.3);
-              floatTxt("COLLAPSED", "#2a7ab8", other.x, other.z, 0.34, 1.7);
-            }
-            return true;
-          }
-        } else {
-          if (ty === 2 && mb.phase < 2) continue;
-          const hy = ty === 0 ? 0.75 : 1.0, rr = ty === 0 ? 1.0 : 0.62;
-          if (Math.sqrt((b.x - mb.x) ** 2 + (b.y - hy) ** 2 + (b.z - mb.z) ** 2) < rr) {
-            seen?.add(mi);
-            mb.hp -= b.dmg;
-            burst(b.x, b.z, 2, REDC, 3, b.y);
-            if (mb.hp <= 0) killMob(mi);
-            return true;
-          }
+          return true;
         }
       }
       return false;
@@ -1423,7 +1226,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         const probe: PB = { x: st.px + dx * s, y: EYE - 0.1 + dy * s, z: st.pz + dz * s, vx: 0, vy: 0, vz: 0, dmg, pierce: 0, life: 0, dead: false };
         if (probe.y <= 0.03 || probe.y > 8 || !insideWorld(probe.x, probe.z)) break;
         let hit = false;
-        if (mobBulletHit(probe, seen)) hit = true;
+        if (summonHit(probe, seen)) hit = true;
         if (!bossDone && st.fightActive && hitBoss(probe)) { hit = true; bossDone = true; }
         if (st.cleared >= FINAL && Math.hypot(probe.x - 0, probe.z - ZC[FINAL]) < 1.4) {
           if (Math.random() < 0.06) floatTxt(IMMUNE_TEXTS[(Math.random() * IMMUNE_TEXTS.length) | 0], "#8a94a8", probe.x, probe.z, 0.4, 1.7);
@@ -1448,7 +1251,6 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       if (st.muzzleT > 0) st.muzzleT -= rdt;
       if (st.bannerT > 0) st.bannerT -= rdt;
       if (st.railT > 0) st.railT -= rdt;
-      if (st.slowT > 0) st.slowT -= rdt;
       if (st.gunKick > 0) st.gunKick = Math.max(0, st.gunKick - rdt * 5.5);
       if (st.hitT > 0) st.hitT -= rdt;
 
@@ -1477,6 +1279,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           st.px = 0; st.pz = ZC[Math.max(0, zone)] + 9.3;
           st.pb = [];
           st.hazards = []; st.waves = [];
+          clearSummons();
           st.ammo = MAGS.slice();
           st.blackT = 0;
           note("respawned — the boss awaits", 2);
@@ -1528,7 +1331,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         let dx = fx * mz + rx * mx, dz = fz * mz + rz * mx;
         const l = Math.hypot(dx, dz);
         dx /= l; dz /= l;
-        const spd = (st.keys.has("shift") ? 12.4 : 8.6) * (st.slowT > 0 ? 0.6 : 1);
+        const spd = st.keys.has("shift") ? 12.4 : 8.6;
         const nx = st.px + dx * spd * dt;
         const nz = st.pz + dz * spd * dt;
         if (canStand(nx, nz)) { st.px = nx; st.pz = nz; }
@@ -1557,85 +1360,24 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         }
       }
 
-      // the final meeting
+      // the final meeting — he speaks once, in order, then points you at the offer
       if (st.cleared >= FINAL) {
         const dAn = Math.hypot(st.px - 0, st.pz - ZC[FINAL]);
         st.nearAnshul = dAn < 9;
-        st.canOffer = dAn < 3.8;
-        if (st.nearAnshul) {
-          st.tauntT -= dt;
-          if (st.tauntT <= 0) {
-            st.tauntT = 4.4;
-            if (!st.metAnshul) {
-              st.metAnshul = true;
-              note(`ANSHUL: "You've beaten everything I ever fought. One way to finish this — offer me the job."`, 4.2);
-            } else {
-              note(`ANSHUL: "${ANSHUL_TAUNTS[st.tauntIdx % ANSHUL_TAUNTS.length]}"`, 3.2);
-              st.tauntIdx++;
-            }
+        if (st.nearAnshul && st.dlgIdx < ANSHUL_DIALOGUE.length) {
+          st.dlgT -= dt;
+          if (st.dlgT <= 0) {
+            note(`ANSHUL: "${ANSHUL_DIALOGUE[st.dlgIdx]}"`, 4.6);
+            st.dlgIdx++;
+            st.dlgT = 5.0;
           }
+        } else if (st.nearAnshul && st.dlgIdx >= ANSHUL_DIALOGUE.length && st.noteT <= 0 && st.cineT < 0) {
+          // only the final instruction stays on screen — no looping the speech
+          note(`ANSHUL: "${ANSHUL_DIALOGUE[ANSHUL_DIALOGUE.length - 1]}"`, 4);
         }
+        st.canOffer = dAn < 4.2 && st.dlgIdx >= ANSHUL_DIALOGUE.length;
       } else {
         st.canOffer = false;
-      }
-
-      // guardians
-      for (let i = 0; i < st.mobs.length; i++) {
-        const mb = st.mobs[i];
-        if (!mb.alive) continue;
-        const spawn = MOB_SPAWNS[i];
-        const ty = spawn.type;
-        const dP = Math.hypot(mb.x - st.px, mb.z - st.pz);
-        mb.t += dt;
-        if (dP > 18) continue;
-
-        if (ty === 0) {
-          if (dP > 1.2) {
-            const a = Math.atan2(st.pz - mb.z, st.px - mb.x);
-            const nx = mb.x + Math.cos(a) * 1.4 * dt, nz = mb.z + Math.sin(a) * 1.4 * dt;
-            if (canStand(nx, nz)) { mb.x = nx; mb.z = nz; }
-          }
-          if (st.invuln <= 0 && dP < 1.25) {
-            st.php -= 6; st.invuln = 1; st.slowT = 2.0; st.shake = 1;
-            sfx("hurt");
-            burst(st.px, st.pz, 8, REDC, 3, 1);
-            note("query leech attached — slowed!", 1.4);
-          }
-        } else if (ty === 1) {
-          // the shard creeps its anchor toward you, pulsing on arrival
-          mb.cd -= dt;
-          if (mb.cd <= 0 && dP > 3.2) {
-            mb.cd = 4;
-            const a = Math.atan2(st.pz - mb.homeZ, st.px - mb.homeX);
-            // the anchor blinks toward you but never leaves its own room
-            mb.homeX = Math.max(-11, Math.min(11, mb.homeX + Math.cos(a) * 2.4));
-            mb.homeZ = Math.max(ZC[ty] - 8.5, Math.min(ZC[ty] + 9, mb.homeZ + Math.sin(a) * 2.4));
-            spawnHazard(mb.homeX, mb.homeZ, 1.5, 0.6);
-            burst(mb.homeX, mb.homeZ, 8, 0x66e0ff, 3, 1.3);
-          }
-          mb.phase += dt * 0.7;
-          mb.slotA.x = mb.homeX + Math.cos(mb.phase) * 2.4; mb.slotA.z = mb.homeZ + Math.sin(mb.phase) * 2.4;
-          mb.slotB.x = mb.homeX - Math.cos(mb.phase * 1.3) * 2.4; mb.slotB.z = mb.homeZ - Math.sin(mb.phase * 1.3) * 2.4;
-          const rp = mb.real === 0 ? mb.slotA : mb.slotB;
-          mb.x = rp.x; mb.z = rp.z;
-        } else {
-          if (mb.phase === 0) {
-            if (dP < 13) { mb.phase = 1; mb.cd = 0.85; mb.teleX = st.px; mb.teleZ = st.pz; }
-          } else if (mb.phase === 1) {
-            mb.cd -= dt;
-            if (mb.cd <= 0) { mb.phase = 2; mb.x = mb.teleX; mb.z = mb.teleZ + 0.01; burst(mb.x, mb.z, 10, REDC, 4, 0.5); }
-          } else {
-            const a = Math.atan2(st.pz - mb.z, st.px - mb.x);
-            const nx = mb.x + Math.cos(a) * 4.0 * dt, nz = mb.z + Math.sin(a) * 4.0 * dt;
-            if (canStand(nx, nz)) { mb.x = nx; mb.z = nz; }
-            if (st.invuln <= 0 && dP < 0.85) {
-              mb.alive = false;
-              st.php -= 10; st.invuln = 1; st.shake = 1.2;
-              sfx("hurt");
-              burst(st.px, st.pz, 12, REDC, 4, 1);
-            }
-          }
-        }
       }
 
       // weapons
@@ -1655,12 +1397,12 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           } else {
             st.muzzleT = 0.06;
             st.ammo[st.weaponSel]--;
-            if (st.weaponSel === 0) { st.fireCd = 0.23; st.gunKick = 0.12; sfx("shot"); spawnPellet(0, 7, 0, 99); }
+            if (st.weaponSel === 0) { st.fireCd = 0.23; st.gunKick = 0.12; sfx("shot"); spawnPellet(0, 10, 0, 99); }
             else if (st.weaponSel === 1) {
               st.fireCd = 0.6;
               st.gunKick = 0.22;
               sfx("shot");
-              for (let i = 0; i < 6; i++) spawnPellet((i / 5 - 0.5) * 0.55, 5, 0, 0.42, 21);
+              for (let i = 0; i < 6; i++) spawnPellet((i / 5 - 0.5) * 0.55, 7, 0, 0.42, 21);
               st.shake = Math.max(st.shake, 0.5);
             } else if (st.weaponSel === 2) {
               st.fireCd = 0.9;
@@ -1669,7 +1411,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
               sfx("rail");
               st.railYaw = st.yaw;
               st.railPitch = st.pitch;
-              st.railLen = castRay(40, true);
+              st.railLen = castRay(55, true);
               st.shake = Math.max(st.shake, 0.9);
             } else {
               st.fireCd = 0.32;
@@ -1695,7 +1437,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt;
         const range2 = (b.x - st.px) ** 2 + (b.z - st.pz) ** 2;
         if (b.y <= 0.02 || b.y > 8 || range2 > 1600 || !insideWorld(b.x, b.z)) { b.dead = true; burst(b.x, b.z, 2, 0xdff3ff, 1.5, Math.max(0.2, b.y)); continue; }
-        if (mobBulletHit(b)) {
+        if (summonHit(b)) {
           registerHit();
           if (b.pierce > 0) b.pierce--;
           else { b.dead = true; continue; }
@@ -1712,11 +1454,10 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       for (const o of st.orbs) {
         o.t += dt;
         let tx: number | null = null, tz = 0, best = 20;
-        for (let mi = 0; mi < st.mobs.length; mi++) {
-          const mb = st.mobs[mi];
-          if (!mb.alive) continue;
-          const d = Math.hypot(mb.x - o.x, mb.z - o.z);
-          if (d < best) { best = d; tx = mb.x; tz = mb.z; }
+        for (const s of st.summons) {
+          if (!s.active) continue;
+          const d = Math.hypot(s.x - o.x, s.z - o.z);
+          if (d < best) { best = d; tx = s.x; tz = s.z; }
         }
         if (tx === null && st.fightActive) { tx = st.bossX; tz = st.bossZ; }
         if (tx !== null) {
@@ -1728,8 +1469,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         }
         o.x += Math.cos(o.a) * 10.5 * dt;
         o.z += Math.sin(o.a) * 10.5 * dt;
-        const probe: PB = { x: o.x, y: 1.2, z: o.z, vx: 0, vy: 0, vz: 0, dmg: 10, pierce: 0, life: 0, dead: false };
-        let hit = mobBulletHit(probe);
+        const probe: PB = { x: o.x, y: 1.2, z: o.z, vx: 0, vy: 0, vz: 0, dmg: 14, pierce: 0, life: 0, dead: false };
+        let hit = summonHit(probe);
         if (!hit && st.fightActive && hitBoss(probe)) hit = true;
         if (!hit && st.cleared >= FINAL && Math.hypot(o.x - 0, o.z - ZC[FINAL]) < 1.4) {
           floatTxt(IMMUNE_TEXTS[(Math.random() * IMMUNE_TEXTS.length) | 0], "#8a94a8", o.x, o.z, 0.4, 1.5);
@@ -1797,6 +1538,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         st.shake = 2;
         sfx("boom");
         st.hazards = []; st.waves = [];
+        clearSummons();
         feedKill(CHAPTERS[st.fightZone].bossName);
         burst(st.bossX, st.bossZ, 60, ZONE_COL[st.fightZone], 8, 1.5);
         burst(st.bossX, st.bossZ, 40, 0xffffff, 5, 1.5);
@@ -1918,160 +1660,52 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         if (!openGate) g.plane.opacity = 0.12 + Math.sin(st.t * 3 + i) * 0.05;
       });
 
-      // guardians
-      mobVis.forEach((mv, i) => {
-        const mb = st.mobs[i];
-        const ty = MOB_SPAWNS[i].type;
-        if (!mb.alive) {
-          mv.g.visible = false;
-          if (mv.ring) mv.ring.visible = false;
+      // summons — the boss's named skeletons
+      st.summons.forEach((s, i) => {
+        const proto = summonProtos[i];
+        if (!s.active) {
+          if (s.rig) s.rig.root.visible = false;
+          proto.visible = false;
           return;
         }
-        mv.g.visible = true;
-        const rig = mobRigs[i];
-        if (ty === 0) {
-          const dPl = Math.hypot(mb.x - st.px, mb.z - st.pz);
-          mv.g.position.set(mb.x, rig ? 0 : Math.abs(Math.sin(mb.t * 5)) * 0.08, mb.z);
-          mv.g.rotation.y = Math.atan2(st.px - mb.x, st.pz - mb.z);
-          mv.g.rotation.z = rig ? 0 : Math.sin(mb.t * 7) * 0.06;
-          if (!rig && mv.eye) mv.eye.scale.setScalar(1 + Math.sin(mb.t * 6) * 0.15);
-          rigPlay(rig, dPl < 16 && dPl > 1.2 ? "Walking_A" : "Idle");
-        } else if (ty === 1) {
-          const yA = rig ? 0 : 1.3 + Math.sin(mb.t * 2) * 0.1;
-          const yB = rig ? 0 : 1.3 - Math.sin(mb.t * 2) * 0.1;
-          mv.shardA!.position.set(mb.slotA.x, yA, mb.slotA.z);
-          mv.shardB!.position.set(mb.slotB.x, yB, mb.slotB.z);
-          if (rig) {
-            mv.shardA!.rotation.y = Math.atan2(st.px - mb.slotA.x, st.pz - mb.slotA.z);
-            mv.shardB!.rotation.y = Math.atan2(st.px - mb.slotB.x, st.pz - mb.slotB.z);
-          } else {
-            mv.shardA!.rotation.y = st.t * 1.4;
-            mv.shardB!.rotation.y = -st.t * 1.4;
-          }
-          setOpacityDeep(mv.shardA!, mb.real === 0 ? 1 : 0.3);
-          setOpacityDeep(mv.shardB!, mb.real === 1 ? 1 : 0.3);
-          mv.g.position.set(0, 0, 0);
+        if (s.rig) {
+          s.rig.root.visible = true;
+          s.rig.root.position.set(s.x, 0, s.z);
+          s.rig.root.rotation.y = Math.atan2(st.px - s.x, st.pz - s.z);
         } else {
-          if (mb.phase === 0) {
-            mv.g.position.set(MOB_SPAWNS[i].x, rig ? 0 : 1.2 + Math.sin(mb.t * 3) * 0.2, MOB_SPAWNS[i].z);
-            if (mv.ring) mv.ring.visible = false;
-            rigPlay(rig, "Idle");
-          } else if (mb.phase === 1) {
-            const f = Math.max(0, mb.cd / 0.85);
-            mv.g.position.set(mb.teleX, (rig ? 0.2 : 1) + 5 * f, mb.teleZ);
-            if (mv.ring) {
-              mv.ring.visible = true;
-              mv.ring.position.set(mb.teleX, 0.03, mb.teleZ);
-              (mv.ring.material as THREE.MeshBasicMaterial).opacity = 0.3 + Math.sin(st.t * 16) * 0.25;
-            }
-            rigPlay(rig, "Jump_Idle");
-          } else {
-            mv.g.position.set(mb.x, rig ? 0 : 1.0, mb.z);
-            if (mv.ring) mv.ring.visible = false;
-            rigPlay(rig, "Running_A");
-          }
-          if (rig) {
-            mv.g.rotation.y = Math.atan2(st.px - mv.g.position.x, st.pz - mv.g.position.z);
-          } else {
-            mv.g.rotation.y = st.t * 3;
-            if (mv.core) mv.core.rotation.x = st.t * 4;
-          }
+          proto.visible = true;
+          proto.position.set(s.x, 1.0, s.z);
+          proto.rotation.y = Math.atan2(st.px - s.x, st.pz - s.z);
         }
+        if (s.label) s.label.position.set(s.x, 2.5, s.z);
       });
 
-      // bosses
+      // bosses — one character per arena, facing the player
       for (let zi = 0; zi <= FINAL; zi++) {
         const v = bossVis[zi];
         const defeated = zi < FINAL && st.cleared > zi;
         const activeFight = st.fightActive && st.fightZone === zi;
         if (defeated) {
           v.group.visible = false;
-          v.ghosts?.forEach(g => (g.visible = false));
-          if (v.hash) v.hash.visible = false;
-          if (v.pin) v.pin.visible = false;
-          v.mods?.forEach(m => (m.visible = false));
           continue;
         }
-        v.group.visible = zi !== 1;
+        v.group.visible = true;
         const oz = ZC[zi];
         const bx = activeFight ? st.bossX : 0;
         const bz = activeFight ? st.bossZ : (zi === FINAL ? oz : oz - 2);
-        if (zi !== 1) v.group.position.set(bx, 0, bz);
+        v.group.position.set(bx, 0, bz);
         const pulse = 1 + (activeFight && st.bossPulse > 0 ? st.bossPulse * 0.5 : 0);
         v.group.scale.setScalar(pulse);
         if (activeFight && st.vicT >= 0) v.group.scale.setScalar(Math.max(0.01, st.vicT / 1.5));
+        v.group.rotation.y = Math.atan2(st.px - bx, st.pz - bz);
 
-        if (zi === 0) {
-          v.group.rotation.y = st.t * 0.15;
-          const hot = activeFight && st.vented;
-          v.seams!.forEach(s => {
-            (s.material as THREE.MeshBasicMaterial).opacity = hot ? 0.7 + Math.sin(st.t * 10) * 0.25 : 0.2;
-          });
-          v.sats!.forEach((s, k) => {
-            const a = st.t * (0.8 + k * 0.25) + (k / 3) * Math.PI * 2;
-            s.position.set(Math.cos(a) * 3.4, 2 + Math.sin(st.t * 2 + k) * 0.8, Math.sin(a) * 3.4);
-            s.rotation.y = st.t * 2;
-          });
-        } else if (zi === 1) {
-          if (activeFight) {
-            v.ghosts!.forEach((g, i) => {
-              const gh = st.ghosts[i];
-              if (!gh) { g.visible = false; return; }
-              g.visible = true;
-              g.position.set(gh.x, 0, gh.z);
-              g.rotation.y = st.t * (0.6 + i * 0.2);
-              const real = i === st.realIdx;
-              g.children.forEach(c => {
-                const mm = (c as THREE.Mesh).material as THREE.Material & { opacity: number; transparent: boolean };
-                mm.transparent = true;
-                mm.opacity = real ? 1 : 0.28;
-              });
-            });
-            if (st.pinT > 0 && st.ghosts.length === 1) {
-              v.ghosts![1].visible = false; v.ghosts![2].visible = false;
-              if (v.pin) { v.pin.visible = true; v.pin.position.set(st.bossX, 0.04, st.bossZ); }
-              if (v.hash) v.hash.visible = false;
-            } else {
-              if (v.pin) v.pin.visible = false;
-              if (v.hash && st.ghosts[st.realIdx]) {
-                v.hash.visible = true;
-                v.hash.position.set(st.ghosts[st.realIdx].x, 3.2, st.ghosts[st.realIdx].z);
-              }
-            }
-          } else {
-            v.ghosts!.forEach((g, i) => {
-              g.visible = i === 0;
-              if (i === 0) { g.position.set(0, 0, oz - 2); g.rotation.y = st.t * 0.4; }
-            });
-            if (v.hash) v.hash.visible = false;
-            if (v.pin) v.pin.visible = false;
-          }
-          v.group.visible = true;
-          v.group.position.set(0, 0, oz - 2);
-        } else if (zi === 2) {
-          const exposed = activeFight && !st.modSt.some(m => m.alive);
-          v.rings![0].rotation.x = st.t * 0.9;
-          v.rings![0].rotation.y = st.t * 0.4;
-          v.rings![1].rotation.y = st.t * 1.1;
-          v.rings![1].rotation.z = st.t * 0.5;
-          v.rings!.forEach(rg => ((rg.material as THREE.MeshBasicMaterial).color.setHex(exposed ? 0xffd0d8 : 0xff7080)));
-          st.modSt.forEach((mo, i) => {
-            const mg = v.mods![i];
-            const aliveNow = activeFight ? mo.alive : true;
-            if (!aliveNow) { mg.visible = false; return; }
-            mg.visible = true;
-            const ang = activeFight ? mo.ang : (i / 4) * Math.PI * 2 + st.t * 0.15;
-            mg.position.set(bx + Math.cos(ang) * 5, 0, bz + Math.sin(ang) * 5);
-            mg.rotation.y = -ang;
-            v.caps![i].opacity = 0.6 + Math.sin(st.t * 4 + i) * 0.3;
-          });
-        } else {
-          v.group.position.y = Math.sin(st.t * 2) * 0.06;
-          v.group.rotation.y = Math.atan2(st.px - bx, st.pz - bz);
+        if (zi === FINAL) {
           if (v.screen) v.screen.opacity = 0.6 + Math.sin(st.t * 8) * 0.2;
           if (v.aura) v.aura.opacity = 0.1 + Math.sin(st.t * 3) * 0.06;
           if (v.halo) { v.halo.rotation.z = st.t * 0.8; v.halo.position.y = 3.25 + Math.sin(st.t * 2) * 0.06; }
           if (st.cineT >= 0 && v.screen) v.screen.opacity = 1;
+        } else {
+          rigPlay(bossRigs[zi], activeFight && st.bossMoving ? "Walking_A" : "Idle");
         }
       }
 

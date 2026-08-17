@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import { profile } from "@/lib/data";
-import { CHAPTERS, ROMAN, PROGRESS_KEY } from "./career/data";
+import { CHAPTERS, ROMAN, PROGRESS_KEY, LINKEDIN_URL } from "./career/data";
 
 // Three.js world loads only when the game opens — stays out of the main bundle.
 const Engine3D = dynamic(() => import("./career/Engine3D"), {
@@ -262,7 +262,13 @@ export default function CareerMode() {
                   <div className="max-w-xl w-full border border-amber-500/40 bg-[#0d0a08]/95 p-8">
                     <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-green-400 mb-2">boss defeated · gate unsealed</p>
                     <h3 className="font-display text-3xl text-zinc-100 mb-4">{vc.bossName}</h3>
-                    <p className="text-[14px] leading-relaxed text-zinc-300 mb-6 italic">{vc.quip}</p>
+                    <p className="text-[13px] leading-relaxed text-zinc-400 mb-5 italic">{vc.quip}</p>
+                    {vc.bossMsg && (
+                      <div className="border dark:border-amber-500/30 border-amber-500/40 bg-amber-500/5 p-4 mb-6">
+                        <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-accent mb-2">▸ incoming message — anshul</p>
+                        <p className="text-[13.5px] leading-relaxed text-zinc-200">{vc.bossMsg}</p>
+                      </div>
+                    )}
                     {vc.unlock && (
                       <div className="flex items-center gap-3 mb-7 font-mono">
                         <span className="text-[9px] uppercase tracking-[0.25em] text-zinc-600">unlocked</span>
@@ -311,13 +317,16 @@ export default function CareerMode() {
                     <h3 className="font-display text-5xl text-zinc-100 mb-2">Offer Accepted</h3>
                     <p className="font-mono text-[11px] text-zinc-400 mb-8">
                       Three bosses. One path. Every bullet bounced off the last obstacle.<br />
-                      And when you finally met him, he asked for the one thing that could end it — a job offer.
+                      He told you himself — now go message him about the job offer.
                     </p>
                     <div className="flex flex-wrap justify-center gap-4 mb-8">
-                      <a href="mailto:anshulpatil1022@gmail.com" className="font-mono text-xs uppercase tracking-[0.2em] text-ink bg-accent px-6 py-2.5 hover:opacity-85 transition-opacity">
-                        Send the real offer
+                      <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="font-mono text-xs uppercase tracking-[0.2em] text-ink bg-accent px-6 py-2.5 hover:opacity-85 transition-opacity">
+                        Message me on LinkedIn
                       </a>
-                      <a href={profile.resumeURL} download className="font-mono text-xs uppercase tracking-[0.2em] text-accent border border-amber-500/40 px-6 py-2.5 hover:border-amber-500 transition-colors">
+                      <a href="mailto:anshulpatil1022@gmail.com" className="font-mono text-xs uppercase tracking-[0.2em] text-accent border border-amber-500/40 px-6 py-2.5 hover:border-amber-500 transition-colors">
+                        Email instead
+                      </a>
+                      <a href={profile.resumeURL} download className="font-mono text-xs uppercase tracking-[0.2em] dark:text-zinc-400 text-zinc-500 border dark:border-zinc-700 border-zinc-300 px-6 py-2.5 hover:dark:border-zinc-500 hover:border-zinc-400 transition-colors">
                         Résumé
                       </a>
                     </div>
