@@ -107,9 +107,9 @@ export default function Hero() {
               onClick={() =>
                 window.dispatchEvent(new KeyboardEvent("keydown", { key: "c", bubbles: true }))
               }
-              className="hidden md:inline-flex items-center gap-2.5 font-mono text-sm uppercase tracking-widest dark:text-accent text-amber-600 border dark:border-amber-500/50 border-amber-500/60 px-4 py-1.5 dark:hover:bg-amber-500/10 hover:bg-amber-500/5 hover:border-amber-500 transition-colors duration-150"
+              className="hidden md:inline-flex items-center gap-2.5 font-mono text-sm uppercase tracking-widest dark:text-zinc-300 text-zinc-700 border dark:border-zinc-700 border-zinc-300 px-4 py-1.5 dark:hover:border-amber-500/60 hover:border-amber-500/60 dark:hover:text-accent hover:text-amber-600 transition-colors duration-150"
             >
-              <span className="text-[10px]">▶</span> Play Career Mode
+              <span className="text-[10px] dark:text-accent text-amber-600">▶</span> Play Career Mode
             </button>
             <a
               href={profile.resumeURL}
@@ -140,13 +140,9 @@ export default function Hero() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 1.1, ease: "easeOut" }}
           >
-            <span className="dark:text-accent text-amber-600"><kbd className="border dark:border-amber-500/50 border-amber-500/60 px-1 py-0.5 text-[9px]">C</kbd> Career Mode — fight my résumé</span>
+            <span><kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5 text-[9px]">C</kbd> career mode</span>
             <span className="dark:text-zinc-800 text-zinc-300">·</span>
-            <span><kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5 text-[9px]">F</kbd> FPS</span>
-            <span className="dark:text-zinc-800 text-zinc-300">·</span>
-            <span><kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5 text-[9px]">T</kbd> Tower Defense</span>
-            <span className="dark:text-zinc-800 text-zinc-300">·</span>
-            <span><kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5 text-[9px]">G</kbd> Breakout</span>
+            <span><kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5 text-[9px]">⌘K</kbd> commands</span>
           </motion.p>
         </div>
 

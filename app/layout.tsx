@@ -7,10 +7,7 @@ import { Providers } from "./providers";
 import { CommandPalette } from "./components/global/CommandPalette";
 import SectionProgress from "./components/global/SectionProgress";
 import ChatWidget from "./components/global/ChatWidget";
-import BreakoutGame from "./components/global/BreakoutGame";
 import GameHint from "./components/global/GameHint";
-import FPSGame from "./components/global/FPSGame";
-import TowerDefense from "./components/global/TowerDefense";
 import CareerMode from "./components/global/CareerMode";
 
 const options = {
@@ -61,14 +58,11 @@ export default function RootLayout({
           </defs>
         </svg>
         <Providers>
-          <FPSGame />
-          <TowerDefense />
           <CareerMode />
           <Navbar />
           <CommandPalette />
           <SectionProgress />
           <ChatWidget />
-          <BreakoutGame />
           <GameHint />
           {children}
           <Footer />

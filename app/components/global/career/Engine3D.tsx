@@ -1,6 +1,10 @@
 "use client";
 
 import * as THREE from "three";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { useEffect, useRef } from "react";
 import { CHAPTERS, WEAPONS, GLYPHS, IMMUNE_TEXTS, ANSHUL_TAUNTS, ROMAN } from "./data";
 
@@ -33,6 +37,20 @@ interface Part { x: number; y: number; z: number; vx: number; vy: number; vz: nu
 // walkable rectangles: rooms always; corridor i needs boss i beaten
 const ROOMS = ZC.map(zc => ({ x1: -ROOM_HW, x2: ROOM_HW, z1: zc - ROOM_HD, z2: zc + ROOM_HD }));
 const CORRS = [0, 1, 2, 3, 4].map(i => ({ x1: -CORR_HW, x2: CORR_HW, z1: ZC[i] - ROOM_HD - (ZONE_GAP - ROOM_HD * 2), z2: ZC[i] - ROOM_HD }));
+
+// per-zone accent palette — the world shifts color as the story progresses
+const ZONE_COL = [0xffb000, 0x2dd4bf, 0xe879f9, 0x38bdf8, 0xf87171, 0xffd88a];
+const ZONE_HEX = ["#ffb000", "#2dd4bf", "#e879f9", "#38bdf8", "#f87171", "#ffd88a"];
+
+// enemy towers guarding the path (rooms 0-4 + one per corridor)
+const TOWER_POS: { x: number; z: number }[] = [];
+for (let zi = 0; zi < 5; zi++) {
+  const zc = ZC[zi];
+  TOWER_POS.push({ x: -9, z: zc + 6 }, { x: 9, z: zc + 4.5 }, { x: -7.5, z: zc - 5 }, { x: 8, z: zc - 6 });
+}
+CORRS.forEach((cr, i) => {
+  TOWER_POS.push({ x: i % 2 === 0 ? 1.7 : -1.7, z: (cr.z1 + cr.z2) / 2 });
+});
 
 export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -78,8 +96,16 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     scene.background = new THREE.Color(0x0d0a08);
     scene.fog = new THREE.Fog(0x0d0a08, 14, 44);
 
-    const camera = new THREE.PerspectiveCamera(62, RW / RH, 0.05, 140);
+    const camera = new THREE.PerspectiveCamera(62, RW / RH, 0.05, 300);
     scene.add(camera);
+
+    // bloom pipeline — the neon glow that sells the whole look
+    const composer = new EffectComposer(renderer);
+    composer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    composer.setSize(RW, RH);
+    composer.addPass(new RenderPass(scene, camera));
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(RW, RH), 0.72, 0.45, 0.5));
+    composer.addPass(new OutputPass());
 
     // ── Helpers ────────────────────────────────────────────────────────────
     const disposables: { dispose: () => void }[] = [];
@@ -133,57 +159,82 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     scene.add(grid);
 
     const WALL_H = 2.6;
-    function mkWall(w: number, d: number, x: number, z: number) {
+    function mkWall(w: number, d: number, x: number, z: number, accent = AMBER) {
       const geo = track(new THREE.BoxGeometry(w, WALL_H, d));
       const mesh = new THREE.Mesh(geo, bmat(0x0f0c0a));
       mesh.position.set(x, WALL_H / 2, z);
-      const e = edgesOf(geo, AMBER, 0.3);
+      const e = edgesOf(geo, accent, 0.32);
       e.position.copy(mesh.position);
       scene.add(mesh, e);
     }
-    // rooms with corridor gaps
+    // rooms with corridor gaps — each zone wears its own accent color
     const segW = (ROOM_HW - CORR_HW); // 11
     ZC.forEach((zc, i) => {
+      const col = ZONE_COL[i];
       // +Z wall (entry side): gap if a corridor comes in (i > 0)
       if (i > 0) {
-        mkWall(segW, 0.5, -(CORR_HW + segW / 2), zc + ROOM_HD);
-        mkWall(segW, 0.5, CORR_HW + segW / 2, zc + ROOM_HD);
+        mkWall(segW, 0.5, -(CORR_HW + segW / 2), zc + ROOM_HD, col);
+        mkWall(segW, 0.5, CORR_HW + segW / 2, zc + ROOM_HD, col);
       } else {
-        mkWall(ROOM_HW * 2 + 0.5, 0.5, 0, zc + ROOM_HD + 0.25);
+        mkWall(ROOM_HW * 2 + 0.5, 0.5, 0, zc + ROOM_HD + 0.25, col);
       }
       // −Z wall (exit side): gap if corridor leaves (i < 5)
       if (i < 5) {
-        mkWall(segW, 0.5, -(CORR_HW + segW / 2), zc - ROOM_HD);
-        mkWall(segW, 0.5, CORR_HW + segW / 2, zc - ROOM_HD);
+        mkWall(segW, 0.5, -(CORR_HW + segW / 2), zc - ROOM_HD, col);
+        mkWall(segW, 0.5, CORR_HW + segW / 2, zc - ROOM_HD, col);
       } else {
-        mkWall(ROOM_HW * 2 + 0.5, 0.5, 0, zc - ROOM_HD - 0.25);
+        mkWall(ROOM_HW * 2 + 0.5, 0.5, 0, zc - ROOM_HD - 0.25, col);
       }
       // side walls
-      mkWall(0.5, ROOM_HD * 2, -ROOM_HW - 0.25, zc);
-      mkWall(0.5, ROOM_HD * 2, ROOM_HW + 0.25, zc);
+      mkWall(0.5, ROOM_HD * 2, -ROOM_HW - 0.25, zc, col);
+      mkWall(0.5, ROOM_HD * 2, ROOM_HW + 0.25, zc, col);
       // corner pillars
       const postGeo = track(new THREE.CylinderGeometry(0.09, 0.09, 3.6, 6));
       for (const [sx, sz] of [[-ROOM_HW, zc - ROOM_HD], [ROOM_HW, zc - ROOM_HD], [ROOM_HW, zc + ROOM_HD], [-ROOM_HW, zc + ROOM_HD]] as [number, number][]) {
-        const post = new THREE.Mesh(postGeo, bmat(AMBER, { transparent: true, opacity: 0.75 }));
+        const post = new THREE.Mesh(postGeo, bmat(col, { transparent: true, opacity: 0.75 }));
         post.position.set(sx, 1.8, sz);
         scene.add(post);
       }
+      // arena floor ring in the zone's color
+      const ring = new THREE.Mesh(track(new THREE.RingGeometry(5.1, 5.24, 48)), bmat(col, { transparent: true, opacity: 0.22, side: THREE.DoubleSide }));
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(0, 0.02, i === 5 ? zc : zc - 2);
+      scene.add(ring);
     });
-    // corridor walls
-    CORRS.forEach(cr => {
+    // corridor walls take the color of the zone they lead to
+    CORRS.forEach((cr, i) => {
       const len = cr.z2 - cr.z1;
-      mkWall(0.5, len, -CORR_HW - 0.25, (cr.z1 + cr.z2) / 2);
-      mkWall(0.5, len, CORR_HW + 0.25, (cr.z1 + cr.z2) / 2);
+      mkWall(0.5, len, -CORR_HW - 0.25, (cr.z1 + cr.z2) / 2, ZONE_COL[i + 1]);
+      mkWall(0.5, len, CORR_HW + 0.25, (cr.z1 + cr.z2) / 2, ZONE_COL[i + 1]);
     });
 
-    // gates — sealed until the zone's boss dies
+    // star field far above — visible past the fog for depth
+    {
+      const n = 800;
+      const pos = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const r = 60 + Math.random() * 120;
+        pos[i * 3] = Math.cos(a) * r;
+        pos[i * 3 + 1] = 14 + Math.random() * 70;
+        pos[i * 3 + 2] = -85 + Math.sin(a) * r * 1.4;
+      }
+      const g = track(new THREE.BufferGeometry());
+      g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+      const sm = track(new THREE.PointsMaterial({ color: 0x9fb4d8, size: 0.5, transparent: true, opacity: 0.55, depthWrite: false, fog: false }));
+      const stars = new THREE.Points(g, sm);
+      stars.frustumCulled = false;
+      scene.add(stars);
+    }
+
+    // gates — sealed until the zone's boss dies, tinted by the guarding zone
     const gates = CORRS.map((cr, i) => {
       const g = new THREE.Group();
-      const plane = new THREE.Mesh(track(new THREE.PlaneGeometry(CORR_HW * 2, WALL_H)), bmat(AMBER, { transparent: true, opacity: 0.16, side: THREE.DoubleSide }));
+      const plane = new THREE.Mesh(track(new THREE.PlaneGeometry(CORR_HW * 2, WALL_H)), bmat(ZONE_COL[i], { transparent: true, opacity: 0.16, side: THREE.DoubleSide }));
       plane.position.y = WALL_H / 2;
-      const frame = edgesOf(track(new THREE.BoxGeometry(CORR_HW * 2, WALL_H, 0.06)), AMBER, 0.7);
+      const frame = edgesOf(track(new THREE.BoxGeometry(CORR_HW * 2, WALL_H, 0.06)), ZONE_COL[i], 0.7);
       frame.position.y = WALL_H / 2;
-      const lock = textSprite("⚠ GATE SEALED", "#ffb000", 0.34);
+      const lock = textSprite("⚠ GATE SEALED", ZONE_HEX[i], 0.34);
       lock.position.y = WALL_H + 0.5;
       g.add(plane, frame, lock);
       g.position.set(0, 0, cr.z2); // at the room's exit
@@ -284,15 +335,15 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       const gunGeo = track(new THREE.BoxGeometry(0.1, 0.1, 0.62));
       const gunM = new THREE.Mesh(gunGeo, bmat(0x241c14));
       gunM.position.set(0.34, 1.25, -0.3);
-      const gunE = edgesOf(gunGeo, AMBER, 0.9);
+      const gunE = edgesOf(gunGeo, 0x67e8f9, 0.9);
       gunE.position.copy(gunM.position);
-      const ring = new THREE.Mesh(track(new THREE.RingGeometry(0.5, 0.6, 24)), bmat(AMBER, { transparent: true, opacity: 0.45, side: THREE.DoubleSide }));
+      const ring = new THREE.Mesh(track(new THREE.RingGeometry(0.5, 0.6, 24)), bmat(0x67e8f9, { transparent: true, opacity: 0.45, side: THREE.DoubleSide }));
       ring.rotation.x = -Math.PI / 2;
       ring.position.y = 0.03;
       player.add(body, bodyE, head, headE, gunM, gunE, ring);
     }
     scene.add(player);
-    const muzzleMat = track(new THREE.SpriteMaterial({ map: textTexture("✦", "#ffcf60", 64), transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
+    const muzzleMat = track(new THREE.SpriteMaterial({ map: textTexture("✦", "#e0f7ff", 64), transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
     const muzzle = new THREE.Sprite(muzzleMat);
     muzzle.scale.setScalar(0.34);
     muzzle.position.set(0.34, 1.25, -0.75);
@@ -300,7 +351,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
 
     // ── Bullets / particles / floaters / zones / minions ──────────────────
     const MAX_PB = 160, MAX_EB = 340;
-    const pbMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.11, 8, 8)), bmat(AMBER_HI), MAX_PB);
+    const pbMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.11, 8, 8)), bmat(0xe8fbff), MAX_PB);
     const ebMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.17, 8, 8)), bmat(REDC), MAX_EB);
     pbMesh.frustumCulled = false; ebMesh.frustumCulled = false;
     pbMesh.count = 0; ebMesh.count = 0;
@@ -367,6 +418,31 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       s.visible = false;
       scene.add(s);
       return s;
+    });
+
+    // enemy towers — hostile turrets guarding the path
+    const towerVis = TOWER_POS.map(tp => {
+      const zi = Math.max(0, Math.min(5, Math.round(-tp.z / ZONE_GAP)));
+      const g = new THREE.Group();
+      const baseGeo = track(new THREE.BoxGeometry(0.85, 0.5, 0.85));
+      const base = new THREE.Mesh(baseGeo, bmat(0x0f0c0a));
+      base.position.y = 0.25;
+      const baseE = edgesOf(baseGeo, ZONE_COL[zi], 0.7);
+      baseE.position.y = 0.25;
+      const colGeo = track(new THREE.CylinderGeometry(0.15, 0.19, 1.6, 6));
+      const column = new THREE.Mesh(colGeo, bmat(0x14100d));
+      column.position.y = 1.3;
+      const colE = edgesOf(colGeo, 0x7a3030, 0.7);
+      colE.position.y = 1.3;
+      const head = new THREE.Mesh(track(new THREE.IcosahedronGeometry(0.3, 0)), bmat(0xff5555));
+      head.position.y = 2.25;
+      const ring = new THREE.Mesh(track(new THREE.RingGeometry(0.62, 0.72, 20)), bmat(0xff5555, { transparent: true, opacity: 0.3, side: THREE.DoubleSide }));
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.03;
+      g.add(base, baseE, column, colE, head, ring);
+      g.position.set(tp.x, 0, tp.z);
+      scene.add(g);
+      return { g, head };
     });
 
     // ── Boss visuals — all six live in the world ───────────────────────────
@@ -519,6 +595,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       metAnshul: false, tauntT: 2, tauntIdx: 0, nearAnshul: false, canOffer: false, cineT: -1,
       entered: new Set<number>(), bannerT: 0,
       blackT: 0,
+      towers: TOWER_POS.map(() => ({ hp: 30, alive: true, cd: 1.2 + Math.random() * 1.5 })),
     };
 
     function note(txt: string, secs = 1.6) {
@@ -937,6 +1014,17 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         st.canOffer = false;
       }
 
+      // ── enemy towers fire at the player ──
+      for (let i = 0; i < st.towers.length; i++) {
+        const tw = st.towers[i];
+        if (!tw.alive) continue;
+        const tp = TOWER_POS[i];
+        if (Math.hypot(tp.x - st.px, tp.z - st.pz) < 13) {
+          tw.cd -= dt;
+          if (tw.cd <= 0) { tw.cd = 1.8; aimShot(tp.x, tp.z, 5.4, 0.17); }
+        }
+      }
+
       // ── fire ──
       const wp = WEAPONS[Math.min(st.cleared, WEAPONS.length - 1)];
       st.fireCd -= dt;
@@ -970,6 +1058,25 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
             m.hp -= b.dmg;
             if (m.hp <= 0) { m.dead = true; burst(m.x, m.z, 8, AMBER, 4, 1.1); }
             if (b.pierce > 0) b.pierce--; else { b.dead = true; break; }
+          }
+        }
+        if (b.dead) continue;
+        // towers take damage; destroying one restores a little HP
+        for (let ti = 0; ti < st.towers.length; ti++) {
+          const tw = st.towers[ti];
+          if (!tw.alive) continue;
+          const tp = TOWER_POS[ti];
+          if (Math.hypot(b.x - tp.x, b.z - tp.z) < 0.62 && b.y > 0 && b.y < 2.7) {
+            tw.hp -= b.dmg;
+            burst(b.x, b.z, 3, REDC, 3, b.y);
+            if (tw.hp <= 0) {
+              tw.alive = false;
+              burst(tp.x, tp.z, 22, 0xff8866, 5, 1.4);
+              st.php = Math.min(100, st.php + 8);
+              floatTxt("+8 HP", "#4ade80", tp.x, tp.z, 0.42, 2.4);
+            }
+            b.dead = true;
+            break;
           }
         }
         if (b.dead) continue;
@@ -1120,6 +1227,16 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         const openGate = st.cleared >= i + 1;
         g.g.visible = !openGate;
         if (!openGate) g.plane.opacity = 0.1 + Math.sin(st.t * 3 + i) * 0.05;
+      });
+
+      // towers
+      towerVis.forEach((tv, i) => {
+        const tw = st.towers[i];
+        if (!tw.alive) { tv.g.visible = false; return; }
+        tv.g.visible = true;
+        tv.head.rotation.y = st.t * 2.2;
+        tv.head.rotation.x = st.t * 1.1;
+        tv.head.scale.setScalar(1 + Math.sin(st.t * 5 + i) * 0.14);
       });
 
       // ── bosses ──
@@ -1319,7 +1436,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         updParts(rdt);
       }
       syncVisuals();
-      renderer.render(scene, camera);
+      composer.render();
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
@@ -1336,6 +1453,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
       for (const d of disposables) d.dispose();
+      composer.dispose();
       renderer.dispose();
       if (canvas.parentElement === mount) mount.removeChild(canvas);
     };

@@ -35,12 +35,12 @@ export default function GameHint() {
             dismiss();
             window.dispatchEvent(new KeyboardEvent("keydown", { key: "c", bubbles: true }));
           }}
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-2.5 border dark:border-amber-500/40 border-amber-500/60 dark:bg-ink/90 bg-paper/90 backdrop-blur-sm font-mono text-[11px] uppercase tracking-[0.18em] dark:text-accent text-amber-600 hover:dark:border-amber-500/80 hover:border-amber-500 transition-colors duration-150 select-none shadow-lg shadow-black/20"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-2.5 border dark:border-zinc-700 border-zinc-300 dark:bg-ink/90 bg-paper/90 backdrop-blur-sm font-mono text-[11px] uppercase tracking-[0.18em] dark:text-zinc-300 text-zinc-600 hover:dark:border-amber-500/60 hover:border-amber-500/60 transition-colors duration-150 select-none shadow-lg shadow-black/20"
         >
-          <span className="text-[10px] animate-pulse">▶</span>
+          <span className="text-[10px] animate-pulse dark:text-accent text-amber-600">▶</span>
           <span>
             this portfolio is playable — press{" "}
-            <kbd className="border dark:border-amber-500/50 border-amber-500/60 px-1.5 py-0.5 text-[10px]">C</kbd>{" "}
+            <kbd className="border dark:border-amber-500/50 border-amber-500/60 dark:text-accent text-amber-600 px-1.5 py-0.5 text-[10px]">C</kbd>{" "}
             to fight my résumé
           </span>
           <span
