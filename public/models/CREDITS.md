@@ -19,3 +19,6 @@ domain, no attribution required; credited out of courtesy.
 | `banner_blue.glb` | Dungeon Remastered | banner_blue |
 | `banner_red.glb` | Dungeon Remastered | banner_red |
 | `banner_yellow.glb` | Dungeon Remastered | banner_patternA_yellow |
+| `knight.glb` | Character Pack: Adventurers | Knight |
+| `rogue_hooded.glb` | Character Pack: Adventurers | Rogue_Hooded |
+| `barbarian.glb` | Character Pack: Adventurers | Barbarian |
