@@ -19,6 +19,14 @@ export default function GameHint() {
     sessionStorage.setItem("game-hint-seen", "1");
   };
 
+  useEffect(() => {
+    if (!visible) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") dismiss(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
+
   return (
     <AnimatePresence>
       {visible && (

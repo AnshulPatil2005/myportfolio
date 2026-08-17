@@ -262,11 +262,7 @@ export default function CareerMode() {
                   <div className="max-w-xl w-full border border-amber-500/40 bg-[#0d0a08]/95 p-8">
                     <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-green-400 mb-2">boss defeated · gate unsealed</p>
                     <h3 className="font-display text-3xl text-zinc-100 mb-4">{vc.bossName}</h3>
-                    <p className="font-mono text-[11px] text-zinc-500 italic mb-5">{vc.quip}</p>
-                    <div className="border-l-2 border-accent pl-4 mb-6">
-                      <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-zinc-600 mb-1.5">what actually happened · {vc.year}</p>
-                      <p className="text-[13px] leading-relaxed text-zinc-300">{vc.victory}</p>
-                    </div>
+                    <p className="text-[14px] leading-relaxed text-zinc-300 mb-6 italic">{vc.quip}</p>
                     {vc.unlock && (
                       <div className="flex items-center gap-3 mb-7 font-mono">
                         <span className="text-[9px] uppercase tracking-[0.25em] text-zinc-600">unlocked</span>

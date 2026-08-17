@@ -5,6 +5,7 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { useEffect, useRef } from "react";
 import { CHAPTERS, WEAPONS, IMMUNE_TEXTS, ANSHUL_TAUNTS, ROMAN } from "./data";
 
@@ -523,7 +524,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
 
     // ── SFX ────────────────────────────────────────────────────────────────
     let actx: AudioContext | null = null;
-    function sfx(type: "shot" | "rail" | "hurt" | "boom") {
+    function sfx(type: "shot" | "rail" | "hurt" | "boom" | "tick") {
       try {
         if (!actx) actx = new AudioContext();
         const t0 = actx.currentTime;
@@ -544,6 +545,13 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           g.gain.setValueAtTime(0.09, t0);
           g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.28);
           o.start(t0); o.stop(t0 + 0.3);
+        } else if (type === "tick") {
+          o.type = "square";
+          o.frequency.setValueAtTime(1050, t0);
+          o.frequency.exponentialRampToValueAtTime(620, t0 + 0.035);
+          g.gain.setValueAtTime(0.022, t0);
+          g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.045);
+          o.start(t0); o.stop(t0 + 0.05);
         } else if (type === "hurt") {
           o.type = "sawtooth";
           o.frequency.setValueAtTime(210, t0);
@@ -709,6 +717,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       ghosts?: THREE.Group[]; hash?: THREE.Sprite; pin?: THREE.Mesh;
       rings?: THREE.Mesh[]; mods?: THREE.Group[]; caps?: THREE.MeshBasicMaterial[];
       screen?: THREE.MeshBasicMaterial; aura?: THREE.MeshBasicMaterial; halo?: THREE.Mesh;
+      protoBody?: THREE.Group;
     }
     const bossVis: BossVis[] = ZC.map((zc, zi) => {
       const group = new THREE.Group();
@@ -865,7 +874,12 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         const panelR = panelL.clone();
         panelR.position.x = 1.2;
         panelR.rotation.y = -0.5;
-        group.add(legL, legR, torso, beltGlow, shoulderL, shoulderR, armL, armR, head, hair, laptop, screen, v.halo, aura, sub, handL, handR, footL, footR, glassL, glassR, bridge, panelL, panelR);
+        // the procedural body lives in its own group — swapped out when the
+        // real character model finishes loading
+        const protoBody = new THREE.Group();
+        protoBody.add(legL, legR, torso, beltGlow, shoulderL, shoulderR, armL, armR, head, hair, handL, handR, footL, footR, glassL, glassR, bridge);
+        v.protoBody = protoBody;
+        group.add(protoBody, laptop, screen, v.halo, aura, sub, panelL, panelR);
       }
       return v;
     });
@@ -879,6 +893,36 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       m.castShadow = !glow;
       m.receiveShadow = !glow;
     });
+
+    // real character model for the final meeting
+    // (KayKit Character Pack: Adventurers — CC0, kaylousberg.com)
+    const mixers: THREE.AnimationMixer[] = [];
+    const anshulActions: { idle?: THREE.AnimationAction; cheer?: THREE.AnimationAction } = {};
+    new GLTFLoader().load(
+      "/models/anshul.glb",
+      gltf => {
+        const model = gltf.scene;
+        model.scale.setScalar(1.4);
+        model.traverse(o => {
+          const mm = o as THREE.Mesh;
+          if (mm.isMesh) { mm.castShadow = true; mm.receiveShadow = false; }
+        });
+        const v = bossVis[FINAL];
+        if (v.protoBody) v.protoBody.visible = false;
+        v.group.add(model);
+        const mixer = new THREE.AnimationMixer(model);
+        mixers.push(mixer);
+        const idleClip = THREE.AnimationClip.findByName(gltf.animations, "Idle") || gltf.animations[0];
+        const cheerClip = THREE.AnimationClip.findByName(gltf.animations, "Cheer");
+        if (idleClip) {
+          anshulActions.idle = mixer.clipAction(idleClip);
+          anshulActions.idle.play();
+        }
+        if (cheerClip) anshulActions.cheer = mixer.clipAction(cheerClip);
+      },
+      undefined,
+      () => { /* offline or missing asset — the procedural body stays */ }
+    );
 
     // ── State ──────────────────────────────────────────────────────────────
     const st = {
@@ -907,7 +951,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       slowT: 0, railT: 0, railLen: 0, railYaw: 0, railPitch: 0,
       orbs: [] as { x: number; z: number; a: number; t: number; dead: boolean }[],
       metAnshul: false, tauntT: 2, tauntIdx: 0, nearAnshul: false, canOffer: false, cineT: -1,
-      entered: new Set<number>(), bannerT: 0,
+      entered: new Set<number>(), introduced: new Set<number>(), bannerT: 0,
+      hitSfxT: 0,
       blackT: 0,
       mobs: MOB_SPAWNS.map(ms => ({
         x: ms.x, z: ms.z,
@@ -937,6 +982,14 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       st.feed.push({ txt, t: st.t });
       if (st.feed.length > 5) st.feed.shift();
       st.feedDirty = true;
+    }
+    // hitmarker pulse + throttled tick sound on every connected shot
+    function registerHit() {
+      st.hitT = 0.12;
+      if (st.t > st.hitSfxT) {
+        st.hitSfxT = st.t + 0.09;
+        sfx("tick");
+      }
     }
     // enemy attacks are readable area denial, not bullet spam
     function spawnHazard(x: number, z: number, r = 2.1, warm = 0.95) {
@@ -1024,6 +1077,11 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         st.cineT = 0;
         st.pb = [];
         document.exitPointerLock();
+        // he celebrates the offer
+        if (anshulActions.cheer) {
+          anshulActions.idle?.fadeOut(0.3);
+          anshulActions.cheer.reset().fadeIn(0.3).play();
+        }
       }
     };
     const onKeyUp = (e: KeyboardEvent) => st.keys.delete(e.key.toLowerCase());
@@ -1222,7 +1280,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           hit = true;
         }
         if (hit) {
-          st.hitT = 0.1;
+          registerHit();
           burst(probe.x, probe.z, 1, 0x9beeff, 2, probe.y);
           if (!pierceAll) break;
         }
@@ -1299,11 +1357,13 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       }
       if (!st.locked) return;
 
-      if (st.invuln > 0) st.invuln -= dt;
+      st.invuln -= dt; // keeps counting down past zero — used as "time since last hit"
       if (st.reloadT > 0) {
         st.reloadT -= dt;
         if (st.reloadT <= 0) st.ammo[st.reloadFor] = MAGS[st.reloadFor];
       }
+      // slow out-of-combat recovery: 5s without damage starts regen
+      if (st.invuln < -4 && st.php > 0 && st.php < 100) st.php = Math.min(100, st.php + 4 * dt);
 
       // movement
       let mx = 0, mz = 0;
@@ -1336,9 +1396,14 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           if (bannerRef.current) bannerRef.current.textContent = `CHAPTER ${ROMAN[i]} · ${CHAPTERS[i].year} — ${CHAPTERS[i].org}`;
         }
         if (i < FINAL && inRoom && st.cleared === i && !st.fightActive && st.pendingFight < 0 && st.pz < ZC[i] + 7.5) {
-          st.pendingFight = i;
-          document.exitPointerLock();
-          onEventRef.current("interlude", i);
+          if (st.introduced.has(i)) {
+            initFight(i); // retry after death — skip the story card, straight to the fight
+          } else {
+            st.introduced.add(i);
+            st.pendingFight = i;
+            document.exitPointerLock();
+            onEventRef.current("interlude", i);
+          }
         }
       }
 
@@ -1480,11 +1545,11 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         const range2 = (b.x - st.px) ** 2 + (b.z - st.pz) ** 2;
         if (b.y <= 0.02 || b.y > 8 || range2 > 1600 || !insideWorld(b.x, b.z)) { b.dead = true; burst(b.x, b.z, 2, 0xdff3ff, 1.5, Math.max(0.2, b.y)); continue; }
         if (mobBulletHit(b)) {
-          st.hitT = 0.12;
+          registerHit();
           if (b.pierce > 0) b.pierce--;
           else { b.dead = true; continue; }
         }
-        if (st.fightActive && hitBoss(b)) { st.hitT = 0.12; b.dead = true; continue; }
+        if (st.fightActive && hitBoss(b)) { registerHit(); b.dead = true; continue; }
         if (st.cleared >= FINAL && Math.hypot(b.x - 0, b.z - ZC[FINAL]) < 1.4 && b.y > 0 && b.y < 3.3) {
           floatTxt(IMMUNE_TEXTS[(Math.random() * IMMUNE_TEXTS.length) | 0], "#8a94a8", b.x, b.z, 0.42, b.y);
           burst(b.x, b.z, 3, 0x999999, 2.5, b.y);
@@ -1519,7 +1584,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           floatTxt(IMMUNE_TEXTS[(Math.random() * IMMUNE_TEXTS.length) | 0], "#8a94a8", o.x, o.z, 0.4, 1.5);
           hit = true;
         }
-        if (hit) st.hitT = 0.12;
+        if (hit) registerHit();
         if (hit || o.t > 2.6 || !insideWorld(o.x, o.z)) { o.dead = true; burst(o.x, o.z, 5, 0xffd88a, 3, 1.2); }
       }
       st.orbs = st.orbs.filter(o => !o.dead);
@@ -1958,6 +2023,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       if (!pausedRef.current) {
         update(rdt);
         updParts(rdt);
+        for (const mx of mixers) mx.update(rdt);
       }
       syncVisuals();
       composer.render();
@@ -1976,6 +2042,15 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       window.removeEventListener("mouseup", onUp);
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
+      // dispose everything, including runtime-loaded GLTF resources
+      scene.traverse(o => {
+        const m = o as THREE.Mesh;
+        if (m.isMesh) {
+          m.geometry?.dispose();
+          const mats = Array.isArray(m.material) ? m.material : [m.material];
+          mats.forEach(mt => (mt as THREE.Material | undefined)?.dispose?.());
+        }
+      });
       for (const d of disposables) d.dispose();
       composer.dispose();
       renderer.dispose();
