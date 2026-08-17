@@ -6,7 +6,6 @@ import Footer from "./components/global/Footer";
 import { Providers } from "./providers";
 import { CommandPalette } from "./components/global/CommandPalette";
 import SectionProgress from "./components/global/SectionProgress";
-import ChatWidget from "./components/global/ChatWidget";
 import GameHint from "./components/global/GameHint";
 import CareerMode from "./components/global/CareerMode";
 
@@ -62,7 +61,6 @@ export default function RootLayout({
           <Navbar />
           <CommandPalette />
           <SectionProgress />
-          <ChatWidget />
           <GameHint />
           {children}
           <Footer />

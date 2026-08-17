@@ -27,12 +27,15 @@ const ZONE_HEX = ["#4ade80", "#38bdf8", "#f87171", "#ffd88a"];
 interface Props {
   initialCleared: number;
   paused: boolean;
-  onEvent: (e: "victory" | "ending" | "pause", data?: number) => void;
+  onEvent: (e: "victory" | "ending" | "pause" | "interlude", data?: number) => void;
 }
 
 interface PB { x: number; y: number; z: number; vx: number; vy: number; vz: number; dmg: number; pierce: number; life: number; dead: boolean }
-interface EB { x: number; z: number; vx: number; vz: number; r: number; dead: boolean }
 interface Part { x: number; y: number; z: number; vx: number; vy: number; vz: number; t: number; max: number; r: number; g: number; b: number }
+// telegraphed area pulse — dodge by stepping out of the circle
+interface Hazard { x: number; z: number; r: number; warm: number; fade: number; dealt: boolean }
+// expanding ground ring — dodge by not being where it crosses
+interface Wave { x: number; z: number; R: number; speed: number; max: number; dealt: boolean }
 
 const ROOMS = ZC.map(zc => ({ x1: -ROOM_HW, x2: ROOM_HW, z1: zc - ROOM_HD, z2: zc + ROOM_HD }));
 const CORRS = [0, 1, 2].map(i => ({ x1: -CORR_HW, x2: CORR_HW, z1: ZC[i] - ROOM_HD - (ZONE_GAP - ROOM_HD * 2), z2: ZC[i] - ROOM_HD }));
@@ -125,7 +128,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     composer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     composer.setSize(RW, RH);
     composer.addPass(new RenderPass(scene, camera));
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(RW, RH), 0.4, 0.35, 0.85));
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(RW, RH), 0.22, 0.3, 0.9));
     composer.addPass(new OutputPass());
 
     // ── Helpers ────────────────────────────────────────────────────────────
@@ -280,6 +283,50 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       }
     }
 
+    // drifting clouds + floating islands
+    const cloudSprites: { s: THREE.Sprite; bx: number; sp: number }[] = [];
+    const islands: { g: THREE.Group; by: number }[] = [];
+    {
+      const c = document.createElement("canvas");
+      c.width = 256; c.height = 128;
+      const g2 = c.getContext("2d")!;
+      for (const [cx, cy, cr] of [[70, 74, 46], [128, 58, 56], [186, 76, 44], [110, 84, 40]] as [number, number, number][]) {
+        const grad = g2.createRadialGradient(cx, cy, 4, cx, cy, cr);
+        grad.addColorStop(0, "rgba(255,255,255,0.95)");
+        grad.addColorStop(1, "rgba(255,255,255,0)");
+        g2.fillStyle = grad;
+        g2.fillRect(0, 0, 256, 128);
+      }
+      const tex = track(new THREE.CanvasTexture(c));
+      for (let i = 0; i < 9; i++) {
+        const sm = track(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.7, depthWrite: false, fog: false }));
+        const s = new THREE.Sprite(sm);
+        const w = 20 + (i * 7) % 16;
+        s.scale.set(w, w * 0.42, 1);
+        const bx = -60 + (i * 137) % 120;
+        s.position.set(bx, 26 + (i * 31) % 16, 16 - (i * 53) % 150);
+        scene.add(s);
+        cloudSprites.push({ s, bx, sp: 0.14 + (i % 3) * 0.08 });
+      }
+      for (let i = 0; i < 4; i++) {
+        const g = new THREE.Group();
+        const top = new THREE.Mesh(track(new THREE.CylinderGeometry(2.6, 3.1, 1.1, 7)), bmat(0x9fbf8a, { flatShading: true }));
+        const under = new THREE.Mesh(track(new THREE.ConeGeometry(2.9, 3.4, 7)), bmat(0x8a7a68, { flatShading: true }));
+        under.rotation.x = Math.PI;
+        under.position.y = -2.2;
+        const treeT = new THREE.Mesh(track(new THREE.CylinderGeometry(0.09, 0.12, 0.8, 5)), bmat(0x7a5c40));
+        treeT.position.y = 0.95;
+        const treeC = new THREE.Mesh(track(new THREE.ConeGeometry(0.6, 1.4, 6)), bmat(0x5fae72, { flatShading: true }));
+        treeC.position.y = 1.9;
+        g.add(top, under, treeT, treeC);
+        const side = i % 2 === 0 ? 1 : -1;
+        const by = 17 + (i * 5) % 9;
+        g.position.set(side * (24 + (i * 11) % 14), by, -8 - i * 32);
+        scene.add(g);
+        islands.push({ g, by });
+      }
+    }
+
     // ── Terrain ────────────────────────────────────────────────────────────
     const ground = new THREE.Mesh(track(new THREE.PlaneGeometry(140, 260)), bmat(0xcfc8b6));
     ground.rotation.x = -Math.PI / 2;
@@ -371,25 +418,41 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       return { g, plane: plane.material as THREE.MeshBasicMaterial };
     });
 
-    // story plates along the path
-    function addSign(txt: string, x: number, y: number, z: number) {
-      const s = plateSprite(txt, "#233150", "rgba(252,252,254,0.92)", 0.34, 40);
-      s.position.set(x, y, z);
-      scene.add(s);
-    }
-    CHAPTERS[0].story.forEach((ln, k) => addSign(ln, k % 2 === 0 ? -5 : 5, 1.7, 8.5 - k * 1.3));
-    CORRS.forEach((cr, i) => {
-      CHAPTERS[i + 1].story.forEach((ln, k) => {
-        addSign(ln, k % 2 === 0 ? -2.1 : 2.1, 1.7, cr.z2 - 2 - k * 2.4);
-      });
-    });
-    addSign("follow the path ↓", 0, 1.2, ZC[0] - 9);
+    // no floating story text — the story lives in the pre-level intro cards
 
     // ambient colorful props
     const propRand = (seed: number) => {
       let s = seed;
       return () => { s = (s * 16807) % 2147483647; return (s % 1000) / 1000; };
     };
+    // surroundings beyond the walls — trees and rocks line the whole path
+    {
+      const rnd = propRand(4242);
+      for (let k = 0; k < 44; k++) {
+        const side = k % 2 === 0 ? 1 : -1;
+        const px2 = side * (17 + rnd() * 12);
+        const pz2 = 14 - rnd() * (ZONE_GAP * 3 + 34);
+        const zi = Math.max(0, Math.min(FINAL, Math.round(-pz2 / ZONE_GAP)));
+        if (rnd() < 0.62) {
+          // stylized tree
+          const th = 1.4 + rnd() * 2.4;
+          const trunk = new THREE.Mesh(track(new THREE.CylinderGeometry(0.12, 0.16, th * 0.45, 6)), bmat(0x7a5c40));
+          trunk.position.set(px2, th * 0.22, pz2);
+          const crown = new THREE.Mesh(
+            track(new THREE.ConeGeometry(0.8 + rnd() * 0.5, th, 6)),
+            bmat(new THREE.Color(ZONE_COL[zi]).lerp(new THREE.Color(0x3f9f5f), 0.55).lerp(new THREE.Color(0xffffff), 0.1).getHex(), { flatShading: true })
+          );
+          crown.position.set(px2, th * 0.45 + th * 0.5, pz2);
+          scene.add(trunk, crown);
+        } else {
+          const rock = new THREE.Mesh(track(new THREE.IcosahedronGeometry(0.5 + rnd() * 0.7, 0)), bmat(0xb8b0a2, { flatShading: true }));
+          rock.position.set(px2, 0.4, pz2);
+          rock.rotation.y = rnd() * Math.PI;
+          scene.add(rock);
+        }
+      }
+    }
+
     ZC.forEach((zc, zi) => {
       const rnd = propRand(zi * 977 + 13);
       const col = ZONE_COL[zi];
@@ -500,14 +563,12 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     }
 
     // ── Bullets / rail / orbs / particles ──────────────────────────────────
-    const MAX_PB = 160, MAX_EB = 300;
+    const MAX_PB = 160;
     const pbMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.11, 8, 8)), emat(0x22d3ee), MAX_PB);
-    const ebMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.17, 8, 8)), emat(0xff6b6b), MAX_EB);
-    pbMesh.frustumCulled = false; ebMesh.frustumCulled = false;
-    pbMesh.count = 0; ebMesh.count = 0;
-    scene.add(pbMesh, ebMesh);
+    pbMesh.frustumCulled = false;
+    pbMesh.count = 0;
+    scene.add(pbMesh);
     const m4 = new THREE.Matrix4();
-    const EB_Y = 1.25;
     const obMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.16, 8, 8)), emat(0xffd88a), 24);
     obMesh.frustumCulled = false; obMesh.count = 0;
     scene.add(obMesh);
@@ -558,17 +619,26 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       f.t = 0; f.live = true;
     }
 
-    // corruption zones (drift boss)
-    const zoneVis = Array.from({ length: 3 }, () => {
+    // hazard pulse visuals (unit radius, scaled per hazard)
+    const hazVis = Array.from({ length: 6 }, () => {
       const g = new THREE.Group();
-      const fill = new THREE.Mesh(track(new THREE.CircleGeometry(1.9, 28)), emat(0xff3c3c, { transparent: true, opacity: 0.14, side: THREE.DoubleSide }));
+      const fill = new THREE.Mesh(track(new THREE.CircleGeometry(1, 28)), emat(0xff5c3c, { transparent: true, opacity: 0.12, side: THREE.DoubleSide }));
       fill.rotation.x = -Math.PI / 2; fill.position.y = 0.03;
-      const rim = new THREE.Mesh(track(new THREE.RingGeometry(1.8, 1.9, 28)), emat(REDC, { transparent: true, opacity: 0.7, side: THREE.DoubleSide }));
+      const rim = new THREE.Mesh(track(new THREE.RingGeometry(0.94, 1, 28)), emat(0xff7050, { transparent: true, opacity: 0.8, side: THREE.DoubleSide }));
       rim.rotation.x = -Math.PI / 2; rim.position.y = 0.04;
       g.add(fill, rim);
       g.visible = false;
       scene.add(g);
       return { g, fill: fill.material as THREE.MeshBasicMaterial, rim: rim.material as THREE.MeshBasicMaterial };
+    });
+    // shockwave ring visuals (unit radius, scaled per wave)
+    const waveVis = Array.from({ length: 4 }, () => {
+      const ring = new THREE.Mesh(track(new THREE.RingGeometry(0.94, 1, 48)), emat(0xffffff, { transparent: true, opacity: 0.8, side: THREE.DoubleSide }));
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.05;
+      ring.visible = false;
+      scene.add(ring);
+      return ring;
     });
 
     // ── Guardian creatures — rounded, finished little machines ─────────────
@@ -576,7 +646,6 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     const mobVis: MobVis[] = MOB_SPAWNS.map(ms => {
       const g = new THREE.Group();
       const v: MobVis = { g };
-      const name = plateSprite(MOB_NAMES[ms.type], "#a63030", "rgba(252,252,254,0.9)", 0.3, 40);
       if (ms.type === 0) {
         // query leech — squat rounded drive-bot with one glowing eye
         const body = new THREE.Mesh(track(new THREE.SphereGeometry(0.72, 20, 14)), bmat(0xd07038, { emissive: 0x2a1004 }));
@@ -591,8 +660,11 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         ant.position.y = 1.25;
         const tip = new THREE.Mesh(track(new THREE.SphereGeometry(0.06, 8, 8)), emat(0xff8060));
         tip.position.y = 1.52;
-        name.position.y = 2.15;
-        g.add(body, skirt, eye, ant, tip, name);
+        const treadL = new THREE.Mesh(track(new THREE.BoxGeometry(0.28, 0.18, 0.95)), bmat(0x6a4428));
+        treadL.position.set(-0.52, 0.1, 0);
+        const treadR = treadL.clone();
+        treadR.position.x = 0.52;
+        g.add(body, skirt, eye, ant, tip, treadL, treadR);
         g.position.set(ms.x, 0, ms.z);
         g.scale.setScalar(1.2);
       } else if (ms.type === 1) {
@@ -609,8 +681,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         };
         v.shardA = mkShard();
         v.shardB = mkShard();
-        name.position.y = 2.5;
-        g.add(v.shardA, v.shardB, name);
+        g.add(v.shardA, v.shardB);
       } else {
         // incident spark — spiky red star that falls from the sky
         const core = new THREE.Mesh(track(new THREE.OctahedronGeometry(0.4, 0)), emat(0xff5050));
@@ -619,8 +690,9 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         const spike2 = spike.clone();
         spike2.scale.set(0.5, 1.5, 0.5);
         v.core = core;
-        name.position.y = 1.9;
-        g.add(core, spike, spike2, name);
+        const glowS = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: glowTexture(), color: 0xff6050, transparent: true, opacity: 0.75, depthWrite: false, blending: THREE.AdditiveBlending })));
+        glowS.scale.setScalar(1.7);
+        g.add(core, spike, spike2, glowS);
         v.ring = new THREE.Mesh(track(new THREE.RingGeometry(0.8, 0.95, 20)), emat(0xff5555, { transparent: true, opacity: 0.6, side: THREE.DoubleSide }));
         v.ring.rotation.x = -Math.PI / 2;
         v.ring.visible = false;
@@ -644,8 +716,11 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       scene.add(group);
       const v: BossVis = { group };
       const name = plateSprite(CHAPTERS[zi].bossName, zi === FINAL ? "#8a6a20" : "#a63030", "rgba(252,252,254,0.92)", 0.42);
-      name.position.y = zi === 0 ? 5.6 : 4.3;
+      name.position.y = zi === 0 ? 6.3 : 4.3;
       group.add(name);
+      const orgPlate = plateSprite(`${CHAPTERS[zi].org} · ${CHAPTERS[zi].year}`, "#3a4560", "rgba(252,252,254,0.88)", 0.28, 38);
+      orgPlate.position.y = name.position.y - 0.52;
+      group.add(orgPlate);
 
       if (zi === 0) {
         // THE MONOLITH — octagonal drive tower with glowing seams + satellites
@@ -669,6 +744,15 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         }
         v.seams = seams;
         v.sats = sats;
+        const baseRing = new THREE.Mesh(track(new THREE.TorusGeometry(2.55, 0.1, 10, 40)), bmat(0x4a6a3e));
+        baseRing.rotation.x = Math.PI / 2;
+        baseRing.position.y = 0.12;
+        const dishPole = new THREE.Mesh(track(new THREE.CylinderGeometry(0.06, 0.06, 0.8, 6)), bmat(0x4a6a3e));
+        dishPole.position.y = 5.1;
+        const dish = new THREE.Mesh(track(new THREE.ConeGeometry(0.5, 0.35, 10)), bmat(0x7a9a6a, { flatShading: true }));
+        dish.rotation.x = Math.PI;
+        dish.position.y = 5.5;
+        group.add(baseRing, dishPole, dish);
       } else if (zi === 1) {
         // NON-DETERMINISM — three ringed crystals, one real
         v.ghosts = [0, 1, 2].map(() => {
@@ -761,7 +845,27 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         aura.position.y = 0.03;
         const sub = plateSprite("FULL-STACK DEVELOPER", "#5a4a20", "rgba(252,252,254,0.9)", 0.26, 38);
         sub.position.y = 3.7;
-        group.add(legL, legR, torso, beltGlow, shoulderL, shoulderR, armL, armR, head, hair, laptop, screen, v.halo, aura, sub);
+        const handL = new THREE.Mesh(track(new THREE.SphereGeometry(0.11, 10, 8)), bmat(skin));
+        handL.position.set(-0.32, 1.48, 0.52);
+        const handR = handL.clone();
+        handR.position.x = 0.32;
+        const footL = new THREE.Mesh(track(new THREE.BoxGeometry(0.2, 0.12, 0.36)), bmat(0x1f2836));
+        footL.position.set(-0.2, 0.06, 0.08);
+        const footR = footL.clone();
+        footR.position.x = 0.2;
+        const glassL = new THREE.Mesh(track(new THREE.TorusGeometry(0.09, 0.018, 8, 16)), bmat(0x223040));
+        glassL.position.set(-0.13, 2.64, 0.3);
+        const glassR = glassL.clone();
+        glassR.position.x = 0.13;
+        const bridge = new THREE.Mesh(track(new THREE.BoxGeometry(0.08, 0.02, 0.02)), bmat(0x223040));
+        bridge.position.set(0, 2.64, 0.32);
+        const panelL = new THREE.Mesh(track(new THREE.PlaneGeometry(0.62, 0.4)), emat(0x9fe8ff, { transparent: true, opacity: 0.45, side: THREE.DoubleSide }));
+        panelL.position.set(-1.2, 2.2, 0.35);
+        panelL.rotation.y = 0.5;
+        const panelR = panelL.clone();
+        panelR.position.x = 1.2;
+        panelR.rotation.y = -0.5;
+        group.add(legL, legR, torso, beltGlow, shoulderL, shoulderR, armL, armR, head, hair, laptop, screen, v.halo, aura, sub, handL, handR, footL, footR, glassL, glassR, bridge, panelL, panelR);
       }
       return v;
     });
@@ -788,15 +892,17 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       swayX: 0, swayY: 0,
       feed: [] as { txt: string; t: number }[], feedDirty: false,
       keys: new Set<string>(),
-      pb: [] as PB[], eb: [] as EB[],
+      pb: [] as PB[],
+      hazards: [] as Hazard[],
+      waves: [] as Wave[],
+      pendingFight: -1,
       fightActive: false, fightZone: -1, introT: -1, vicT: -1, deadT: -1,
       bossX: 0, bossZ: 0, bossHp: 0, bossMax: 1,
       shake: 0, bossPulse: 0, noteT: 0,
-      vented: false, ventT: 4, cdA: 1.2, cdB: 3.5, cdC: 6, burstN: 0,
+      vented: false, ventT: 4, cdA: 1.2, cdB: 3.5,
       ghosts: [] as { x: number; z: number }[], realIdx: 0, pinHits: 0, pinT: 0, shuffleT: 0,
       modSt: [] as { ang: number; hp: number; cd: number; alive: boolean }[],
       exposedT: 0,
-      dzones: [] as { x: number; z: number; warm: number; life: number }[],
       weaponSel: Math.max(0, Math.min(3, initialCleared)),
       slowT: 0, railT: 0, railLen: 0, railYaw: 0, railPitch: 0,
       orbs: [] as { x: number; z: number; a: number; t: number; dead: boolean }[],
@@ -805,6 +911,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       blackT: 0,
       mobs: MOB_SPAWNS.map(ms => ({
         x: ms.x, z: ms.z,
+        homeX: ms.x, homeZ: ms.z,
         hp: [24, 20, 18][ms.type],
         alive: true,
         t: Math.random() * 10,
@@ -831,20 +938,14 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       if (st.feed.length > 5) st.feed.shift();
       st.feedDirty = true;
     }
-    // easier fights: every enemy projectile flies 15% slower
-    function aimShot(x: number, z: number, speed: number, r = 0.17, offAng = 0) {
-      if (st.eb.length > MAX_EB - 4) return;
-      const a = Math.atan2(st.pz - z, st.px - x) + offAng;
-      const v = speed * 0.85;
-      st.eb.push({ x, z, vx: Math.cos(a) * v, vz: Math.sin(a) * v, r, dead: false });
+    // enemy attacks are readable area denial, not bullet spam
+    function spawnHazard(x: number, z: number, r = 2.1, warm = 0.95) {
+      if (st.hazards.length >= 6) return;
+      st.hazards.push({ x, z, r, warm, fade: 0.45, dealt: false });
     }
-    function ringShot(x: number, z: number, n: number, speed: number, phase = 0, r = 0.17) {
-      if (st.eb.length > MAX_EB - n - 1) return;
-      const v = speed * 0.85;
-      for (let i = 0; i < n; i++) {
-        const a = phase + (i / n) * Math.PI * 2;
-        st.eb.push({ x, z, vx: Math.cos(a) * v, vz: Math.sin(a) * v, r, dead: false });
-      }
+    function spawnWave(x: number, z: number, speed = 5.5, max = 9.5) {
+      if (st.waves.length >= 4) return;
+      st.waves.push({ x, z, R: 0.6, speed, max, dealt: false });
     }
 
     function canStand(x: number, z: number): boolean {
@@ -879,12 +980,13 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       st.bossX = 0;
       st.bossZ = ZC[zone] - 2;
       st.bossHp = st.bossMax = [180, 220, 260][zone];
-      st.eb = []; st.pb = [];
-      st.vented = false; st.ventT = 4; st.cdA = 1.2; st.cdB = 3.5; st.cdC = 6; st.burstN = 0;
+      st.pb = [];
+      st.hazards = [];
+      st.waves = [];
+      st.vented = false; st.ventT = 4; st.cdA = 2.4; st.cdB = 3.5;
       st.ghosts = []; st.realIdx = 0; st.pinHits = 0; st.pinT = 0; st.shuffleT = 0;
-      st.modSt = [0, 1, 2, 3].map(i => ({ ang: (i / 4) * Math.PI * 2, hp: 40, cd: 1 + i * 0.7, alive: true }));
+      st.modSt = [0, 1, 2, 3].map(i => ({ ang: (i / 4) * Math.PI * 2, hp: 40, cd: 2 + i * 1.1, alive: true }));
       st.exposedT = 0;
-      st.dzones = [];
       if (introNameRef.current) introNameRef.current.textContent = CHAPTERS[zone].bossName;
       if (introSubRef.current) introSubRef.current.textContent = CHAPTERS[zone].bossSub;
       if (bossNameRef.current) bossNameRef.current.textContent = CHAPTERS[zone].bossName;
@@ -895,7 +997,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     const seqActive = () => st.vicT >= 0 || st.deadT >= 0 || st.cineT >= 0 || st.introT > 0;
     const onLockChange = () => {
       st.locked = document.pointerLockElement === canvas;
-      if (!st.locked && !seqActive() && !pausedRef.current) onEventRef.current("pause");
+      if (!st.locked && !seqActive() && st.pendingFight < 0 && !pausedRef.current) onEventRef.current("pause");
     };
     const onCanvasClick = () => {
       if (!st.locked && !seqActive() && !pausedRef.current) canvas.requestPointerLock();
@@ -920,7 +1022,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       if (k === "r") startReload();
       if (k === "e" && st.canOffer && st.cineT < 0) {
         st.cineT = 0;
-        st.eb = []; st.pb = [];
+        st.pb = [];
         document.exitPointerLock();
       }
     };
@@ -934,7 +1036,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
 
-    // ── Boss AI ────────────────────────────────────────────────────────────
+    // ── Boss AI — telegraphed area attacks, no projectile spam ─────────────
     function updBoss(dt: number) {
       const zone = st.fightZone;
       const oz = ZC[zone];
@@ -948,13 +1050,9 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           if (st.vented) note("VENTING — STRIKE NOW", 1.4);
         }
         st.cdA -= dt;
-        if (st.cdA <= 0) { st.cdA = 1.4; ringShot(st.bossX, st.bossZ, 9, 3.9, st.t); }
+        if (st.cdA <= 0) { st.cdA = 3.4; spawnWave(st.bossX, st.bossZ, 5.5, 10); }
         st.cdB -= dt;
-        if (st.cdB <= 0) { st.cdB = 3.8; st.burstN = 3; st.cdC = 0; }
-        if (st.burstN > 0) {
-          st.cdC -= dt;
-          if (st.cdC <= 0) { st.cdC = 0.18; st.burstN--; aimShot(st.bossX, st.bossZ + 1, 7.4, 0.3); }
-        }
+        if (st.cdB <= 0) { st.cdB = 4.2; spawnHazard(st.px, st.pz, 2.1); }
       } else if (zone === 1) {
         if (st.pinT > 0) {
           st.pinT -= dt;
@@ -974,17 +1072,17 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
             z: oz - 2 + Math.sin(base + (i / 3) * Math.PI * 2) * 2.1,
           }));
           st.realIdx = (Math.random() * 3) | 0;
-          ringShot(old.x, old.z, 12, 4.8, st.t);
+          spawnWave(old.x, old.z, 6, 8);
           burst(old.x, old.z, 10, 0x66e0ff, 4, 1.5);
         }
         const real = st.ghosts[st.realIdx];
         st.bossX = real.x; st.bossZ = real.z;
         st.cdA -= dt;
         if (st.cdA <= 0) {
-          st.cdA = 2.3;
-          st.ghosts.forEach((g, i) => {
-            for (let k = -1; k <= 1; k++) aimShot(g.x, g.z, 5.4, 0.17, k * 0.16 + i * 0.03);
-          });
+          st.cdA = 3.4;
+          const a = Math.random() * Math.PI * 2;
+          spawnHazard(st.px, st.pz, 1.9);
+          spawnHazard(st.px + Math.cos(a) * 2.6, st.pz + Math.sin(a) * 2.6, 1.9);
         }
       } else {
         st.bossX = Math.sin(st.t * 0.6) * 3;
@@ -1000,23 +1098,12 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           mo.ang += dt * 0.5;
           mo.cd -= dt;
           if (mo.cd <= 0) {
-            mo.cd = 2.6;
-            aimShot(st.bossX + Math.cos(mo.ang) * 5, st.bossZ + Math.sin(mo.ang) * 5, 6.0, 0.2);
+            mo.cd = 4.6;
+            spawnHazard(st.px + (Math.random() - 0.5) * 3, st.pz + (Math.random() - 0.5) * 3, 2.0);
           }
         }
-        st.cdA -= dt;
-        if (st.cdA <= 0) {
-          st.cdA = 7;
-          st.dzones = Array.from({ length: 3 }, () => ({
-            x: Math.max(-ROOM_HW + 2, Math.min(ROOM_HW - 2, st.px + (Math.random() - 0.5) * 15)),
-            z: Math.max(oz - ROOM_HD + 2, Math.min(oz + ROOM_HD - 2, st.pz + (Math.random() - 0.5) * 11)),
-            warm: 1, life: 4,
-          }));
-        }
-        for (const z of st.dzones) { if (z.warm > 0) z.warm -= dt; else z.life -= dt; }
-        st.dzones = st.dzones.filter(z => z.life > 0);
         st.cdB -= dt;
-        if (st.cdB <= 0) { st.cdB = 5.6; ringShot(st.bossX, st.bossZ, 14, 4, st.t); }
+        if (st.cdB <= 0) { st.cdB = 6; spawnWave(st.bossX, st.bossZ, 5, 9.5); }
       }
     }
 
@@ -1180,7 +1267,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           st.php = 100;
           st.invuln = 2;
           st.px = 0; st.pz = ZC[Math.max(0, zone)] + 9.3;
-          st.eb = []; st.pb = [];
+          st.pb = [];
+          st.hazards = []; st.waves = [];
           st.ammo = MAGS.slice();
           st.blackT = 0;
           note("respawned — the boss awaits", 2);
@@ -1189,7 +1277,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       }
       if (st.cineT >= 0) {
         st.cineT += rdt;
-        st.eb = []; st.pb = [];
+        st.pb = [];
+        st.hazards = []; st.waves = [];
         if (st.cineT > 0.5 && Math.random() < 0.25) burst(st.bossX + (Math.random() - 0.5) * 2, st.bossZ + (Math.random() - 0.5) * 2, 8, Math.random() < 0.5 ? GREENC : 0xffd88a, 4, 1.5);
         if (st.cineT > 0.4 && st.cineT < 0.5) note("He reads the offer…", 1.2);
         if (st.cineT > 1.7 && st.cineT < 1.8) note("CRITICAL HIT", 0.9);
@@ -1199,6 +1288,13 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       }
       if (st.introT > 0) {
         st.introT -= rdt;
+        return;
+      }
+      // interlude accepted — the fight begins now
+      if (st.pendingFight >= 0) {
+        const z = st.pendingFight;
+        st.pendingFight = -1;
+        initFight(z);
         return;
       }
       if (!st.locked) return;
@@ -1239,8 +1335,10 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           st.bannerT = 3.2;
           if (bannerRef.current) bannerRef.current.textContent = `CHAPTER ${ROMAN[i]} · ${CHAPTERS[i].year} — ${CHAPTERS[i].org}`;
         }
-        if (i < FINAL && inRoom && st.cleared === i && !st.fightActive && st.pz < ZC[i] + 7.5) {
-          initFight(i);
+        if (i < FINAL && inRoom && st.cleared === i && !st.fightActive && st.pendingFight < 0 && st.pz < ZC[i] + 7.5) {
+          st.pendingFight = i;
+          document.exitPointerLock();
+          onEventRef.current("interlude", i);
         }
       }
 
@@ -1282,8 +1380,6 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
             const nx = mb.x + Math.cos(a) * 1.4 * dt, nz = mb.z + Math.sin(a) * 1.4 * dt;
             if (canStand(nx, nz)) { mb.x = nx; mb.z = nz; }
           }
-          mb.cd -= dt;
-          if (mb.cd <= 0) { mb.cd = 3.4; ringShot(mb.x, mb.z, 7, 3, mb.t); }
           if (st.invuln <= 0 && dP < 1.25) {
             st.php -= 6; st.invuln = 1; st.slowT = 2.0; st.shake = 1;
             sfx("hurt");
@@ -1291,13 +1387,21 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
             note("query leech attached — slowed!", 1.4);
           }
         } else if (ty === 1) {
+          // the shard creeps its anchor toward you, pulsing on arrival
+          mb.cd -= dt;
+          if (mb.cd <= 0 && dP > 3.2) {
+            mb.cd = 4;
+            const a = Math.atan2(st.pz - mb.homeZ, st.px - mb.homeX);
+            mb.homeX += Math.cos(a) * 2.4;
+            mb.homeZ += Math.sin(a) * 2.4;
+            spawnHazard(mb.homeX, mb.homeZ, 1.5, 0.6);
+            burst(mb.homeX, mb.homeZ, 8, 0x66e0ff, 3, 1.3);
+          }
           mb.phase += dt * 0.7;
-          mb.slotA.x = spawn.x + Math.cos(mb.phase) * 2.6; mb.slotA.z = spawn.z + Math.sin(mb.phase) * 2.6;
-          mb.slotB.x = spawn.x - Math.cos(mb.phase * 1.3) * 2.6; mb.slotB.z = spawn.z - Math.sin(mb.phase * 1.3) * 2.6;
+          mb.slotA.x = mb.homeX + Math.cos(mb.phase) * 2.4; mb.slotA.z = mb.homeZ + Math.sin(mb.phase) * 2.4;
+          mb.slotB.x = mb.homeX - Math.cos(mb.phase * 1.3) * 2.4; mb.slotB.z = mb.homeZ - Math.sin(mb.phase * 1.3) * 2.4;
           const rp = mb.real === 0 ? mb.slotA : mb.slotB;
           mb.x = rp.x; mb.z = rp.z;
-          mb.cd -= dt;
-          if (mb.cd <= 0) { mb.cd = 2.4; aimShot(mb.x, mb.z, 5.2, 0.17); }
         } else {
           if (mb.phase === 0) {
             if (dP < 13) { mb.phase = 1; mb.cd = 0.85; mb.teleX = st.px; mb.teleZ = st.pz; }
@@ -1420,25 +1524,40 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       }
       st.orbs = st.orbs.filter(o => !o.dead);
 
-      // enemy bullets
-      for (const b of st.eb) {
-        if (b.dead) continue;
-        b.x += b.vx * dt; b.z += b.vz * dt;
-        if (!insideWorld(b.x, b.z)) { b.dead = true; continue; }
-        if (st.invuln <= 0 && Math.hypot(b.x - st.px, b.z - st.pz) < b.r + 0.38) {
-          b.dead = true;
-          st.php -= 8; st.invuln = 1;
-          st.shake = 1;
-          sfx("hurt");
-          burst(st.px, st.pz, 10, REDC, 4, 1.2);
+      // hazards: telegraph then pulse once
+      for (const h of st.hazards) {
+        if (h.warm > 0) {
+          h.warm -= dt;
+          if (h.warm <= 0) {
+            burst(h.x, h.z, 14, 0xff7050, 5, 0.4);
+            if (st.invuln <= 0 && Math.hypot(h.x - st.px, h.z - st.pz) < h.r) {
+              st.php -= 12; st.invuln = 1; st.shake = 1.1;
+              sfx("hurt");
+              burst(st.px, st.pz, 10, REDC, 4, 1.2);
+            }
+          }
+        } else {
+          h.fade -= dt;
         }
       }
+      st.hazards = st.hazards.filter(h => h.fade > 0);
 
-      if (st.fightActive && st.fightZone === 2) {
-        for (const z of st.dzones) {
-          if (z.warm <= 0 && Math.hypot(z.x - st.px, z.z - st.pz) < 1.9) st.php -= 15 * dt;
+      // shockwaves: an expanding ring you step over or away from
+      for (const w of st.waves) {
+        w.R += w.speed * dt;
+        if (!w.dealt) {
+          const d = Math.hypot(w.x - st.px, w.z - st.pz);
+          if (Math.abs(d - w.R) < 0.55) {
+            w.dealt = true;
+            if (st.invuln <= 0) {
+              st.php -= 10; st.invuln = 1; st.shake = 1;
+              sfx("hurt");
+              burst(st.px, st.pz, 10, REDC, 4, 1.2);
+            }
+          } else if (w.R > d + 0.6) w.dealt = true;
         }
       }
+      st.waves = st.waves.filter(w => w.R < w.max);
 
       if (st.fightActive && st.invuln <= 0 && Math.hypot(st.bossX - st.px, st.bossZ - st.pz) < 1.9) {
         st.php -= 12; st.invuln = 1.1; st.shake = 1.3;
@@ -1447,7 +1566,6 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       }
 
       st.pb = st.pb.filter(b => !b.dead);
-      st.eb = st.eb.filter(b => !b.dead);
 
       if (st.php <= 0 && st.deadT < 0) {
         st.php = 0;
@@ -1462,6 +1580,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         st.timeScale = 0.22;
         st.shake = 2;
         sfx("boom");
+        st.hazards = []; st.waves = [];
         feedKill(CHAPTERS[st.fightZone].bossName);
         burst(st.bossX, st.bossZ, 60, ZONE_COL[st.fightZone], 8, 1.5);
         burst(st.bossX, st.bossZ, 40, 0xffffff, 5, 1.5);
@@ -1508,9 +1627,6 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       for (const b of st.pb) { m4.setPosition(b.x, b.y, b.z); pbMesh.setMatrixAt(n++, m4); }
       pbMesh.count = n; pbMesh.instanceMatrix.needsUpdate = true;
       n = 0;
-      for (const b of st.eb) { m4.setPosition(b.x, EB_Y, b.z); ebMesh.setMatrixAt(n++, m4); }
-      ebMesh.count = n; ebMesh.instanceMatrix.needsUpdate = true;
-      n = 0;
       for (const o of st.orbs) { m4.setPosition(o.x, 1.2, o.z); obMesh.setMatrixAt(n++, m4); }
       obMesh.count = n; obMesh.instanceMatrix.needsUpdate = true;
 
@@ -1547,16 +1663,36 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         if (f.t >= f.max) { f.live = false; f.s.visible = false; }
       }
 
-      // corruption zones
-      for (let i = 0; i < 3; i++) {
-        const z = st.dzones[i];
-        const v = zoneVis[i];
-        if (z && st.fightActive && st.fightZone === 2) {
+      // hazard pulses
+      for (let i = 0; i < 6; i++) {
+        const h = st.hazards[i];
+        const v = hazVis[i];
+        if (h) {
           v.g.visible = true;
-          v.g.position.set(z.x, 0, z.z);
-          if (z.warm > 0) { v.fill.opacity = 0.04; v.rim.opacity = 0.4 + Math.sin(st.t * 12) * 0.3; }
-          else { v.fill.opacity = 0.16; v.rim.opacity = 0.8; }
+          v.g.position.set(h.x, 0, h.z);
+          v.g.scale.setScalar(h.r);
+          if (h.warm > 0) {
+            v.fill.opacity = 0.08;
+            v.rim.opacity = 0.5 + Math.sin(st.t * 14) * 0.3;
+          } else {
+            const f = Math.max(0, h.fade / 0.45);
+            v.fill.opacity = 0.35 * f;
+            v.rim.opacity = 0.9 * f;
+          }
         } else v.g.visible = false;
+      }
+      // shockwave rings
+      for (let i = 0; i < 4; i++) {
+        const w = st.waves[i];
+        const v = waveVis[i];
+        if (w) {
+          v.visible = true;
+          v.position.set(w.x, 0.05, w.z);
+          v.scale.setScalar(w.R);
+          const wm = v.material as THREE.MeshBasicMaterial;
+          wm.opacity = Math.max(0, 0.85 * (1 - w.R / w.max));
+          wm.color.setHex(st.fightActive ? ZONE_COL[st.fightZone] : 0xffffff);
+        } else v.visible = false;
       }
 
       // gates
@@ -1746,6 +1882,15 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
 
       sun.position.set(st.px + 18, 30, st.pz + 10);
       sun.target.position.set(st.px, 0, st.pz);
+
+      // drifting clouds + bobbing islands
+      cloudSprites.forEach((c2, i) => {
+        c2.s.position.x = c2.bx + Math.sin(st.t * 0.05 * (1 + c2.sp) + i * 2.1) * 9;
+      });
+      islands.forEach((is, i) => {
+        is.g.position.y = is.by + Math.sin(st.t * 0.5 + i * 1.7) * 0.5;
+        is.g.rotation.y = st.t * 0.04 * (i % 2 === 0 ? 1 : -1);
+      });
 
       const zAt = Math.max(0, Math.min(FINAL, Math.round(-st.pz / ZONE_GAP)));
       colA.setHex(ZONE_COL[zAt]).multiplyScalar(0.08);

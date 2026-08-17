@@ -18,7 +18,7 @@ const Engine3D = dynamic(() => import("./career/Engine3D"), {
   ),
 });
 
-type Phase = "map" | "world" | "victory" | "pause" | "ending";
+type Phase = "map" | "world" | "interlude" | "victory" | "pause" | "ending";
 
 const fade = {
   initial: { opacity: 0, y: 8 },
@@ -32,6 +32,7 @@ export default function CareerMode() {
   const [phase, setPhase] = useState<Phase>("map");
   const [saved, setSaved] = useState(0);
   const [vicChapter, setVicChapter] = useState(0);
+  const [introChapter, setIntroChapter] = useState(0);
   const [runId, setRunId] = useState(0);
   const [runStart, setRunStart] = useState(0);
   const phaseRef = useRef<Phase>("map");
@@ -72,19 +73,24 @@ export default function CareerMode() {
       if (k === "escape") {
         if (ph === "world") setPhase("pause");
         else if (ph === "pause") setPhase("world");
-        else if (ph === "victory") setPhase("world");
+        else if (ph === "victory" || ph === "interlude") setPhase("world");
         else setOpen(false);
         return;
       }
-      if ((k === " " || k === "enter") && ph === "victory") setPhase("world");
+      if ((k === " " || k === "enter") && (ph === "victory" || ph === "interlude")) setPhase("world");
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const onEngineEvent = useCallback((e: "victory" | "ending" | "pause", data?: number) => {
+  const onEngineEvent = useCallback((e: "victory" | "ending" | "pause" | "interlude", data?: number) => {
     if (e === "pause") {
       setPhase(p => (p === "world" ? "pause" : p));
+      return;
+    }
+    if (e === "interlude") {
+      setIntroChapter(data ?? 0);
+      setPhase("interlude");
       return;
     }
     if (e === "victory") {
@@ -218,6 +224,37 @@ export default function CareerMode() {
                   <p className="font-mono text-[9px] text-zinc-700 mt-3">first person · WASD move · shift to sprint · mouse look · hold click to shoot · R reload · 1-4 weapons · E to interact · desktop only</p>
                 </motion.div>
               )}
+
+              {/* ── PRE-LEVEL INTERLUDE ── */}
+              {phase === "interlude" && (() => {
+                const ic = CHAPTERS[introChapter];
+                return (
+                  <motion.div key={`intl-${introChapter}`} {...fade} className="absolute inset-0 flex items-center justify-center px-8 bg-black/50">
+                    <div className="max-w-xl w-full border border-amber-500/30 bg-[#0d0a08]/95 p-8">
+                      <div className="flex items-baseline justify-between mb-1">
+                        <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-zinc-500">Chapter {ROMAN[introChapter]} · {ic.year}</p>
+                        <p className="font-mono text-[10px] text-zinc-600">{introChapter + 1} / 3</p>
+                      </div>
+                      <h3 className="font-display text-3xl text-zinc-100 mb-1">{ic.org}</h3>
+                      <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent mb-5">{ic.role}</p>
+                      <p className="font-mono text-[12.5px] leading-relaxed text-zinc-300 whitespace-pre-line mb-5">{ic.story.join("\n")}</p>
+                      <div className="border-l-2 border-accent pl-4 mb-6">
+                        <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-zinc-600 mb-1.5">what he did</p>
+                        <p className="text-[13px] leading-relaxed text-zinc-300">{ic.victory}</p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-zinc-600 mb-1">now face it as a boss</p>
+                          <p className="font-mono text-sm font-bold text-red-400">{ic.bossName}</p>
+                        </div>
+                        <button onClick={() => setPhase("world")} className="font-mono text-xs uppercase tracking-[0.2em] text-ink bg-accent px-6 py-2 hover:opacity-85 transition-opacity shrink-0">
+                          Fight [space]
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })()}
 
               {/* ── VICTORY ── */}
               {phase === "victory" && (
