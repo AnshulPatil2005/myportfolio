@@ -39,8 +39,9 @@ const ROOMS = ZC.map(zc => ({ x1: -ROOM_HW, x2: ROOM_HW, z1: zc - ROOM_HD, z2: z
 const CORRS = [0, 1, 2, 3, 4].map(i => ({ x1: -CORR_HW, x2: CORR_HW, z1: ZC[i] - ROOM_HD - (ZONE_GAP - ROOM_HD * 2), z2: ZC[i] - ROOM_HD }));
 
 // per-zone accent palette — the world shifts color as the story progresses
-const ZONE_COL = [0xffb000, 0x2dd4bf, 0xe879f9, 0x38bdf8, 0xf87171, 0xffd88a];
-const ZONE_HEX = ["#ffb000", "#2dd4bf", "#e879f9", "#38bdf8", "#f87171", "#ffd88a"];
+const ZONE_COL = [0x4ade80, 0x2dd4bf, 0xe879f9, 0x38bdf8, 0xf87171, 0xffd88a];
+const ZONE_HEX = ["#4ade80", "#2dd4bf", "#e879f9", "#38bdf8", "#f87171", "#ffd88a"];
+const EYE = 1.6;
 
 // weird mobs — a different creature type haunts each zone
 // 0 query leech · 1 captcha mimic · 2 encoding worm · 3 quantum shard · 4 incident spark
@@ -94,21 +95,30 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
 
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.15;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x161129);
-    scene.fog = new THREE.Fog(0x161129, 16, 54);
+    scene.background = new THREE.Color(0x584060);
+    scene.fog = new THREE.Fog(0x584060, 24, 95);
 
-    // real lighting — filled surfaces get shape and warmth
-    scene.add(new THREE.HemisphereLight(0xbfd4ff, 0x3a2450, 0.9));
-    const sun = new THREE.DirectionalLight(0xfff2e0, 1.6);
+    // dusk lighting — warm sun, cool sky, colored arena lights
+    scene.add(new THREE.HemisphereLight(0xcfd8ff, 0x3a2a4e, 0.75));
+    const sun = new THREE.DirectionalLight(0xffe0c0, 1.5);
     sun.position.set(18, 30, 10);
-    scene.add(sun);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.camera.left = -30; sun.shadow.camera.right = 30;
+    sun.shadow.camera.top = 30; sun.shadow.camera.bottom = -30;
+    sun.shadow.camera.near = 1; sun.shadow.camera.far = 90;
+    sun.shadow.bias = -0.002;
+    scene.add(sun, sun.target);
     ZC.forEach((zc, i) => {
       const pl = new THREE.PointLight(ZONE_COL[i], 70, 32, 1.8);
       pl.position.set(0, 6.5, i === 5 ? zc : zc - 2);
       scene.add(pl);
     });
+
 
     const camera = new THREE.PerspectiveCamera(62, RW / RH, 0.05, 300);
     scene.add(camera);
@@ -162,6 +172,57 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       const img = tex.image as HTMLCanvasElement;
       s.scale.set((img.width / img.height) * worldH, worldH, 1);
       return s;
+    }
+
+    // ── Sky ────────────────────────────────────────────────────────────────
+    {
+      const skyGeo = track(new THREE.SphereGeometry(220, 24, 16));
+      const skyMat = track(new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        depthWrite: false,
+        uniforms: {
+          top: { value: new THREE.Color(0x27407e) },
+          mid: { value: new THREE.Color(0x8a55b0) },
+          bot: { value: new THREE.Color(0xffa06a) },
+        },
+        vertexShader: `varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+        fragmentShader: `varying vec3 vP; uniform vec3 top; uniform vec3 mid; uniform vec3 bot;
+          void main(){ float h = normalize(vP).y;
+          vec3 c = h > 0.12 ? mix(mid, top, smoothstep(0.12, 0.65, h)) : mix(bot, mid, smoothstep(-0.1, 0.12, h));
+          gl_FragColor = vec4(c, 1.0); }`,
+      }));
+      const sky = new THREE.Mesh(skyGeo, skyMat);
+      sky.position.set(0, 0, -85);
+      scene.add(sky);
+      // low sun glow on the horizon — you walk toward the light
+      const c = document.createElement("canvas");
+      c.width = c.height = 256;
+      const g2 = c.getContext("2d")!;
+      const grad = g2.createRadialGradient(128, 128, 10, 128, 128, 128);
+      grad.addColorStop(0, "rgba(255,224,190,1)");
+      grad.addColorStop(0.25, "rgba(255,175,135,0.85)");
+      grad.addColorStop(1, "rgba(255,145,120,0)");
+      g2.fillStyle = grad;
+      g2.fillRect(0, 0, 256, 256);
+      const tex = track(new THREE.CanvasTexture(c));
+      const sm = track(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, fog: false }));
+      const glow = new THREE.Sprite(sm);
+      glow.scale.setScalar(75);
+      glow.position.set(0, 14, -295);
+      scene.add(glow);
+      // silhouetted mountain ring
+      for (let i = 0; i < 14; i++) {
+        const a = (i / 14) * Math.PI * 2;
+        const dist = 95 + ((i * 37) % 45);
+        const h = 16 + ((i * 53) % 22);
+        const m = new THREE.Mesh(
+          track(new THREE.ConeGeometry(9 + ((i * 29) % 8), h, 5)),
+          bmat(0x2c2048, { flatShading: true })
+        );
+        m.position.set(Math.cos(a) * dist, h / 2 - 2, -85 + Math.sin(a) * dist * 1.3);
+        m.rotation.y = a;
+        scene.add(m);
+      }
     }
 
     // ── Terrain — colorful filled floors ───────────────────────────────────
@@ -279,7 +340,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     });
 
     // story sign panels — chapter text stands along the path
-    function addSign(txt: string, x: number, y: number, z: number, color = "#c8b08a", h = 0.3) {
+    function addSign(txt: string, x: number, y: number, z: number, color = "#d8e2f8", h = 0.3) {
       const s = textSprite(txt, color, h, 44);
       s.position.set(x, y, z);
       scene.add(s);
@@ -291,7 +352,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         addSign(ln, k % 2 === 0 ? -2.1 : 2.1, 1.7, cr.z2 - 2 - k * 2.4);
       });
     });
-    addSign("↓ follow the path", 0, 1.2, ZC[0] - 9, "#8a7050");
+    addSign("↓ follow the path", 0, 1.2, ZC[0] - 9, "#b8c4e8");
 
     // ambient zone props — filled, colorful low-poly crystals and pillars
     const propRand = (seed: number) => {
@@ -364,11 +425,73 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       player.add(body, bodyE, head, headE, gunM, gunE, ring);
     }
     scene.add(player);
+    player.visible = false; // first person — the body stays hidden
+
+    // viewmodel gun attached to the camera
+    const gun = new THREE.Group();
+    const gunEdgeMats: THREE.LineBasicMaterial[] = [];
+    {
+      const bodyGeo = track(new THREE.BoxGeometry(0.15, 0.15, 0.5));
+      const gb = new THREE.Mesh(bodyGeo, bmat(0x2e3a46));
+      const gbe = edgesOf(bodyGeo, 0xdff3ff, 0.85);
+      gunEdgeMats.push(gbe.material as THREE.LineBasicMaterial);
+      const barrelGeo = track(new THREE.BoxGeometry(0.065, 0.065, 0.46));
+      const barrel = new THREE.Mesh(barrelGeo, bmat(0x22303c));
+      barrel.position.set(0, 0.035, -0.42);
+      const be = edgesOf(barrelGeo, 0xdff3ff, 0.55);
+      gunEdgeMats.push(be.material as THREE.LineBasicMaterial);
+      be.position.copy(barrel.position);
+      gun.add(gb, gbe, barrel, be);
+    }
+    gun.position.set(0.32, -0.27, -0.65);
+    camera.add(gun);
     const muzzleMat = track(new THREE.SpriteMaterial({ map: textTexture("✦", "#e0f7ff", 64), transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
     const muzzle = new THREE.Sprite(muzzleMat);
-    muzzle.scale.setScalar(0.34);
-    muzzle.position.set(0.34, 1.25, -0.75);
-    player.add(muzzle);
+    muzzle.scale.setScalar(0.3);
+    muzzle.position.set(0.32, -0.22, -1.05);
+    camera.add(muzzle);
+    const WEAPON_TINT = [0xdff3ff, 0x4ade80, 0x2dd4bf, 0xe879f9, 0x9beeff, 0xffd88a];
+
+    // tiny synthesized sound effects
+    let actx: AudioContext | null = null;
+    function sfx(type: "shot" | "rail" | "hurt" | "boom") {
+      try {
+        if (!actx) actx = new AudioContext();
+        const t0 = actx.currentTime;
+        const o = actx.createOscillator();
+        const g = actx.createGain();
+        o.connect(g); g.connect(actx.destination);
+        if (type === "shot") {
+          o.type = "square";
+          o.frequency.setValueAtTime(640, t0);
+          o.frequency.exponentialRampToValueAtTime(150, t0 + 0.08);
+          g.gain.setValueAtTime(0.04, t0);
+          g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.09);
+          o.start(t0); o.stop(t0 + 0.1);
+        } else if (type === "rail") {
+          o.type = "sawtooth";
+          o.frequency.setValueAtTime(130, t0);
+          o.frequency.exponentialRampToValueAtTime(28, t0 + 0.26);
+          g.gain.setValueAtTime(0.09, t0);
+          g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.28);
+          o.start(t0); o.stop(t0 + 0.3);
+        } else if (type === "hurt") {
+          o.type = "sawtooth";
+          o.frequency.setValueAtTime(210, t0);
+          o.frequency.exponentialRampToValueAtTime(55, t0 + 0.18);
+          g.gain.setValueAtTime(0.07, t0);
+          g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.2);
+          o.start(t0); o.stop(t0 + 0.22);
+        } else {
+          o.type = "triangle";
+          o.frequency.setValueAtTime(95, t0);
+          o.frequency.exponentialRampToValueAtTime(24, t0 + 0.4);
+          g.gain.setValueAtTime(0.11, t0);
+          g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.45);
+          o.start(t0); o.stop(t0 + 0.5);
+        }
+      } catch { /* audio unavailable */ }
+    }
 
     // ── Bullets / particles / floaters / zones / minions ──────────────────
     const MAX_PB = 160, MAX_EB = 340;
@@ -638,13 +761,24 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       return v;
     });
 
+    // bake shadow flags: lit surfaces cast/receive, glow + sky meshes don't
+    scene.traverse(o => {
+      const m = o as THREE.Mesh;
+      if (!m.isMesh) return;
+      const matAny = m.material as THREE.Material & { isMeshBasicMaterial?: boolean; isShaderMaterial?: boolean };
+      const glow = matAny.isMeshBasicMaterial === true || matAny.isShaderMaterial === true;
+      m.castShadow = !glow;
+      m.receiveShadow = !glow;
+    });
+
     // ── State ──────────────────────────────────────────────────────────────
     const st = {
       t: 0, timeScale: 1,
       cleared: Math.max(0, Math.min(5, initialCleared)),
       px: 0, pz: ZC[Math.max(0, Math.min(5, initialCleared))] + 8.5,
       php: 100, invuln: 1.2, fireCd: 0,
-      yaw: 0, pitch: 0.32, locked: false, firing: false, muzzleT: 0, bobT: 0, moving: false,
+      yaw: 0, pitch: 0, locked: false, firing: false, muzzleT: 0, bobT: 0, moving: false,
+      gunKick: 0, hitT: 0,
       keys: new Set<string>(),
       pb: [] as PB[], eb: [] as EB[], minions: [] as MinionS[],
       // fight
@@ -664,7 +798,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       blackT: 0,
       // weapons
       weaponSel: Math.max(0, Math.min(5, initialCleared)),
-      slowT: 0, beamLen: 0, railT: 0, railLen: 0, railYaw: 0,
+      slowT: 0, beamLen: 0, railT: 0, railLen: 0, railYaw: 0, railPitch: 0,
       orbs: [] as { x: number; z: number; a: number; t: number; dead: boolean }[],
       // mobs
       mobs: MOB_SPAWNS.map(ms => ({
@@ -737,6 +871,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       if (introNameRef.current) introNameRef.current.textContent = CHAPTERS[zone].bossName;
       if (introSubRef.current) introSubRef.current.textContent = CHAPTERS[zone].bossSub;
       if (bossNameRef.current) bossNameRef.current.textContent = CHAPTERS[zone].bossName;
+      if (bossFillRef.current) bossFillRef.current.style.background = ZONE_HEX[zone];
     }
 
     // ── Input ──────────────────────────────────────────────────────────────
@@ -751,13 +886,13 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     const onMouseMove = (e: MouseEvent) => {
       if (!st.locked) return;
       st.yaw -= e.movementX * 0.0022;
-      st.pitch = Math.max(-0.15, Math.min(1.05, st.pitch + e.movementY * 0.0018));
+      st.pitch = Math.max(-1.3, Math.min(1.3, st.pitch - e.movementY * 0.0022));
     };
     const onDown = (e: MouseEvent) => { if (st.locked && e.button === 0) st.firing = true; };
     const onUp = () => { st.firing = false; };
     const onKeyDown = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
-      if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) st.keys.add(k);
+      if (["w", "a", "s", "d", "shift", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) st.keys.add(k);
       const num = parseInt(k, 10);
       if (num >= 1 && num <= 6 && num - 1 <= st.cleared) st.weaponSel = num - 1;
       if (k === "e" && st.canOffer && st.cineT < 0) {
@@ -990,8 +1125,9 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     function killMob(mi: number) {
       const mb = st.mobs[mi];
       mb.alive = false;
-      const cols = [0xffb000, 0x2dd4bf, 0xe879f9, 0x38bdf8, 0xf87171];
+      const cols = [0x4ade80, 0x2dd4bf, 0xe879f9, 0x38bdf8, 0xf87171];
       burst(mb.x, mb.z, 20, cols[MOB_SPAWNS[mi].type], 5, 1.2);
+      sfx("boom");
       st.php = Math.min(100, st.php + 5);
       floatTxt("+5 HP", "#4ade80", mb.x, mb.z, 0.4, 2);
     }
@@ -1068,13 +1204,14 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
 
     // hitscan march for the OCR beam and the rail — returns travel distance
     function castRay(dmg: number, pierceAll: boolean): number {
-      const dx = -Math.sin(st.yaw), dz = -Math.cos(st.yaw);
+      const cp = Math.cos(st.pitch), sp2 = Math.sin(st.pitch);
+      const dx = -Math.sin(st.yaw) * cp, dy = sp2, dz = -Math.cos(st.yaw) * cp;
       const seen = new Set<number>();
       let bossDone = false;
       let s = 1.0;
-      for (; s < 26; s += 0.55) {
-        const probe: PB = { x: st.px + dx * s, y: 1.25, z: st.pz + dz * s, vx: 0, vy: 0, vz: 0, dmg, pierce: 0, life: 0, dead: false };
-        if (!insideWorld(probe.x, probe.z)) break;
+      for (; s < 28; s += 0.55) {
+        const probe: PB = { x: st.px + dx * s, y: EYE - 0.1 + dy * s, z: st.pz + dz * s, vx: 0, vy: 0, vz: 0, dmg, pierce: 0, life: 0, dead: false };
+        if (probe.y <= 0.03 || probe.y > 8 || !insideWorld(probe.x, probe.z)) break;
         let hit = false;
         if (mobBulletHit(probe, seen)) hit = true;
         if (!bossDone && st.fightActive && hitBoss(probe)) { hit = true; bossDone = true; }
@@ -1083,7 +1220,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           hit = true;
         }
         if (hit) {
-          burst(probe.x, probe.z, 1, pierceAll ? 0x9beeff : 0xe879f9, 2, 1.25);
+          st.hitT = 0.1;
+          burst(probe.x, probe.z, 1, pierceAll ? 0x9beeff : 0xe879f9, 2, probe.y);
           if (!pierceAll) break;
         }
       }
@@ -1101,6 +1239,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       if (st.bannerT > 0) st.bannerT -= rdt;
       if (st.railT > 0) st.railT -= rdt;
       if (st.slowT > 0) st.slowT -= rdt;
+      if (st.gunKick > 0) st.gunKick = Math.max(0, st.gunKick - rdt * 5.5);
+      if (st.hitT > 0) st.hitT -= rdt;
 
       if (st.vicT >= 0) {
         st.vicT -= rdt;
@@ -1162,7 +1302,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         let dx = fx * mz + rx * mx, dz = fz * mz + rz * mx;
         const l = Math.hypot(dx, dz);
         dx /= l; dz /= l;
-        const spd = 8.6 * (st.slowT > 0 ? 0.6 : 1);
+        const spd = (st.keys.has("shift") ? 12.4 : 8.6) * (st.slowT > 0 ? 0.6 : 1);
         const nx = st.px + dx * spd * dt;
         const nz = st.pz + dz * spd * dt;
         if (canStand(nx, nz)) { st.px = nx; st.pz = nz; }
@@ -1297,38 +1437,49 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       st.fireCd -= dt;
       st.beamLen = 0;
       if (st.firing && st.cineT < 0) {
+        const cp = Math.cos(st.pitch), sp2 = Math.sin(st.pitch);
         const spawnPellet = (off: number, dmg: number, pierce: number, life: number, speed = 24) => {
           if (st.pb.length >= MAX_PB - 2) return;
           const ya = st.yaw + off;
-          const dx = -Math.sin(ya), dz = -Math.cos(ya);
-          st.pb.push({ x: st.px + dx * 0.7, y: 1.25, z: st.pz + dz * 0.7, vx: dx * speed, vy: 0, vz: dz * speed, dmg, pierce, life, dead: false });
+          const dx = -Math.sin(ya) * cp, dy = sp2, dz = -Math.cos(ya) * cp;
+          st.pb.push({ x: st.px + dx * 0.6, y: EYE - 0.12 + dy * 0.6, z: st.pz + dz * 0.6, vx: dx * speed, vy: dy * speed, vz: dz * speed, dmg, pierce, life, dead: false });
         };
         if (st.weaponSel === 3) {
           // OCR BEAM — continuous extraction ray
           st.muzzleT = 0.05;
+          st.gunKick = Math.max(st.gunKick, 0.05);
           st.beamLen = castRay(26 * dt, false);
         } else if (st.fireCd <= 0) {
           st.muzzleT = 0.06;
-          if (st.weaponSel === 0) { st.fireCd = 0.25; spawnPellet(0, 6, 0, 99); }
+          if (st.weaponSel === 0) { st.fireCd = 0.25; st.gunKick = 0.12; sfx("shot"); spawnPellet(0, 6, 0, 99); }
           else if (st.weaponSel === 1) {
             // SQL BURST — shotgun
             st.fireCd = 0.6;
+            st.gunKick = 0.22;
+            sfx("shot");
             for (let i = 0; i < 6; i++) spawnPellet((i / 5 - 0.5) * 0.55, 4, 0, 0.42, 21);
             st.shake = Math.max(st.shake, 0.5);
           } else if (st.weaponSel === 2) {
             // HEADLESS AUTOMATION — full-auto
             st.fireCd = 0.1;
+            st.gunKick = 0.07;
+            sfx("shot");
             spawnPellet((Math.random() - 0.5) * 0.13, 3, 0, 99, 26);
           } else if (st.weaponSel === 4) {
             // DETERMINISTIC RAIL — hitscan pierce
             st.fireCd = 0.95;
             st.railT = 0.16;
+            st.gunKick = 0.3;
+            sfx("rail");
             st.railYaw = st.yaw;
+            st.railPitch = st.pitch;
             st.railLen = castRay(34, true);
             st.shake = Math.max(st.shake, 0.9);
           } else {
             // FULL STACK — homing orbs
             st.fireCd = 0.34;
+            st.gunKick = 0.1;
+            sfx("shot");
             if (st.orbs.length < 24) {
               const fa = Math.atan2(-Math.cos(st.yaw), -Math.sin(st.yaw));
               st.orbs.push({ x: st.px, z: st.pz, a: fa + (Math.random() - 0.5) * 0.5, t: 0, dead: false });
@@ -1346,7 +1497,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         if (b.life <= 0) { b.dead = true; burst(b.x, b.z, 2, AMBER, 1.5, b.y); continue; }
         b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt;
         const range2 = (b.x - st.px) ** 2 + (b.z - st.pz) ** 2;
-        if (range2 > 1600 || !insideWorld(b.x, b.z)) { b.dead = true; burst(b.x, b.z, 2, AMBER, 1.5, b.y); continue; }
+        if (b.y <= 0.02 || b.y > 8 || range2 > 1600 || !insideWorld(b.x, b.z)) { b.dead = true; burst(b.x, b.z, 2, 0xdff3ff, 1.5, Math.max(0.2, b.y)); continue; }
         for (const m of st.minions) {
           if (m.dead) continue;
           const d3 = Math.sqrt((b.x - m.x) ** 2 + (b.y - 1.1) ** 2 + (b.z - m.z) ** 2);
@@ -1358,10 +1509,11 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         }
         if (b.dead) continue;
         if (mobBulletHit(b)) {
+          st.hitT = 0.12;
           if (b.pierce > 0) b.pierce--;
           else { b.dead = true; continue; }
         }
-        if (st.fightActive && hitBoss(b)) { b.dead = true; continue; }
+        if (st.fightActive && hitBoss(b)) { st.hitT = 0.12; b.dead = true; continue; }
         // shooting Anshul is futile
         if (st.cleared >= 5 && Math.hypot(b.x - 0, b.z - ZC[5]) < 1.55 && b.y > 0 && b.y < 3.2) {
           floatTxt(IMMUNE_TEXTS[(Math.random() * IMMUNE_TEXTS.length) | 0], "#999999", b.x, b.z, 0.42, b.y);
@@ -1397,6 +1549,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           floatTxt(IMMUNE_TEXTS[(Math.random() * IMMUNE_TEXTS.length) | 0], "#999999", o.x, o.z, 0.4, 1.4);
           hit = true;
         }
+        if (hit) st.hitT = 0.12;
         if (hit || o.t > 2.6 || !insideWorld(o.x, o.z)) { o.dead = true; burst(o.x, o.z, 5, 0xffd88a, 3, 1.2); }
       }
       st.orbs = st.orbs.filter(o => !o.dead);
@@ -1410,6 +1563,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           b.dead = true;
           st.php -= 9; st.invuln = 1;
           st.shake = 1;
+          sfx("hurt");
           burst(st.px, st.pz, 10, REDC, 4, 1.2);
         }
       }
@@ -1428,7 +1582,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       }
 
       if (st.fightActive && st.invuln <= 0 && Math.hypot(st.bossX - st.px, st.bossZ - st.pz) < 1.9) {
-        st.php -= 14; st.invuln = 1.1; st.shake = 1.3; burst(st.px, st.pz, 12, REDC, 5, 1.2);
+        st.php -= 14; st.invuln = 1.1; st.shake = 1.3; sfx("hurt"); burst(st.px, st.pz, 12, REDC, 5, 1.2);
       }
 
       st.pb = st.pb.filter(b => !b.dead);
@@ -1447,6 +1601,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         st.vicT = 1.5;
         st.timeScale = 0.22;
         st.shake = 2;
+        sfx("boom");
         burst(st.bossX, st.bossZ, 60, AMBER, 8, 1.5);
         burst(st.bossX, st.bossZ, 40, 0xffffff, 5, 1.5);
         document.exitPointerLock();
@@ -1468,24 +1623,14 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     const colB = new THREE.Color();
 
     function syncVisuals() {
-      // character — faces movement direction while running, camera direction while firing/idle
-      player.position.set(st.px, 0, st.pz);
-      if (st.moving && !st.firing) {
-        let mx = 0, mz = 0;
-        if (st.keys.has("w") || st.keys.has("arrowup")) mz += 1;
-        if (st.keys.has("s") || st.keys.has("arrowdown")) mz -= 1;
-        if (st.keys.has("a") || st.keys.has("arrowleft")) mx -= 1;
-        if (st.keys.has("d") || st.keys.has("arrowright")) mx += 1;
-        const fx = -Math.sin(st.yaw), fz = -Math.cos(st.yaw);
-        const rx = -fz, rz = fx;
-        const dx = fx * mz + rx * mx, dz = fz * mz + rz * mx;
-        if (dx || dz) player.rotation.y = Math.atan2(dx, dz) + Math.PI;
-      } else {
-        player.rotation.y = st.yaw + Math.PI;
-      }
-      player.position.y = st.moving ? Math.abs(Math.sin(st.bobT)) * 0.07 : 0;
-      player.visible = !(st.invuln > 0 && ((st.t * 14) | 0) % 2 === 0) && st.deadT < 0;
+      // viewmodel
       muzzleMat.opacity = st.muzzleT > 0 ? 0.9 : 0;
+      gun.position.z = -0.65 + st.gunKick * 0.85;
+      gun.position.y = -0.27 + (st.moving ? Math.sin(st.bobT) * 0.016 : 0);
+      gun.rotation.x = st.gunKick * 0.8;
+      gun.visible = st.cineT < 0 && !(st.fightActive && st.introT > 0);
+      muzzle.visible = gun.visible;
+      for (const gm of gunEdgeMats) gm.color.setHex(WEAPON_TINT[st.weaponSel]);
 
       // bullets
       let n = 0;
@@ -1600,25 +1745,29 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       for (const o of st.orbs) { m4.setPosition(o.x, 1.2, o.z); obMesh.setMatrixAt(n++, m4); }
       obMesh.count = n; obMesh.instanceMatrix.needsUpdate = true;
 
-      // OCR beam
+      // OCR beam — follows the full 3D aim
       if (st.beamLen > 0.5) {
-        const dx = -Math.sin(st.yaw), dz = -Math.cos(st.yaw);
-        const mid = (0.8 + st.beamLen) / 2;
+        const cp2 = Math.cos(st.pitch), sp3 = Math.sin(st.pitch);
+        const dx = -Math.sin(st.yaw) * cp2, dy = sp3, dz = -Math.cos(st.yaw) * cp2;
+        const ex = st.px + dx * st.beamLen, ey = EYE - 0.1 + dy * st.beamLen, ez = st.pz + dz * st.beamLen;
+        const sx = st.px + dx * 0.9, sy = EYE - 0.14 + dy * 0.9, sz = st.pz + dz * 0.9;
         beamMesh.visible = true;
-        beamMesh.position.set(st.px + dx * mid, 1.25, st.pz + dz * mid);
-        beamMesh.rotation.y = st.yaw;
+        beamMesh.position.set((sx + ex) / 2, (sy + ey) / 2, (sz + ez) / 2);
+        beamMesh.lookAt(ex, ey, ez);
         const th = 1 + Math.sin(st.t * 40) * 0.35;
-        beamMesh.scale.set(th, th, Math.max(0.1, st.beamLen - 0.8));
+        beamMesh.scale.set(th, th, Math.max(0.1, st.beamLen - 0.9));
       } else beamMesh.visible = false;
 
-      // rail flash
+      // rail flash — frozen at the moment of the shot
       if (st.railT > 0) {
-        const dx = -Math.sin(st.railYaw), dz = -Math.cos(st.railYaw);
-        const mid = (0.8 + st.railLen) / 2;
+        const cp2 = Math.cos(st.railPitch), sp3 = Math.sin(st.railPitch);
+        const dx = -Math.sin(st.railYaw) * cp2, dy = sp3, dz = -Math.cos(st.railYaw) * cp2;
+        const ex = st.px + dx * st.railLen, ey = EYE - 0.1 + dy * st.railLen, ez = st.pz + dz * st.railLen;
+        const sx = st.px + dx * 0.9, sy = EYE - 0.14 + dy * 0.9, sz = st.pz + dz * 0.9;
         railMesh.visible = true;
-        railMesh.position.set(st.px + dx * mid, 1.25, st.pz + dz * mid);
-        railMesh.rotation.y = st.railYaw;
-        railMesh.scale.set(1, 1, Math.max(0.1, st.railLen - 0.8));
+        railMesh.position.set((sx + ex) / 2, (sy + ey) / 2, (sz + ez) / 2);
+        railMesh.lookAt(ex, ey, ez);
+        railMesh.scale.set(1, 1, Math.max(0.1, st.railLen - 0.9));
         railMat.opacity = (st.railT / 0.16) * 0.9;
       } else railMesh.visible = false;
 
@@ -1732,16 +1881,12 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         }
       }
 
-      // ── camera: third person orbit ──
+      // ── camera: first person ──
       const cosP = Math.cos(st.pitch), sinP = Math.sin(st.pitch);
-      const dist = 5.4;
-      camPos.set(
-        st.px + Math.sin(st.yaw) * cosP * dist,
-        1.5 + sinP * dist,
-        st.pz + Math.cos(st.yaw) * cosP * dist
-      );
-      const fx = -Math.sin(st.yaw), fz = -Math.cos(st.yaw);
-      camLook.set(st.px + fx * 2.2, 1.55, st.pz + fz * 2.2);
+      const dirX = -Math.sin(st.yaw) * cosP, dirY = sinP, dirZ = -Math.cos(st.yaw) * cosP;
+      const bob = st.moving && st.deadT < 0 ? Math.sin(st.bobT) * 0.045 : 0;
+      camPos.set(st.px, EYE + bob, st.pz);
+      camLook.set(st.px + dirX, EYE + bob + dirY, st.pz + dirZ);
 
       if (st.introT > 0 && st.fightActive) {
         const k = 1 - Math.max(0, Math.min(1, st.introT / 2.2));
@@ -1759,19 +1904,31 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         camPos.lerpVectors(camPos, tmpA, e);
         camLook.lerpVectors(camLook, tmpB, e);
       }
+      if (st.deadT >= 0) {
+        camPos.y = EYE - Math.min(1, (1.4 - st.deadT) * 1.4) * 1.0;
+      }
       if (st.shake > 0) {
         camPos.x += (Math.random() - 0.5) * st.shake * 0.22;
         camPos.y += (Math.random() - 0.5) * st.shake * 0.16;
       }
       camera.position.copy(camPos);
       camera.lookAt(camLook);
+      if (st.deadT >= 0) camera.rotation.z = (1.4 - st.deadT) * 0.3;
+
+      // sprint FOV punch
+      const targetFov = st.keys.has("shift") && st.moving ? 70 : 62;
+      camera.fov += (targetFov - camera.fov) * 0.12;
+      camera.updateProjectionMatrix();
+
+      // shadow sun follows the player
+      sun.position.set(st.px + 18, 30, st.pz + 10);
+      sun.target.position.set(st.px, 0, st.pz);
 
       // atmosphere drifts toward the current zone's palette
       const zAt = Math.max(0, Math.min(5, Math.round(-st.pz / ZONE_GAP)));
-      colA.setHex(ZONE_COL[zAt]).multiplyScalar(0.075);
-      colB.setHex(0x120e24).add(colA);
-      (scene.background as THREE.Color).lerp(colB, 0.025);
-      (scene.fog as THREE.Fog).color.copy(scene.background as THREE.Color);
+      colA.setHex(ZONE_COL[zAt]).multiplyScalar(0.1);
+      colB.setHex(0x4e3a58).add(colA);
+      (scene.fog as THREE.Fog).color.lerp(colB, 0.03);
 
       // ── HUD ──
       if (hpFillRef.current) {
@@ -1787,7 +1944,11 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       if (flashRef.current) flashRef.current.style.opacity = String(Math.max(0, (st.invuln - 0.45)) * 0.5);
       if (blackRef.current) blackRef.current.style.opacity = String(st.blackT);
       if (introRef.current) introRef.current.style.opacity = st.introT > 0.25 && st.fightActive ? "1" : "0";
-      if (crossRef.current) crossRef.current.style.opacity = st.locked && st.cineT < 0 && st.introT <= 0 ? "1" : "0";
+      if (crossRef.current) {
+        crossRef.current.style.opacity = st.locked && st.cineT < 0 && st.introT <= 0 ? "1" : "0";
+        const sc = 1 + (st.hitT > 0 ? st.hitT * 2.2 : 0) + (st.gunKick > 0.15 ? 0.15 : 0);
+        crossRef.current.style.transform = `translate(-50%, -50%) scale(${sc.toFixed(3)})`;
+      }
       if (lockHintRef.current) lockHintRef.current.style.opacity = !st.locked && !seqActive() && !pausedRef.current ? "1" : "0";
       if (bannerRef.current) bannerRef.current.style.opacity = st.bannerT > 0.4 ? "1" : "0";
       if (promptRef.current) promptRef.current.style.opacity = st.canOffer && st.cineT < 0 ? "1" : "0";
@@ -1864,16 +2025,16 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       {/* crosshair */}
       <div ref={crossRef} className="absolute left-1/2 top-1/2 pointer-events-none transition-opacity duration-200" style={{ transform: "translate(-50%, -50%)", opacity: 0 }}>
         <div className="relative w-[26px] h-[26px]">
-          <span className="absolute left-1/2 top-0 w-px h-[7px] bg-accent -translate-x-1/2" />
-          <span className="absolute left-1/2 bottom-0 w-px h-[7px] bg-accent -translate-x-1/2" />
-          <span className="absolute top-1/2 left-0 h-px w-[7px] bg-accent -translate-y-1/2" />
-          <span className="absolute top-1/2 right-0 h-px w-[7px] bg-accent -translate-y-1/2" />
-          <span className="absolute left-1/2 top-1/2 w-[2px] h-[2px] bg-accent -translate-x-1/2 -translate-y-1/2" />
+          <span className="absolute left-1/2 top-0 w-px h-[7px] bg-[#dff3ff] -translate-x-1/2" />
+          <span className="absolute left-1/2 bottom-0 w-px h-[7px] bg-[#dff3ff] -translate-x-1/2" />
+          <span className="absolute top-1/2 left-0 h-px w-[7px] bg-[#dff3ff] -translate-y-1/2" />
+          <span className="absolute top-1/2 right-0 h-px w-[7px] bg-[#dff3ff] -translate-y-1/2" />
+          <span className="absolute left-1/2 top-1/2 w-[2px] h-[2px] bg-[#dff3ff] -translate-x-1/2 -translate-y-1/2" />
         </div>
       </div>
 
       <div ref={lockHintRef} className="absolute inset-0 flex items-center justify-center transition-opacity duration-300 pointer-events-none" style={{ opacity: 0 }}>
-        <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-accent border border-amber-500/40 bg-[#0d0a08]/80 px-6 py-3 animate-pulse">
+        <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-[#9adfff] border border-[#9adfff]/40 bg-[#10101e]/85 px-6 py-3 animate-pulse">
           click to take control
         </p>
       </div>
@@ -1881,8 +2042,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       {/* zone banner */}
       <div
         ref={bannerRef}
-        className="absolute top-[18%] inset-x-0 text-center font-display text-3xl text-accent pointer-events-none transition-opacity duration-700"
-        style={{ opacity: 0, textShadow: "0 0 24px rgba(255,176,0,0.35)" }}
+        className="absolute top-[18%] inset-x-0 text-center font-display text-3xl text-[#ffe9b8] pointer-events-none transition-opacity duration-700"
+        style={{ opacity: 0, textShadow: "0 0 24px rgba(255,225,170,0.35)" }}
       />
 
       {/* E prompt */}
@@ -1900,14 +2061,14 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           <div ref={bossFillRef} className="h-full" style={{ width: "100%", background: "#ffb000" }} />
         </div>
       </div>
-      <div ref={noteRef} className="absolute top-16 inset-x-0 text-center font-mono text-[12px] font-bold text-[#ffc43c] pointer-events-none px-8" style={{ opacity: 0, textShadow: "0 0 12px rgba(255,176,0,0.5)" }} />
+      <div ref={noteRef} className="absolute top-16 inset-x-0 text-center font-mono text-[12px] font-bold text-[#ffe9b8] pointer-events-none px-8" style={{ opacity: 0, textShadow: "0 0 12px rgba(255,225,170,0.5)" }} />
       <div className="absolute bottom-3 left-4 pointer-events-none">
         <p className="font-mono text-[8px] uppercase tracking-[0.25em] text-zinc-600 mb-1">HP</p>
         <div className="w-[150px] h-[8px] bg-[#241a10] border border-black/40">
           <div ref={hpFillRef} className="h-full" style={{ width: "100%", background: "#4ade80" }} />
         </div>
       </div>
-      <div ref={weaponRef} className="absolute bottom-3 right-4 font-mono text-[10px] font-bold tracking-[0.2em] text-accent pointer-events-none" />
+      <div ref={weaponRef} className="absolute bottom-3 right-4 font-mono text-[10px] font-bold tracking-[0.2em] text-[#9adfff] pointer-events-none" />
       <div ref={objRef} className="absolute bottom-3 inset-x-0 text-center font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-600 pointer-events-none" />
 
       {/* boss intro splash */}
@@ -1915,7 +2076,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         <div className="absolute top-0 inset-x-0 h-[12%] bg-black/80" />
         <div className="absolute bottom-0 inset-x-0 h-[12%] bg-black/80" />
         <p className="font-mono text-[10px] uppercase tracking-[0.5em] text-red-400 mb-3 animate-pulse">⚠ warning ⚠</p>
-        <h3 ref={introNameRef} className="font-display text-5xl md:text-6xl text-accent mb-2" style={{ textShadow: "0 0 30px rgba(255,176,0,0.4)" }} />
+        <h3 ref={introNameRef} className="font-display text-5xl md:text-6xl text-[#ffd88a] mb-2" style={{ textShadow: "0 0 30px rgba(255,216,138,0.4)" }} />
         <p ref={introSubRef} className="font-mono text-[10px] uppercase tracking-[0.25em] text-zinc-500" />
       </div>
     </div>

@@ -215,7 +215,7 @@ export default function CareerMode() {
                       </button>
                     )}
                   </div>
-                  <p className="font-mono text-[9px] text-zinc-700 mt-3">third person · WASD walk · mouse look · hold click to shoot · E to interact · desktop only</p>
+                  <p className="font-mono text-[9px] text-zinc-700 mt-3">first person · WASD move · shift to sprint · mouse look · hold click to shoot · 1-6 weapons · E to interact · desktop only</p>
                 </motion.div>
               )}
 
