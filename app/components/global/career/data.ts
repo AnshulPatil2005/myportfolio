@@ -15,7 +15,7 @@ export const CHAPTERS = [
     bossName: "THE MONOLITH", bossSub: "armored database titan — strike while it vents",
     victory: "Reduced backend API latency by 40% through query optimization and caching.",
     quip: "weak point found: the queries nobody ever EXPLAIN'd.",
-    unlock: "SQL BURST", unlockDesc: "3-round spread — optimized queries hit wider",
+    unlock: "SQL BURST", unlockDesc: "shotgun — six pellets, close-range purge",
     exitTo: "jobs",
   },
   {
@@ -29,7 +29,7 @@ export const CHAPTERS = [
     bossName: "THE GATEKEEPER", bossSub: "shoot the highlighted glyph — sequence matters",
     victory: "Automated the eCourts portal with Playwright + CAPTCHA/OCR handling, storing structured metadata in JSON/JSONL/SQLite with preserved source HTML/PDF orders.",
     quip: "verification complete: he was human. the scraper wasn't. it won anyway.",
-    unlock: "HEADLESS AUTOMATION", unlockDesc: "fire rate up — the browser never sleeps",
+    unlock: "HEADLESS AUTOMATION", unlockDesc: "full-auto — the browser never sleeps",
     exitTo: "projects",
   },
   {
@@ -43,7 +43,7 @@ export const CHAPTERS = [
     bossName: "THE CORRUPTED SCRIPT", bossSub: "living mojibake — purify the swarm",
     victory: "Built a multi-strategy extraction pipeline — legacy font conversion, Tesseract, SuryaOCR, Cloud Vision, glyph-to-Unicode mapping — turning corrupted court PDFs into an ML-ready Gujarati legal corpus.",
     quip: "every glyph mapped. every conjunct restored. the text confessed.",
-    unlock: "OCR BEAM", unlockDesc: "shots pierce — nothing stays unreadable",
+    unlock: "OCR BEAM", unlockDesc: "continuous extraction beam — hold to melt",
     exitTo: "research",
   },
   {
@@ -57,7 +57,7 @@ export const CHAPTERS = [
     bossName: "NON-DETERMINISM", bossSub: "only one instance is real — pin it with 8 hits",
     victory: "Designed cross-platform determinism checks with fixed mesh cases, canonical artifacts, and SHA256 comparison — plus ASan/UBSan testing and benchmark workflows with dashboard trend visualization.",
     quip: "SHA256 matched on all platforms. reality agreed with itself again.",
-    unlock: "DETERMINISTIC BEAM", unlockDesc: "damage up — every shot lands identically",
+    unlock: "DETERMINISTIC RAIL", unlockDesc: "railgun — one exact answer, pierces everything",
     exitTo: "jobs",
   },
   {
@@ -71,7 +71,7 @@ export const CHAPTERS = [
     bossName: "ARCHITECTURE DRIFT", bossSub: "refactor the risky modules to expose the core",
     victory: "Shipped Stratum — PR review with typed findings and risk scoring, deployment conflict detection, live architecture-drift mapping, and Sentry/Render/Railway incident correlation. 4 stages, 115 tests, 3 providers.",
     quip: "drift contained. the modules hold. this is what the product does daily.",
-    unlock: "FULL STACK", unlockDesc: "everything at once — spread, pierce, speed",
+    unlock: "FULL STACK", unlockDesc: "homing orbs — ship everything, everywhere",
     exitTo: "featured-work",
   },
   {
@@ -89,12 +89,12 @@ export const CHAPTERS = [
 ];
 
 export const WEAPONS = [
-  { name: "CONSOLE.LOG", rate: 4, shots: 1, spread: 0, dmg: 4, pierce: 0 },
-  { name: "SQL BURST", rate: 4, shots: 3, spread: 0.22, dmg: 4, pierce: 0 },
-  { name: "HEADLESS AUTOMATION", rate: 7, shots: 3, spread: 0.22, dmg: 4, pierce: 0 },
-  { name: "OCR BEAM", rate: 7, shots: 3, spread: 0.2, dmg: 5, pierce: 1 },
-  { name: "DETERMINISTIC BEAM", rate: 8, shots: 3, spread: 0.18, dmg: 6, pierce: 1 },
-  { name: "FULL STACK", rate: 10, shots: 5, spread: 0.34, dmg: 6, pierce: 2 },
+  { name: "CONSOLE.LOG" },
+  { name: "SQL BURST" },
+  { name: "HEADLESS AUTOMATION" },
+  { name: "OCR BEAM" },
+  { name: "DETERMINISTIC RAIL" },
+  { name: "FULL STACK" },
 ];
 
 export const GLYPHS = ["અ", "ક", "ષ", "જ્ઞ", "ર", "૨", "Ø", "�", "Ξ", "ঌ"];

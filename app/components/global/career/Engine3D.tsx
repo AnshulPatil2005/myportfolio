@@ -29,7 +29,7 @@ interface Props {
   onEvent: (e: "victory" | "ending" | "pause", data?: number) => void;
 }
 
-interface PB { x: number; y: number; z: number; vx: number; vy: number; vz: number; dmg: number; pierce: number; dead: boolean }
+interface PB { x: number; y: number; z: number; vx: number; vy: number; vz: number; dmg: number; pierce: number; life: number; dead: boolean }
 interface EB { x: number; z: number; vx: number; vz: number; r: number; dead: boolean }
 interface MinionS { x: number; z: number; vx: number; vz: number; hp: number; t: number; ang: number; diving: boolean; dead: boolean }
 interface Part { x: number; y: number; z: number; vx: number; vy: number; vz: number; t: number; max: number; r: number; g: number; b: number }
@@ -42,14 +42,23 @@ const CORRS = [0, 1, 2, 3, 4].map(i => ({ x1: -CORR_HW, x2: CORR_HW, z1: ZC[i] -
 const ZONE_COL = [0xffb000, 0x2dd4bf, 0xe879f9, 0x38bdf8, 0xf87171, 0xffd88a];
 const ZONE_HEX = ["#ffb000", "#2dd4bf", "#e879f9", "#38bdf8", "#f87171", "#ffd88a"];
 
-// enemy towers guarding the path (rooms 0-4 + one per corridor)
-const TOWER_POS: { x: number; z: number }[] = [];
+// weird mobs — a different creature type haunts each zone
+// 0 query leech · 1 captcha mimic · 2 encoding worm · 3 quantum shard · 4 incident spark
+type MobType = 0 | 1 | 2 | 3 | 4;
+const MOB_SPAWNS: { type: MobType; x: number; z: number }[] = [];
 for (let zi = 0; zi < 5; zi++) {
   const zc = ZC[zi];
-  TOWER_POS.push({ x: -9, z: zc + 6 }, { x: 9, z: zc + 4.5 }, { x: -7.5, z: zc - 5 }, { x: 8, z: zc - 6 });
+  const t = zi as MobType;
+  MOB_SPAWNS.push(
+    { type: t, x: -9, z: zc + 6 },
+    { type: t, x: 9, z: zc + 5 },
+    { type: t, x: -8, z: zc - 4 },
+    { type: t, x: 8, z: zc - 5 },
+    { type: t, x: -4, z: zc + 1 },
+  );
 }
 CORRS.forEach((cr, i) => {
-  TOWER_POS.push({ x: i % 2 === 0 ? 1.7 : -1.7, z: (cr.z1 + cr.z2) / 2 });
+  MOB_SPAWNS.push({ type: Math.min(4, i + 1) as MobType, x: 0, z: (cr.z1 + cr.z2) / 2 });
 });
 
 export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
@@ -359,6 +368,19 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     const m4 = new THREE.Matrix4();
     const EB_Y = 1.25;
 
+    // homing orbs + beam/rail meshes
+    const obMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.16, 8, 8)), bmat(0xffd88a), 24);
+    obMesh.frustumCulled = false; obMesh.count = 0;
+    scene.add(obMesh);
+    const beamMat = bmat(0xe879f9, { transparent: true, opacity: 0.85 });
+    const beamMesh = new THREE.Mesh(track(new THREE.BoxGeometry(0.055, 0.055, 1)), beamMat);
+    beamMesh.visible = false;
+    scene.add(beamMesh);
+    const railMat = bmat(0x9beeff, { transparent: true, opacity: 0.9 });
+    const railMesh = new THREE.Mesh(track(new THREE.BoxGeometry(0.07, 0.07, 1)), railMat);
+    railMesh.visible = false;
+    scene.add(railMesh);
+
     const MAXP = 500;
     const partPos = new Float32Array(MAXP * 3);
     const partCol = new Float32Array(MAXP * 3);
@@ -420,29 +442,61 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       return s;
     });
 
-    // enemy towers — hostile turrets guarding the path
-    const towerVis = TOWER_POS.map(tp => {
-      const zi = Math.max(0, Math.min(5, Math.round(-tp.z / ZONE_GAP)));
+    // weird mob visuals — one build per spawn
+    interface MobVis { g: THREE.Group; edge?: THREE.LineSegments; face?: THREE.Sprite; segs?: THREE.Sprite[]; shardA?: THREE.Mesh; shardB?: THREE.Mesh; ring?: THREE.Mesh }
+    const mobVis: MobVis[] = MOB_SPAWNS.map(ms => {
       const g = new THREE.Group();
-      const baseGeo = track(new THREE.BoxGeometry(0.85, 0.5, 0.85));
-      const base = new THREE.Mesh(baseGeo, bmat(0x0f0c0a));
-      base.position.y = 0.25;
-      const baseE = edgesOf(baseGeo, ZONE_COL[zi], 0.7);
-      baseE.position.y = 0.25;
-      const colGeo = track(new THREE.CylinderGeometry(0.15, 0.19, 1.6, 6));
-      const column = new THREE.Mesh(colGeo, bmat(0x14100d));
-      column.position.y = 1.3;
-      const colE = edgesOf(colGeo, 0x7a3030, 0.7);
-      colE.position.y = 1.3;
-      const head = new THREE.Mesh(track(new THREE.IcosahedronGeometry(0.3, 0)), bmat(0xff5555));
-      head.position.y = 2.25;
-      const ring = new THREE.Mesh(track(new THREE.RingGeometry(0.62, 0.72, 20)), bmat(0xff5555, { transparent: true, opacity: 0.3, side: THREE.DoubleSide }));
-      ring.rotation.x = -Math.PI / 2;
-      ring.position.y = 0.03;
-      g.add(base, baseE, column, colE, head, ring);
-      g.position.set(tp.x, 0, tp.z);
+      const v: MobVis = { g };
+      if (ms.type === 0) {
+        // query leech — a wobbling stack of drive platters with an antenna
+        [0.52, 0.42, 0.32].forEach((r, k) => {
+          const geo = track(new THREE.CylinderGeometry(r, r + 0.05, 0.26, 10));
+          const m = new THREE.Mesh(geo, bmat(0x14100d));
+          m.position.y = 0.2 + k * 0.28;
+          const e = edgesOf(geo, 0xff7755, 0.85);
+          e.position.y = m.position.y;
+          g.add(m, e);
+        });
+        const ant = new THREE.Mesh(track(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 4)), bmat(0xff5555));
+        ant.position.y = 1.2;
+        g.add(ant);
+        g.position.set(ms.x, 0, ms.z);
+      } else if (ms.type === 1) {
+        // captcha mimic — a floating verification panel with two faces
+        const pGeo = track(new THREE.BoxGeometry(1.15, 1.15, 0.12));
+        const panel = new THREE.Mesh(pGeo, bmat(0x0f1413));
+        v.edge = edgesOf(pGeo, 0x2dd4bf);
+        v.face = textSprite("☐", "#2dd4bf", 0.6);
+        v.face.position.z = 0.16;
+        g.add(panel, v.edge, v.face);
+        g.position.set(ms.x, 1.4, ms.z);
+      } else if (ms.type === 2) {
+        // encoding worm — glyph chain, head first (children hold world positions)
+        v.segs = Array.from({ length: 6 }, (_, s) => {
+          const sp = textSprite(s === 0 ? "જ્ઞ" : GLYPHS[(s * 3) % GLYPHS.length], s === 0 ? "#e879f9" : "#9a5aa8", s === 0 ? 0.95 : 0.78 - s * 0.07);
+          g.add(sp);
+          return sp;
+        });
+      } else if (ms.type === 3) {
+        // quantum shard — the same crystal in two places at once
+        const mkShard = () => {
+          const m = new THREE.Mesh(track(new THREE.IcosahedronGeometry(0.5, 0)), track(new THREE.MeshBasicMaterial({ color: 0x38bdf8, wireframe: true, transparent: true, opacity: 0.9 })));
+          g.add(m);
+          return m;
+        };
+        v.shardA = mkShard();
+        v.shardB = mkShard();
+      } else {
+        // incident spark — a production error looking for you
+        v.face = textSprite("ERR", "#ff5555", 0.7);
+        g.add(v.face);
+        v.ring = new THREE.Mesh(track(new THREE.RingGeometry(0.8, 0.95, 20)), bmat(0xff5555, { transparent: true, opacity: 0.6, side: THREE.DoubleSide }));
+        v.ring.rotation.x = -Math.PI / 2;
+        v.ring.visible = false;
+        scene.add(v.ring);
+      }
       scene.add(g);
-      return { g, head };
+      return v;
     });
 
     // ── Boss visuals — all six live in the world ───────────────────────────
@@ -595,7 +649,24 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       metAnshul: false, tauntT: 2, tauntIdx: 0, nearAnshul: false, canOffer: false, cineT: -1,
       entered: new Set<number>(), bannerT: 0,
       blackT: 0,
-      towers: TOWER_POS.map(() => ({ hp: 30, alive: true, cd: 1.2 + Math.random() * 1.5 })),
+      // weapons
+      weaponSel: Math.max(0, Math.min(5, initialCleared)),
+      slowT: 0, beamLen: 0, railT: 0, railLen: 0, railYaw: 0,
+      orbs: [] as { x: number; z: number; a: number; t: number; dead: boolean }[],
+      // mobs
+      mobs: MOB_SPAWNS.map(ms => ({
+        x: ms.x, z: ms.z,
+        hp: [26, 24, 30, 20, 16][ms.type],
+        alive: true,
+        t: Math.random() * 10,
+        cd: 1 + Math.random() * 2,
+        phase: 0,
+        fake: false,
+        real: 0,
+        slotA: { x: ms.x + 2.4, z: ms.z }, slotB: { x: ms.x - 2.4, z: ms.z },
+        trail: [] as { x: number; z: number }[],
+        teleX: 0, teleZ: 0,
+      })),
     };
 
     function note(txt: string, secs = 1.6) {
@@ -674,6 +745,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     const onKeyDown = (e: KeyboardEvent) => {
       const k = e.key.toLowerCase();
       if (["w", "a", "s", "d", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) st.keys.add(k);
+      const num = parseInt(k, 10);
+      if (num >= 1 && num <= 6 && num - 1 <= st.cleared) st.weaponSel = num - 1;
       if (k === "e" && st.canOffer && st.cineT < 0) {
         st.cineT = 0;
         st.eb = []; st.pb = [];
@@ -900,6 +973,110 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       return false;
     }
 
+    // ── Mob combat helpers ─────────────────────────────────────────────────
+    function killMob(mi: number) {
+      const mb = st.mobs[mi];
+      mb.alive = false;
+      const cols = [0xffb000, 0x2dd4bf, 0xe879f9, 0x38bdf8, 0xf87171];
+      burst(mb.x, mb.z, 20, cols[MOB_SPAWNS[mi].type], 5, 1.2);
+      st.php = Math.min(100, st.php + 5);
+      floatTxt("+5 HP", "#4ade80", mb.x, mb.z, 0.4, 2);
+    }
+
+    // shared hit test for pellets, beams, rail, and orbs
+    function mobBulletHit(b: PB, seen?: Set<number>): boolean {
+      for (let mi = 0; mi < st.mobs.length; mi++) {
+        if (seen?.has(mi)) continue;
+        const mb = st.mobs[mi];
+        if (!mb.alive) continue;
+        const ty = MOB_SPAWNS[mi].type;
+        if (ty === 1) {
+          const d3 = Math.sqrt((b.x - mb.x) ** 2 + (b.y - 1.4) ** 2 + (b.z - mb.z) ** 2);
+          if (d3 < 0.78) {
+            seen?.add(mi);
+            if (mb.fake) {
+              if (b.dmg > 2) { floatTxt("REFLECTED", "#ff5555", mb.x, mb.z, 0.36, 2); aimShot(mb.x, mb.z, 6.5, 0.17); }
+            } else {
+              mb.hp -= b.dmg;
+              burst(b.x, b.z, 2, 0x2dd4bf, 3, b.y);
+              if (mb.hp <= 0) killMob(mi);
+            }
+            return true;
+          }
+        } else if (ty === 2) {
+          const dh = Math.sqrt((b.x - mb.x) ** 2 + (b.y - 1.05) ** 2 + (b.z - mb.z) ** 2);
+          if (dh < 0.62) {
+            seen?.add(mi);
+            mb.hp -= b.dmg;
+            burst(b.x, b.z, 2, 0xe879f9, 3, b.y);
+            if (mb.hp <= 0) killMob(mi);
+            return true;
+          }
+          for (let s = 1; s < 6; s++) {
+            const p = mb.trail[Math.min(Math.max(mb.trail.length - 1, 0), s * 8)];
+            if (p && Math.sqrt((b.x - p.x) ** 2 + (b.y - 1.0) ** 2 + (b.z - p.z) ** 2) < 0.55) {
+              seen?.add(mi);
+              burst(b.x, b.z, 2, 0x777777, 2, b.y);
+              return true;
+            }
+          }
+        } else if (ty === 3) {
+          const other = mb.real === 0 ? mb.slotB : mb.slotA;
+          if (Math.sqrt((b.x - mb.x) ** 2 + (b.y - 1.3) ** 2 + (b.z - mb.z) ** 2) < 0.66) {
+            seen?.add(mi);
+            mb.hp -= b.dmg;
+            burst(b.x, b.z, 2, 0x38bdf8, 3, b.y);
+            if (mb.hp <= 0) killMob(mi);
+            return true;
+          }
+          if (Math.sqrt((b.x - other.x) ** 2 + (b.y - 1.3) ** 2 + (b.z - other.z) ** 2) < 0.66) {
+            seen?.add(mi);
+            if (b.dmg > 2) {
+              mb.real = 1 - mb.real;
+              burst(other.x, other.z, 6, 0x38bdf8, 3, 1.3);
+              floatTxt("COLLAPSED", "#38bdf8", other.x, other.z, 0.34, 1.7);
+            }
+            return true;
+          }
+        } else {
+          if (ty === 4 && mb.phase < 2) continue;
+          const hy = ty === 0 ? 0.55 : 1.0, rr = ty === 0 ? 0.72 : 0.55;
+          if (Math.sqrt((b.x - mb.x) ** 2 + (b.y - hy) ** 2 + (b.z - mb.z) ** 2) < rr) {
+            seen?.add(mi);
+            mb.hp -= b.dmg;
+            burst(b.x, b.z, 2, REDC, 3, b.y);
+            if (mb.hp <= 0) killMob(mi);
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    // hitscan march for the OCR beam and the rail — returns travel distance
+    function castRay(dmg: number, pierceAll: boolean): number {
+      const dx = -Math.sin(st.yaw), dz = -Math.cos(st.yaw);
+      const seen = new Set<number>();
+      let bossDone = false;
+      let s = 1.0;
+      for (; s < 26; s += 0.55) {
+        const probe: PB = { x: st.px + dx * s, y: 1.25, z: st.pz + dz * s, vx: 0, vy: 0, vz: 0, dmg, pierce: 0, life: 0, dead: false };
+        if (!insideWorld(probe.x, probe.z)) break;
+        let hit = false;
+        if (mobBulletHit(probe, seen)) hit = true;
+        if (!bossDone && st.fightActive && hitBoss(probe)) { hit = true; bossDone = true; }
+        if (st.cleared >= 5 && Math.hypot(probe.x - 0, probe.z - ZC[5]) < 1.55) {
+          if (Math.random() < 0.06) floatTxt(IMMUNE_TEXTS[(Math.random() * IMMUNE_TEXTS.length) | 0], "#999999", probe.x, probe.z, 0.4, 1.5);
+          hit = true;
+        }
+        if (hit) {
+          burst(probe.x, probe.z, 1, pierceAll ? 0x9beeff : 0xe879f9, 2, 1.25);
+          if (!pierceAll) break;
+        }
+      }
+      return s;
+    }
+
     // ── Main update ────────────────────────────────────────────────────────
     function update(rdt: number) {
       const dt = rdt * st.timeScale;
@@ -909,6 +1086,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       if (st.bossPulse > 0) st.bossPulse -= rdt;
       if (st.muzzleT > 0) st.muzzleT -= rdt;
       if (st.bannerT > 0) st.bannerT -= rdt;
+      if (st.railT > 0) st.railT -= rdt;
+      if (st.slowT > 0) st.slowT -= rdt;
 
       if (st.vicT >= 0) {
         st.vicT -= rdt;
@@ -916,6 +1095,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           st.timeScale = 1;
           st.fightActive = false;
           st.cleared = st.fightZone + 1;
+          st.weaponSel = Math.min(st.cleared, 5); // auto-equip the new unlock
           st.php = 100;
           onEventRef.current("victory", st.fightZone);
         }
@@ -969,8 +1149,9 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         let dx = fx * mz + rx * mx, dz = fz * mz + rz * mx;
         const l = Math.hypot(dx, dz);
         dx /= l; dz /= l;
-        const nx = st.px + dx * 8.6 * dt;
-        const nz = st.pz + dz * 8.6 * dt;
+        const spd = 8.6 * (st.slowT > 0 ? 0.6 : 1);
+        const nx = st.px + dx * spd * dt;
+        const nz = st.pz + dz * spd * dt;
         if (canStand(nx, nz)) { st.px = nx; st.pz = nz; }
         else if (canStand(nx, st.pz)) st.px = nx;
         else if (canStand(st.px, nz)) st.pz = nz;
@@ -1014,32 +1195,132 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         st.canOffer = false;
       }
 
-      // ── enemy towers fire at the player ──
-      for (let i = 0; i < st.towers.length; i++) {
-        const tw = st.towers[i];
-        if (!tw.alive) continue;
-        const tp = TOWER_POS[i];
-        if (Math.hypot(tp.x - st.px, tp.z - st.pz) < 13) {
-          tw.cd -= dt;
-          if (tw.cd <= 0) { tw.cd = 1.8; aimShot(tp.x, tp.z, 5.4, 0.17); }
+      // ── weird mobs ──
+      for (let i = 0; i < st.mobs.length; i++) {
+        const mb = st.mobs[i];
+        if (!mb.alive) continue;
+        const spawn = MOB_SPAWNS[i];
+        const ty = spawn.type;
+        const dP = Math.hypot(mb.x - st.px, mb.z - st.pz);
+        mb.t += dt;
+        if (dP > 18) continue; // dormant until approached
+
+        if (ty === 0) {
+          // query leech: crawls at you; contact drains and SLOWS
+          if (dP > 1.1) {
+            const a = Math.atan2(st.pz - mb.z, st.px - mb.x);
+            const nx = mb.x + Math.cos(a) * 1.5 * dt, nz = mb.z + Math.sin(a) * 1.5 * dt;
+            if (canStand(nx, nz)) { mb.x = nx; mb.z = nz; }
+          }
+          mb.cd -= dt;
+          if (mb.cd <= 0) { mb.cd = 3; ringShot(mb.x, mb.z, 8, 3, mb.t); }
+          if (st.invuln <= 0 && dP < 0.95) {
+            st.php -= 8; st.invuln = 1; st.slowT = 2.2; st.shake = 1;
+            burst(st.px, st.pz, 8, REDC, 3, 1);
+            note("query leech attached — slowed!", 1.4);
+          }
+        } else if (ty === 1) {
+          // captcha mimic: flips between real (vulnerable) and fake (reflects)
+          mb.phase += dt;
+          const cyc = mb.phase % 2.8;
+          mb.fake = cyc > 1.6;
+          const a = Math.atan2(st.pz - mb.z, st.px - mb.x);
+          const dir = dP > 8 ? 1 : dP < 6.5 ? -1 : 0;
+          const sx = Math.cos(a + Math.PI / 2), sz = Math.sin(a + Math.PI / 2);
+          const nx = mb.x + (Math.cos(a) * dir * 2 + sx * Math.sin(mb.t * 1.3) * 2) * dt;
+          const nz = mb.z + (Math.sin(a) * dir * 2 + sz * Math.sin(mb.t * 1.3) * 2) * dt;
+          if (canStand(nx, nz)) { mb.x = nx; mb.z = nz; }
+          mb.cd -= dt;
+          if (mb.cd <= 0) { mb.cd = 2.2; aimShot(mb.x, mb.z, 5.6, 0.17, -0.06); aimShot(mb.x, mb.z, 5.6, 0.17, 0.06); }
+        } else if (ty === 2) {
+          // encoding worm: weaving chase; only the head is vulnerable
+          const a = Math.atan2(st.pz - mb.z, st.px - mb.x) + Math.sin(mb.t * 2.2) * 0.7;
+          const nx = mb.x + Math.cos(a) * 2.6 * dt, nz = mb.z + Math.sin(a) * 2.6 * dt;
+          if (canStand(nx, nz)) { mb.x = nx; mb.z = nz; }
+          mb.trail.unshift({ x: mb.x, z: mb.z });
+          if (mb.trail.length > 46) mb.trail.pop();
+          mb.cd -= dt;
+          if (mb.cd <= 0) { mb.cd = 2.8; for (let k = -1; k <= 1; k++) aimShot(mb.x, mb.z, 5, 0.17, k * 0.18); }
+          if (st.invuln <= 0) {
+            for (let s = 0; s < 6; s++) {
+              const p = s === 0 ? { x: mb.x, z: mb.z } : mb.trail[Math.min(Math.max(mb.trail.length - 1, 0), s * 8)];
+              if (p && Math.hypot(p.x - st.px, p.z - st.pz) < 0.75) {
+                st.php -= 10; st.invuln = 1; st.shake = 1.1;
+                burst(st.px, st.pz, 8, REDC, 3, 1);
+                break;
+              }
+            }
+          }
+        } else if (ty === 3) {
+          // quantum shard: two positions orbit its spawn; only the real one exists
+          mb.phase += dt * 0.7;
+          mb.slotA.x = spawn.x + Math.cos(mb.phase) * 2.6; mb.slotA.z = spawn.z + Math.sin(mb.phase) * 2.6;
+          mb.slotB.x = spawn.x - Math.cos(mb.phase * 1.3) * 2.6; mb.slotB.z = spawn.z - Math.sin(mb.phase * 1.3) * 2.6;
+          const rp = mb.real === 0 ? mb.slotA : mb.slotB;
+          mb.x = rp.x; mb.z = rp.z;
+          mb.cd -= dt;
+          if (mb.cd <= 0) { mb.cd = 2; aimShot(mb.x, mb.z, 5.4, 0.17); }
+        } else {
+          // incident spark: telegraphed sky-drop, then a fast melee chase
+          if (mb.phase === 0) {
+            if (dP < 13) { mb.phase = 1; mb.cd = 0.85; mb.teleX = st.px; mb.teleZ = st.pz; }
+          } else if (mb.phase === 1) {
+            mb.cd -= dt;
+            if (mb.cd <= 0) { mb.phase = 2; mb.x = mb.teleX; mb.z = mb.teleZ + 0.01; burst(mb.x, mb.z, 10, REDC, 4, 0.5); }
+          } else {
+            const a = Math.atan2(st.pz - mb.z, st.px - mb.x);
+            const nx = mb.x + Math.cos(a) * 4.3 * dt, nz = mb.z + Math.sin(a) * 4.3 * dt;
+            if (canStand(nx, nz)) { mb.x = nx; mb.z = nz; }
+            if (st.invuln <= 0 && dP < 0.8) {
+              mb.alive = false;
+              st.php -= 12; st.invuln = 1; st.shake = 1.2;
+              burst(st.px, st.pz, 12, REDC, 4, 1);
+            }
+          }
         }
       }
 
-      // ── fire ──
-      const wp = WEAPONS[Math.min(st.cleared, WEAPONS.length - 1)];
+      // ── weapons: each unlock is a genuinely different gun ──
       st.fireCd -= dt;
-      if (st.firing && st.fireCd <= 0 && st.pb.length < MAX_PB - 6) {
-        st.fireCd = 1 / wp.rate;
-        st.muzzleT = 0.06;
-        for (let i = 0; i < wp.shots; i++) {
-          const off = wp.shots === 1 ? 0 : (i / (wp.shots - 1) - 0.5) * wp.spread * 0.55;
+      st.beamLen = 0;
+      if (st.firing && st.cineT < 0) {
+        const spawnPellet = (off: number, dmg: number, pierce: number, life: number, speed = 24) => {
+          if (st.pb.length >= MAX_PB - 2) return;
           const ya = st.yaw + off;
           const dx = -Math.sin(ya), dz = -Math.cos(ya);
-          st.pb.push({
-            x: st.px + dx * 0.7, y: 1.25, z: st.pz + dz * 0.7,
-            vx: dx * 24, vy: 0, vz: dz * 24,
-            dmg: wp.dmg, pierce: wp.pierce, dead: false,
-          });
+          st.pb.push({ x: st.px + dx * 0.7, y: 1.25, z: st.pz + dz * 0.7, vx: dx * speed, vy: 0, vz: dz * speed, dmg, pierce, life, dead: false });
+        };
+        if (st.weaponSel === 3) {
+          // OCR BEAM — continuous extraction ray
+          st.muzzleT = 0.05;
+          st.beamLen = castRay(26 * dt, false);
+        } else if (st.fireCd <= 0) {
+          st.muzzleT = 0.06;
+          if (st.weaponSel === 0) { st.fireCd = 0.25; spawnPellet(0, 6, 0, 99); }
+          else if (st.weaponSel === 1) {
+            // SQL BURST — shotgun
+            st.fireCd = 0.6;
+            for (let i = 0; i < 6; i++) spawnPellet((i / 5 - 0.5) * 0.55, 4, 0, 0.42, 21);
+            st.shake = Math.max(st.shake, 0.5);
+          } else if (st.weaponSel === 2) {
+            // HEADLESS AUTOMATION — full-auto
+            st.fireCd = 0.1;
+            spawnPellet((Math.random() - 0.5) * 0.13, 3, 0, 99, 26);
+          } else if (st.weaponSel === 4) {
+            // DETERMINISTIC RAIL — hitscan pierce
+            st.fireCd = 0.95;
+            st.railT = 0.16;
+            st.railYaw = st.yaw;
+            st.railLen = castRay(34, true);
+            st.shake = Math.max(st.shake, 0.9);
+          } else {
+            // FULL STACK — homing orbs
+            st.fireCd = 0.34;
+            if (st.orbs.length < 24) {
+              const fa = Math.atan2(-Math.cos(st.yaw), -Math.sin(st.yaw));
+              st.orbs.push({ x: st.px, z: st.pz, a: fa + (Math.random() - 0.5) * 0.5, t: 0, dead: false });
+            }
+          }
         }
       }
 
@@ -1048,6 +1329,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       // ── player bullets ──
       for (const b of st.pb) {
         if (b.dead) continue;
+        b.life -= dt;
+        if (b.life <= 0) { b.dead = true; burst(b.x, b.z, 2, AMBER, 1.5, b.y); continue; }
         b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt;
         const range2 = (b.x - st.px) ** 2 + (b.z - st.pz) ** 2;
         if (range2 > 1600 || !insideWorld(b.x, b.z)) { b.dead = true; burst(b.x, b.z, 2, AMBER, 1.5, b.y); continue; }
@@ -1061,25 +1344,10 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           }
         }
         if (b.dead) continue;
-        // towers take damage; destroying one restores a little HP
-        for (let ti = 0; ti < st.towers.length; ti++) {
-          const tw = st.towers[ti];
-          if (!tw.alive) continue;
-          const tp = TOWER_POS[ti];
-          if (Math.hypot(b.x - tp.x, b.z - tp.z) < 0.62 && b.y > 0 && b.y < 2.7) {
-            tw.hp -= b.dmg;
-            burst(b.x, b.z, 3, REDC, 3, b.y);
-            if (tw.hp <= 0) {
-              tw.alive = false;
-              burst(tp.x, tp.z, 22, 0xff8866, 5, 1.4);
-              st.php = Math.min(100, st.php + 8);
-              floatTxt("+8 HP", "#4ade80", tp.x, tp.z, 0.42, 2.4);
-            }
-            b.dead = true;
-            break;
-          }
+        if (mobBulletHit(b)) {
+          if (b.pierce > 0) b.pierce--;
+          else { b.dead = true; continue; }
         }
-        if (b.dead) continue;
         if (st.fightActive && hitBoss(b)) { b.dead = true; continue; }
         // shooting Anshul is futile
         if (st.cleared >= 5 && Math.hypot(b.x - 0, b.z - ZC[5]) < 1.55 && b.y > 0 && b.y < 3.2) {
@@ -1088,6 +1356,37 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           b.dead = true;
         }
       }
+
+      // ── homing orbs (FULL STACK) ──
+      for (const o of st.orbs) {
+        o.t += dt;
+        let tx: number | null = null, tz = 0, best = 20;
+        for (let mi = 0; mi < st.mobs.length; mi++) {
+          const mb = st.mobs[mi];
+          if (!mb.alive) continue;
+          const d = Math.hypot(mb.x - o.x, mb.z - o.z);
+          if (d < best) { best = d; tx = mb.x; tz = mb.z; }
+        }
+        if (tx === null && st.fightActive) { tx = st.bossX; tz = st.bossZ; }
+        if (tx !== null) {
+          const want = Math.atan2(tz - o.z, tx - o.x);
+          let dA = want - o.a;
+          while (dA > Math.PI) dA -= Math.PI * 2;
+          while (dA < -Math.PI) dA += Math.PI * 2;
+          o.a += Math.max(-6 * dt, Math.min(6 * dt, dA));
+        }
+        o.x += Math.cos(o.a) * 10.5 * dt;
+        o.z += Math.sin(o.a) * 10.5 * dt;
+        const probe: PB = { x: o.x, y: 1.2, z: o.z, vx: 0, vy: 0, vz: 0, dmg: 8, pierce: 0, life: 0, dead: false };
+        let hit = mobBulletHit(probe);
+        if (!hit && st.fightActive && hitBoss(probe)) hit = true;
+        if (!hit && st.cleared >= 5 && Math.hypot(o.x - 0, o.z - ZC[5]) < 1.55) {
+          floatTxt(IMMUNE_TEXTS[(Math.random() * IMMUNE_TEXTS.length) | 0], "#999999", o.x, o.z, 0.4, 1.4);
+          hit = true;
+        }
+        if (hit || o.t > 2.6 || !insideWorld(o.x, o.z)) { o.dead = true; burst(o.x, o.z, 5, 0xffd88a, 3, 1.2); }
+      }
+      st.orbs = st.orbs.filter(o => !o.dead);
 
       // ── enemy bullets ──
       for (const b of st.eb) {
@@ -1229,15 +1528,84 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         if (!openGate) g.plane.opacity = 0.1 + Math.sin(st.t * 3 + i) * 0.05;
       });
 
-      // towers
-      towerVis.forEach((tv, i) => {
-        const tw = st.towers[i];
-        if (!tw.alive) { tv.g.visible = false; return; }
-        tv.g.visible = true;
-        tv.head.rotation.y = st.t * 2.2;
-        tv.head.rotation.x = st.t * 1.1;
-        tv.head.scale.setScalar(1 + Math.sin(st.t * 5 + i) * 0.14);
+      // weird mobs
+      mobVis.forEach((mv, i) => {
+        const mb = st.mobs[i];
+        const ty = MOB_SPAWNS[i].type;
+        if (!mb.alive) {
+          mv.g.visible = false;
+          if (mv.ring) mv.ring.visible = false;
+          return;
+        }
+        mv.g.visible = true;
+        if (ty === 0) {
+          mv.g.position.set(mb.x, 0, mb.z);
+          mv.g.rotation.z = Math.sin(mb.t * 7) * 0.1;
+          mv.g.rotation.y = Math.atan2(st.px - mb.x, st.pz - mb.z);
+        } else if (ty === 1) {
+          mv.g.position.set(mb.x, 1.4 + Math.sin(mb.t * 2) * 0.15, mb.z);
+          mv.g.rotation.y = Math.atan2(st.px - mb.x, st.pz - mb.z);
+          if (mv.edge) (mv.edge.material as THREE.LineBasicMaterial).color.setHex(mb.fake ? 0xff5555 : 0x2dd4bf);
+          if (mv.face) (mv.face.material as THREE.SpriteMaterial).map = textTexture(mb.fake ? "�" : "☐", mb.fake ? "#ff5555" : "#2dd4bf", 56);
+        } else if (ty === 2) {
+          mv.segs!.forEach((sp, s) => {
+            const p = s === 0 ? { x: mb.x, z: mb.z } : (mb.trail[Math.min(Math.max(mb.trail.length - 1, 0), s * 8)] || { x: mb.x, z: mb.z });
+            sp.position.set(p.x, 1.05 - s * 0.04, p.z);
+          });
+        } else if (ty === 3) {
+          mv.shardA!.position.set(mb.slotA.x, 1.3, mb.slotA.z);
+          mv.shardB!.position.set(mb.slotB.x, 1.3, mb.slotB.z);
+          mv.shardA!.rotation.y = st.t * 1.4; mv.shardA!.rotation.x = st.t * 0.8;
+          mv.shardB!.rotation.y = -st.t * 1.4; mv.shardB!.rotation.x = -st.t * 0.8;
+          (mv.shardA!.material as THREE.MeshBasicMaterial).opacity = mb.real === 0 ? 0.95 : 0.3;
+          (mv.shardB!.material as THREE.MeshBasicMaterial).opacity = mb.real === 1 ? 0.95 : 0.3;
+        } else {
+          const errs = ["ERR", "500", "PANIC"];
+          if (mv.face) (mv.face.material as THREE.SpriteMaterial).map = textTexture(errs[((mb.t * 3) | 0) % 3], "#ff5555", 52);
+          if (mb.phase === 0) {
+            mv.g.position.set(MOB_SPAWNS[i].x, 1.2 + Math.sin(mb.t * 3) * 0.2, MOB_SPAWNS[i].z);
+            if (mv.ring) mv.ring.visible = false;
+          } else if (mb.phase === 1) {
+            const f = Math.max(0, mb.cd / 0.85);
+            mv.g.position.set(mb.teleX, 1 + 5 * f, mb.teleZ);
+            if (mv.ring) {
+              mv.ring.visible = true;
+              mv.ring.position.set(mb.teleX, 0.03, mb.teleZ);
+              (mv.ring.material as THREE.MeshBasicMaterial).opacity = 0.3 + Math.sin(st.t * 16) * 0.25;
+            }
+          } else {
+            mv.g.position.set(mb.x, 1.0, mb.z);
+            if (mv.ring) mv.ring.visible = false;
+          }
+        }
       });
+
+      // orbs
+      n = 0;
+      for (const o of st.orbs) { m4.setPosition(o.x, 1.2, o.z); obMesh.setMatrixAt(n++, m4); }
+      obMesh.count = n; obMesh.instanceMatrix.needsUpdate = true;
+
+      // OCR beam
+      if (st.beamLen > 0.5) {
+        const dx = -Math.sin(st.yaw), dz = -Math.cos(st.yaw);
+        const mid = (0.8 + st.beamLen) / 2;
+        beamMesh.visible = true;
+        beamMesh.position.set(st.px + dx * mid, 1.25, st.pz + dz * mid);
+        beamMesh.rotation.y = st.yaw;
+        const th = 1 + Math.sin(st.t * 40) * 0.35;
+        beamMesh.scale.set(th, th, Math.max(0.1, st.beamLen - 0.8));
+      } else beamMesh.visible = false;
+
+      // rail flash
+      if (st.railT > 0) {
+        const dx = -Math.sin(st.railYaw), dz = -Math.cos(st.railYaw);
+        const mid = (0.8 + st.railLen) / 2;
+        railMesh.visible = true;
+        railMesh.position.set(st.px + dx * mid, 1.25, st.pz + dz * mid);
+        railMesh.rotation.y = st.railYaw;
+        railMesh.scale.set(1, 1, Math.max(0.1, st.railLen - 0.8));
+        railMat.opacity = (st.railT / 0.16) * 0.9;
+      } else railMesh.visible = false;
 
       // ── bosses ──
       for (let zi = 0; zi < 6; zi++) {
@@ -1401,7 +1769,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       if (lockHintRef.current) lockHintRef.current.style.opacity = !st.locked && !seqActive() && !pausedRef.current ? "1" : "0";
       if (bannerRef.current) bannerRef.current.style.opacity = st.bannerT > 0.4 ? "1" : "0";
       if (promptRef.current) promptRef.current.style.opacity = st.canOffer && st.cineT < 0 ? "1" : "0";
-      if (weaponRef.current) weaponRef.current.textContent = WEAPONS[Math.min(st.cleared, WEAPONS.length - 1)].name;
+      if (weaponRef.current) weaponRef.current.textContent = `[${st.weaponSel + 1}] ${WEAPONS[st.weaponSel].name}${st.cleared > 0 ? ` — keys 1-${Math.min(6, st.cleared + 1)} switch` : ""}`;
       if (zoneRef.current) {
         const zi = Math.max(0, Math.min(5, Math.round(-st.pz / ZONE_GAP)));
         const dots = Array.from({ length: 6 }, (_, i) => (i < st.cleared ? "◆" : i === 5 ? "☠" : "◇")).join(" ");
