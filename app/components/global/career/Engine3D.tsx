@@ -78,6 +78,9 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
   const bannerRef = useRef<HTMLDivElement>(null);
   const weaponRef = useRef<HTMLDivElement>(null);
   const promptRef = useRef<HTMLDivElement>(null);
+  const ammoRef = useRef<HTMLDivElement>(null);
+  const hpNumRef = useRef<HTMLSpanElement>(null);
+  const feedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -99,12 +102,12 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x584060);
-    scene.fog = new THREE.Fog(0x584060, 24, 95);
+    scene.background = new THREE.Color(0xcfe4f5);
+    scene.fog = new THREE.Fog(0xcfe4f5, 30, 115);
 
-    // dusk lighting — warm sun, cool sky, colored arena lights
-    scene.add(new THREE.HemisphereLight(0xcfd8ff, 0x3a2a4e, 0.75));
-    const sun = new THREE.DirectionalLight(0xffe0c0, 1.5);
+    // bright clean daylight — Valorant-style readability
+    scene.add(new THREE.HemisphereLight(0xeaf4ff, 0xcabfa8, 1.0));
+    const sun = new THREE.DirectionalLight(0xfff2dc, 2.0);
     sun.position.set(18, 30, 10);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
@@ -114,7 +117,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     sun.shadow.bias = -0.002;
     scene.add(sun, sun.target);
     ZC.forEach((zc, i) => {
-      const pl = new THREE.PointLight(ZONE_COL[i], 70, 32, 1.8);
+      const pl = new THREE.PointLight(ZONE_COL[i], 40, 32, 1.8);
       pl.position.set(0, 6.5, i === 5 ? zc : zc - 2);
       scene.add(pl);
     });
@@ -128,7 +131,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     composer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     composer.setSize(RW, RH);
     composer.addPass(new RenderPass(scene, camera));
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(RW, RH), 0.55, 0.4, 0.72));
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(RW, RH), 0.4, 0.35, 0.85));
     composer.addPass(new OutputPass());
 
     // ── Helpers ────────────────────────────────────────────────────────────
@@ -181,9 +184,9 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         side: THREE.BackSide,
         depthWrite: false,
         uniforms: {
-          top: { value: new THREE.Color(0x27407e) },
-          mid: { value: new THREE.Color(0x8a55b0) },
-          bot: { value: new THREE.Color(0xffa06a) },
+          top: { value: new THREE.Color(0x3f8de0) },
+          mid: { value: new THREE.Color(0x9fd0f2) },
+          bot: { value: new THREE.Color(0xfdf0da) },
         },
         vertexShader: `varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
         fragmentShader: `varying vec3 vP; uniform vec3 top; uniform vec3 mid; uniform vec3 bot;
@@ -199,9 +202,9 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       c.width = c.height = 256;
       const g2 = c.getContext("2d")!;
       const grad = g2.createRadialGradient(128, 128, 10, 128, 128, 128);
-      grad.addColorStop(0, "rgba(255,224,190,1)");
-      grad.addColorStop(0.25, "rgba(255,175,135,0.85)");
-      grad.addColorStop(1, "rgba(255,145,120,0)");
+      grad.addColorStop(0, "rgba(255,250,235,1)");
+      grad.addColorStop(0.25, "rgba(255,235,190,0.8)");
+      grad.addColorStop(1, "rgba(255,225,170,0)");
       g2.fillStyle = grad;
       g2.fillRect(0, 0, 256, 256);
       const tex = track(new THREE.CanvasTexture(c));
@@ -217,7 +220,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         const h = 16 + ((i * 53) % 22);
         const m = new THREE.Mesh(
           track(new THREE.ConeGeometry(9 + ((i * 29) % 8), h, 5)),
-          bmat(0x2c2048, { flatShading: true })
+          bmat(0x8fa8cc, { flatShading: true })
         );
         m.position.set(Math.cos(a) * dist, h / 2 - 2, -85 + Math.sin(a) * dist * 1.3);
         m.rotation.y = a;
@@ -226,15 +229,16 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     }
 
     // ── Terrain — colorful filled floors ───────────────────────────────────
-    const ground = new THREE.Mesh(track(new THREE.PlaneGeometry(140, 320)), bmat(0x1b1433));
+    const ground = new THREE.Mesh(track(new THREE.PlaneGeometry(140, 320)), bmat(0xcfc8b6));
     ground.rotation.x = -Math.PI / 2;
     ground.position.set(0, -0.04, -85);
     scene.add(ground);
     const tint = (hex: number, k: number) => new THREE.Color(hex).multiplyScalar(k).getHex();
+    const pastel = (hex: number, k: number) => new THREE.Color(0xe9e2d2).lerp(new THREE.Color(hex), k).getHex();
     ZC.forEach((zc, i) => {
       const floor = new THREE.Mesh(
         track(new THREE.PlaneGeometry(ROOM_HW * 2, ROOM_HD * 2)),
-        bmat(tint(ZONE_COL[i], 0.16), { emissive: tint(ZONE_COL[i], 0.04) })
+        bmat(pastel(ZONE_COL[i], 0.22))
       );
       floor.rotation.x = -Math.PI / 2;
       floor.position.set(0, -0.02, zc);
@@ -243,26 +247,29 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     CORRS.forEach((cr, i) => {
       const floor = new THREE.Mesh(
         track(new THREE.PlaneGeometry(CORR_HW * 2, cr.z2 - cr.z1)),
-        bmat(tint(ZONE_COL[i + 1], 0.14), { emissive: tint(ZONE_COL[i + 1], 0.03) })
+        bmat(pastel(ZONE_COL[i + 1], 0.28))
       );
       floor.rotation.x = -Math.PI / 2;
       floor.position.set(0, -0.02, (cr.z1 + cr.z2) / 2);
       scene.add(floor);
     });
-    const grid = new THREE.GridHelper(300, 150, 0x6a5a9a, 0x2e2450);
+    const grid = new THREE.GridHelper(300, 150, 0xffffff, 0xffffff);
     (grid.material as THREE.Material).transparent = true;
-    (grid.material as THREE.Material).opacity = 0.22;
+    (grid.material as THREE.Material).opacity = 0.1;
     grid.position.z = -85;
     scene.add(grid);
 
     const WALL_H = 2.6;
+    // Valorant-style: warm white architecture with a glowing colored trim band
     function mkWall(w: number, d: number, x: number, z: number, accent = AMBER) {
       const geo = track(new THREE.BoxGeometry(w, WALL_H, d));
-      const mesh = new THREE.Mesh(geo, bmat(tint(accent, 0.42), { emissive: tint(accent, 0.06) }));
+      const mesh = new THREE.Mesh(geo, bmat(pastel(accent, 0.08)));
       mesh.position.set(x, WALL_H / 2, z);
-      const e = edgesOf(geo, accent, 0.5);
+      const e = edgesOf(geo, accent, 0.55);
       e.position.copy(mesh.position);
-      scene.add(mesh, e);
+      const trim = new THREE.Mesh(track(new THREE.BoxGeometry(w + 0.04, 0.1, d + 0.04)), emat(accent, { transparent: true, opacity: 0.95 }));
+      trim.position.set(x, WALL_H - 0.28, z);
+      scene.add(mesh, e, trim);
     }
     // rooms with corridor gaps — each zone wears its own accent color
     const segW = (ROOM_HW - CORR_HW); // 11
@@ -318,7 +325,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       }
       const g = track(new THREE.BufferGeometry());
       g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-      const sm = track(new THREE.PointsMaterial({ color: 0x9fb4d8, size: 0.5, transparent: true, opacity: 0.55, depthWrite: false, fog: false }));
+      const sm = track(new THREE.PointsMaterial({ color: 0xffffff, size: 0.5, transparent: true, opacity: 0.16, depthWrite: false, fog: false }));
       const stars = new THREE.Points(g, sm);
       stars.frustumCulled = false;
       scene.add(stars);
@@ -340,7 +347,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     });
 
     // story sign panels — chapter text stands along the path
-    function addSign(txt: string, x: number, y: number, z: number, color = "#d8e2f8", h = 0.3) {
+    function addSign(txt: string, x: number, y: number, z: number, color = "#2c3a58", h = 0.3) {
       const s = textSprite(txt, color, h, 44);
       s.position.set(x, y, z);
       scene.add(s);
@@ -352,7 +359,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         addSign(ln, k % 2 === 0 ? -2.1 : 2.1, 1.7, cr.z2 - 2 - k * 2.4);
       });
     });
-    addSign("↓ follow the path", 0, 1.2, ZC[0] - 9, "#b8c4e8");
+    addSign("↓ follow the path", 0, 1.2, ZC[0] - 9, "#3a4a6a");
 
     // ambient zone props — filled, colorful low-poly crystals and pillars
     const propRand = (seed: number) => {
@@ -372,7 +379,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         if (zi === 0 || zi === 4) geo = track(new THREE.ConeGeometry(0.42 + rnd() * 0.3, h, 5));
         else if (zi === 1 || zi === 5) geo = track(new THREE.CylinderGeometry(0.2, 0.32, h, 6));
         else { geo = track(new THREE.IcosahedronGeometry(0.5 + rnd() * 0.45, 0)); py = 0.55; }
-        const m = new THREE.Mesh(geo, bmat(tint(col, 0.6), { flatShading: true, emissive: tint(col, 0.14) }));
+        const m = new THREE.Mesh(geo, bmat(new THREE.Color(col).lerp(new THREE.Color(0xffffff), 0.2).getHex(), { flatShading: true, emissive: tint(col, 0.1) }));
         m.position.set(px2, py, pz2);
         m.rotation.y = rnd() * Math.PI;
         scene.add(m);
@@ -396,7 +403,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       }
       const g = track(new THREE.BufferGeometry());
       g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-      const ptsm = track(new THREE.PointsMaterial({ color: 0x9a7fd6, size: 0.09, transparent: true, opacity: 0.55, depthWrite: false }));
+      const ptsm = track(new THREE.PointsMaterial({ color: 0xffffff, size: 0.09, transparent: true, opacity: 0.3, depthWrite: false }));
       const pts = new THREE.Points(g, ptsm);
       pts.frustumCulled = false;
       scene.add(pts);
@@ -451,6 +458,9 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     muzzle.position.set(0.32, -0.22, -1.05);
     camera.add(muzzle);
     const WEAPON_TINT = [0xdff3ff, 0x4ade80, 0x2dd4bf, 0xe879f9, 0x9beeff, 0xffd88a];
+    const MAGS = [12, 6, 30, 100, 4, 8];
+    const RELOAD_T = [1.0, 1.4, 1.6, 1.8, 2.2, 1.6];
+    const MOB_NAMES = ["QUERY LEECH", "CAPTCHA MIMIC", "ENCODING WORM", "QUANTUM SHARD", "INCIDENT SPARK"];
 
     // tiny synthesized sound effects
     let actx: AudioContext | null = null;
@@ -495,7 +505,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
 
     // ── Bullets / particles / floaters / zones / minions ──────────────────
     const MAX_PB = 160, MAX_EB = 340;
-    const pbMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.11, 8, 8)), emat(0xe8fbff), MAX_PB);
+    const pbMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.11, 8, 8)), emat(0x22d3ee), MAX_PB);
     const ebMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.17, 8, 8)), emat(0xff6b6b), MAX_EB);
     pbMesh.frustumCulled = false; ebMesh.frustumCulled = false;
     pbMesh.count = 0; ebMesh.count = 0;
@@ -779,6 +789,9 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       php: 100, invuln: 1.2, fireCd: 0,
       yaw: 0, pitch: 0, locked: false, firing: false, muzzleT: 0, bobT: 0, moving: false,
       gunKick: 0, hitT: 0,
+      ammo: MAGS.slice(), reloadT: 0, reloadFor: 0,
+      swayX: 0, swayY: 0,
+      feed: [] as { txt: string; t: number }[], feedDirty: false,
       keys: new Set<string>(),
       pb: [] as PB[], eb: [] as EB[], minions: [] as MinionS[],
       // fight
@@ -819,6 +832,17 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     function note(txt: string, secs = 1.6) {
       if (noteRef.current) noteRef.current.textContent = txt;
       st.noteT = secs;
+    }
+    function startReload() {
+      const w = st.weaponSel;
+      if (st.reloadT > 0 || st.ammo[w] >= MAGS[w]) return;
+      st.reloadT = RELOAD_T[w];
+      st.reloadFor = w;
+    }
+    function feedKill(txt: string) {
+      st.feed.push({ txt, t: st.t });
+      if (st.feed.length > 5) st.feed.shift();
+      st.feedDirty = true;
     }
     function aimShot(x: number, z: number, speed: number, r = 0.17, offAng = 0) {
       if (st.eb.length > MAX_EB - 4) return;
@@ -887,6 +911,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       if (!st.locked) return;
       st.yaw -= e.movementX * 0.0022;
       st.pitch = Math.max(-1.3, Math.min(1.3, st.pitch - e.movementY * 0.0022));
+      st.swayX = Math.max(-0.06, Math.min(0.06, st.swayX + e.movementX * 0.00045));
+      st.swayY = Math.max(-0.05, Math.min(0.05, st.swayY + e.movementY * 0.0004));
     };
     const onDown = (e: MouseEvent) => { if (st.locked && e.button === 0) st.firing = true; };
     const onUp = () => { st.firing = false; };
@@ -894,7 +920,11 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       const k = e.key.toLowerCase();
       if (["w", "a", "s", "d", "shift", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) st.keys.add(k);
       const num = parseInt(k, 10);
-      if (num >= 1 && num <= 6 && num - 1 <= st.cleared) st.weaponSel = num - 1;
+      if (num >= 1 && num <= 6 && num - 1 <= st.cleared && num - 1 !== st.weaponSel) {
+        st.weaponSel = num - 1;
+        st.reloadT = 0; // switching cancels the reload
+      }
+      if (k === "r") startReload();
       if (k === "e" && st.canOffer && st.cineT < 0) {
         st.cineT = 0;
         st.eb = []; st.pb = [];
@@ -1128,6 +1158,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       const cols = [0x4ade80, 0x2dd4bf, 0xe879f9, 0x38bdf8, 0xf87171];
       burst(mb.x, mb.z, 20, cols[MOB_SPAWNS[mi].type], 5, 1.2);
       sfx("boom");
+      feedKill(MOB_NAMES[MOB_SPAWNS[mi].type]);
       st.php = Math.min(100, st.php + 5);
       floatTxt("+5 HP", "#4ade80", mb.x, mb.z, 0.4, 2);
     }
@@ -1288,6 +1319,10 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       if (!st.locked) return;
 
       if (st.invuln > 0) st.invuln -= dt;
+      if (st.reloadT > 0) {
+        st.reloadT -= dt;
+        if (st.reloadT <= 0) st.ammo[st.reloadFor] = MAGS[st.reloadFor];
+      }
 
       // ── movement (camera-relative) ──
       let mx = 0, mz = 0;
@@ -1444,46 +1479,57 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           const dx = -Math.sin(ya) * cp, dy = sp2, dz = -Math.cos(ya) * cp;
           st.pb.push({ x: st.px + dx * 0.6, y: EYE - 0.12 + dy * 0.6, z: st.pz + dz * 0.6, vx: dx * speed, vy: dy * speed, vz: dz * speed, dmg, pierce, life, dead: false });
         };
+        const canFire = st.reloadT <= 0;
         if (st.weaponSel === 3) {
-          // OCR BEAM — continuous extraction ray
-          st.muzzleT = 0.05;
-          st.gunKick = Math.max(st.gunKick, 0.05);
-          st.beamLen = castRay(26 * dt, false);
-        } else if (st.fireCd <= 0) {
-          st.muzzleT = 0.06;
-          if (st.weaponSel === 0) { st.fireCd = 0.25; st.gunKick = 0.12; sfx("shot"); spawnPellet(0, 6, 0, 99); }
-          else if (st.weaponSel === 1) {
-            // SQL BURST — shotgun
-            st.fireCd = 0.6;
-            st.gunKick = 0.22;
-            sfx("shot");
-            for (let i = 0; i < 6; i++) spawnPellet((i / 5 - 0.5) * 0.55, 4, 0, 0.42, 21);
-            st.shake = Math.max(st.shake, 0.5);
-          } else if (st.weaponSel === 2) {
-            // HEADLESS AUTOMATION — full-auto
-            st.fireCd = 0.1;
-            st.gunKick = 0.07;
-            sfx("shot");
-            spawnPellet((Math.random() - 0.5) * 0.13, 3, 0, 99, 26);
-          } else if (st.weaponSel === 4) {
-            // DETERMINISTIC RAIL — hitscan pierce
-            st.fireCd = 0.95;
-            st.railT = 0.16;
-            st.gunKick = 0.3;
-            sfx("rail");
-            st.railYaw = st.yaw;
-            st.railPitch = st.pitch;
-            st.railLen = castRay(34, true);
-            st.shake = Math.max(st.shake, 0.9);
+          // OCR BEAM — continuous extraction ray, drains energy
+          if (canFire && st.ammo[3] > 0) {
+            st.muzzleT = 0.05;
+            st.gunKick = Math.max(st.gunKick, 0.05);
+            st.beamLen = castRay(26 * dt, false);
+            st.ammo[3] = Math.max(0, st.ammo[3] - 20 * dt);
+            if (st.ammo[3] <= 0) startReload();
+          } else if (canFire) startReload();
+        } else if (st.fireCd <= 0 && canFire) {
+          if (st.ammo[st.weaponSel] <= 0) {
+            startReload();
           } else {
-            // FULL STACK — homing orbs
-            st.fireCd = 0.34;
-            st.gunKick = 0.1;
-            sfx("shot");
-            if (st.orbs.length < 24) {
-              const fa = Math.atan2(-Math.cos(st.yaw), -Math.sin(st.yaw));
-              st.orbs.push({ x: st.px, z: st.pz, a: fa + (Math.random() - 0.5) * 0.5, t: 0, dead: false });
+            st.muzzleT = 0.06;
+            st.ammo[st.weaponSel]--;
+            if (st.weaponSel === 0) { st.fireCd = 0.25; st.gunKick = 0.12; sfx("shot"); spawnPellet(0, 6, 0, 99); }
+            else if (st.weaponSel === 1) {
+              // SQL BURST — shotgun
+              st.fireCd = 0.6;
+              st.gunKick = 0.22;
+              sfx("shot");
+              for (let i = 0; i < 6; i++) spawnPellet((i / 5 - 0.5) * 0.55, 4, 0, 0.42, 21);
+              st.shake = Math.max(st.shake, 0.5);
+            } else if (st.weaponSel === 2) {
+              // HEADLESS AUTOMATION — full-auto
+              st.fireCd = 0.1;
+              st.gunKick = 0.07;
+              sfx("shot");
+              spawnPellet((Math.random() - 0.5) * 0.13, 3, 0, 99, 26);
+            } else if (st.weaponSel === 4) {
+              // DETERMINISTIC RAIL — hitscan pierce
+              st.fireCd = 0.95;
+              st.railT = 0.16;
+              st.gunKick = 0.3;
+              sfx("rail");
+              st.railYaw = st.yaw;
+              st.railPitch = st.pitch;
+              st.railLen = castRay(34, true);
+              st.shake = Math.max(st.shake, 0.9);
+            } else {
+              // FULL STACK — homing orbs
+              st.fireCd = 0.34;
+              st.gunKick = 0.1;
+              sfx("shot");
+              if (st.orbs.length < 24) {
+                const fa = Math.atan2(-Math.cos(st.yaw), -Math.sin(st.yaw));
+                st.orbs.push({ x: st.px, z: st.pz, a: fa + (Math.random() - 0.5) * 0.5, t: 0, dead: false });
+              }
             }
+            if (st.ammo[st.weaponSel] <= 0) startReload();
           }
         }
       }
@@ -1602,6 +1648,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         st.timeScale = 0.22;
         st.shake = 2;
         sfx("boom");
+        feedKill(CHAPTERS[st.fightZone].bossName + " ✦");
         burst(st.bossX, st.bossZ, 60, AMBER, 8, 1.5);
         burst(st.bossX, st.bossZ, 40, 0xffffff, 5, 1.5);
         document.exitPointerLock();
@@ -1623,14 +1670,30 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     const colB = new THREE.Color();
 
     function syncVisuals() {
-      // viewmodel
+      // viewmodel — kick, bob, sway, reload dip
+      st.swayX *= 0.86;
+      st.swayY *= 0.86;
+      const rlProg = st.reloadT > 0 ? 1 - st.reloadT / RELOAD_T[st.reloadFor] : 0;
+      const rlDip = st.reloadT > 0 ? Math.sin(rlProg * Math.PI) : 0;
       muzzleMat.opacity = st.muzzleT > 0 ? 0.9 : 0;
       gun.position.z = -0.65 + st.gunKick * 0.85;
-      gun.position.y = -0.27 + (st.moving ? Math.sin(st.bobT) * 0.016 : 0);
-      gun.rotation.x = st.gunKick * 0.8;
+      gun.position.x = 0.32 - st.swayX * 1.2;
+      gun.position.y = -0.27 + (st.moving ? Math.sin(st.bobT) * 0.016 : 0) - st.swayY * 0.7 - rlDip * 0.14;
+      gun.rotation.x = st.gunKick * 0.8 + st.swayY * 1.1 + rlDip * 0.55;
+      gun.rotation.y = -st.swayX * 1.4;
       gun.visible = st.cineT < 0 && !(st.fightActive && st.introT > 0);
-      muzzle.visible = gun.visible;
+      muzzle.visible = gun.visible && st.reloadT <= 0;
       for (const gm of gunEdgeMats) gm.color.setHex(WEAPON_TINT[st.weaponSel]);
+
+      // kill feed
+      const cutoff = st.t - 3.6;
+      if (st.feed.length && st.feed[0].t < cutoff) { st.feed = st.feed.filter(f => f.t >= cutoff); st.feedDirty = true; }
+      if (st.feedDirty && feedRef.current) {
+        st.feedDirty = false;
+        feedRef.current.innerHTML = st.feed
+          .map(f => `<div style="font-family:var(--font-mono),monospace;font-size:10px;letter-spacing:0.14em;color:#fff;background:rgba(12,18,28,0.6);padding:3px 10px;border-right:2px solid #22d3ee;text-shadow:0 1px 3px rgba(0,0,0,0.5)">⌫ ${f.txt}</div>`)
+          .join("");
+      }
 
       // bullets
       let n = 0;
@@ -1926,8 +1989,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
 
       // atmosphere drifts toward the current zone's palette
       const zAt = Math.max(0, Math.min(5, Math.round(-st.pz / ZONE_GAP)));
-      colA.setHex(ZONE_COL[zAt]).multiplyScalar(0.1);
-      colB.setHex(0x4e3a58).add(colA);
+      colA.setHex(ZONE_COL[zAt]).multiplyScalar(0.08);
+      colB.setHex(0xc4daea).add(colA);
       (scene.fog as THREE.Fog).color.lerp(colB, 0.03);
 
       // ── HUD ──
@@ -1952,7 +2015,14 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       if (lockHintRef.current) lockHintRef.current.style.opacity = !st.locked && !seqActive() && !pausedRef.current ? "1" : "0";
       if (bannerRef.current) bannerRef.current.style.opacity = st.bannerT > 0.4 ? "1" : "0";
       if (promptRef.current) promptRef.current.style.opacity = st.canOffer && st.cineT < 0 ? "1" : "0";
-      if (weaponRef.current) weaponRef.current.textContent = `[${st.weaponSel + 1}] ${WEAPONS[st.weaponSel].name}${st.cleared > 0 ? ` — keys 1-${Math.min(6, st.cleared + 1)} switch` : ""}`;
+      if (weaponRef.current) weaponRef.current.textContent = `[${st.weaponSel + 1}] ${WEAPONS[st.weaponSel].name}${st.cleared > 0 ? ` · 1-${Math.min(6, st.cleared + 1)}` : ""}`;
+      if (ammoRef.current) {
+        const reloading = st.reloadT > 0;
+        ammoRef.current.textContent = reloading ? "RELOADING" : `${Math.ceil(st.ammo[st.weaponSel])}`;
+        ammoRef.current.style.fontSize = reloading ? "13px" : "30px";
+        ammoRef.current.style.opacity = reloading ? String(0.5 + Math.sin(st.t * 10) * 0.4) : "1";
+      }
+      if (hpNumRef.current) hpNumRef.current.textContent = String(Math.max(0, Math.ceil(st.php)));
       if (zoneRef.current) {
         const zi = Math.max(0, Math.min(5, Math.round(-st.pz / ZONE_GAP)));
         const dots = Array.from({ length: 6 }, (_, i) => (i < st.cleared ? "◆" : i === 5 ? "☠" : "◇")).join(" ");
@@ -2054,22 +2124,30 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       </div>
 
       {/* HUD */}
-      <div ref={zoneRef} className="absolute top-2.5 left-4 font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-500 pointer-events-none" />
+      <div ref={zoneRef} className="absolute top-2.5 left-4 font-mono text-[9px] uppercase tracking-[0.2em] text-white/85 pointer-events-none" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.55)" }} />
       <div ref={bossWrapRef} className="absolute top-2.5 inset-x-0 flex flex-col items-center pointer-events-none transition-opacity duration-300" style={{ opacity: 0 }}>
-        <p ref={bossNameRef} className="font-mono text-[10px] font-bold tracking-[0.25em] text-[#c8b08a] mb-1.5" />
-        <div className="w-[340px] max-w-[50vw] h-[7px] bg-[#241a10] border border-black/40">
+        <p ref={bossNameRef} className="font-mono text-[10px] font-bold tracking-[0.25em] text-white mb-1.5" style={{ textShadow: "0 1px 5px rgba(0,0,0,0.6)" }} />
+        <div className="w-[340px] max-w-[50vw] h-[7px] bg-black/45 border border-black/30">
           <div ref={bossFillRef} className="h-full" style={{ width: "100%", background: "#ffb000" }} />
         </div>
       </div>
+      <div ref={feedRef} className="absolute top-10 right-4 pointer-events-none flex flex-col items-end gap-1" />
       <div ref={noteRef} className="absolute top-16 inset-x-0 text-center font-mono text-[12px] font-bold text-[#ffe9b8] pointer-events-none px-8" style={{ opacity: 0, textShadow: "0 0 12px rgba(255,225,170,0.5)" }} />
-      <div className="absolute bottom-3 left-4 pointer-events-none">
-        <p className="font-mono text-[8px] uppercase tracking-[0.25em] text-zinc-600 mb-1">HP</p>
-        <div className="w-[150px] h-[8px] bg-[#241a10] border border-black/40">
-          <div ref={hpFillRef} className="h-full" style={{ width: "100%", background: "#4ade80" }} />
+      <div className="absolute bottom-3 left-4 pointer-events-none flex items-end gap-2.5">
+        <span ref={hpNumRef} className="font-mono text-3xl font-bold text-white leading-none" style={{ textShadow: "0 1px 6px rgba(0,0,0,0.6)" }}>100</span>
+        <div className="pb-0.5">
+          <p className="font-mono text-[8px] uppercase tracking-[0.25em] text-white/70 mb-1" style={{ textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>HP</p>
+          <div className="w-[130px] h-[7px] bg-black/45 border border-black/30">
+            <div ref={hpFillRef} className="h-full" style={{ width: "100%", background: "#4ade80" }} />
+          </div>
         </div>
       </div>
-      <div ref={weaponRef} className="absolute bottom-3 right-4 font-mono text-[10px] font-bold tracking-[0.2em] text-[#9adfff] pointer-events-none" />
-      <div ref={objRef} className="absolute bottom-3 inset-x-0 text-center font-mono text-[9px] uppercase tracking-[0.2em] text-zinc-600 pointer-events-none" />
+      <div className="absolute bottom-3 right-4 pointer-events-none text-right">
+        <div ref={weaponRef} className="font-mono text-[9px] font-bold tracking-[0.2em] text-white/85 mb-1" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.55)" }} />
+        <div ref={ammoRef} className="font-mono font-bold text-white leading-none" style={{ fontSize: 30, textShadow: "0 1px 6px rgba(0,0,0,0.6)" }} />
+        <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-white/60 mt-0.5" style={{ textShadow: "0 1px 3px rgba(0,0,0,0.5)" }}>R reload</p>
+      </div>
+      <div ref={objRef} className="absolute bottom-3 inset-x-0 text-center font-mono text-[9px] uppercase tracking-[0.2em] text-white/80 pointer-events-none" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.55)" }} />
 
       {/* boss intro splash */}
       <div ref={introRef} className="absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-500 pointer-events-none" style={{ opacity: 0 }}>
