@@ -44,7 +44,7 @@ export default function GameHint() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 12 }}
             transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[81] w-[min(92vw,480px)] border dark:border-amber-500/40 border-amber-500/50 dark:bg-ink bg-paper p-8 shadow-2xl shadow-black/40 select-none text-center"
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[81] w-[min(92vw,480px)] border dark:border-zinc-700 border-zinc-300 dark:bg-ink bg-paper p-8 shadow-2xl shadow-black/40 select-none text-center"
           >
             <p className="font-mono text-[9px] uppercase tracking-[0.35em] dark:text-accent text-amber-600 mb-3">
               ▶ this portfolio is playable

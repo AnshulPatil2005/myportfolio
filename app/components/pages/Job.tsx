@@ -16,7 +16,7 @@ export default function Job() {
       <Slide delay={0.16}>
         <div className="flex items-start justify-between gap-6 mb-10">
           <div>
-            <p className="font-mono text-xs uppercase tracking-[0.22em] dark:text-accent text-amber-600 mb-3">
+            <p className="font-mono text-xs uppercase tracking-[0.22em] dark:text-zinc-500 text-zinc-500 mb-3">
               #<ScrambleIndex target="00" />
             </p>
             <h2 className="font-display font-normal text-5xl sm:text-7xl tracking-[-0.02em] leading-none">
@@ -49,7 +49,7 @@ export default function Job() {
                   {/* Commit line */}
                   <div className="flex items-center gap-2.5 mb-2 font-mono text-[11px]">
                     <span className="dark:text-zinc-600 text-zinc-400 select-none">*</span>
-                    <span className="text-accent tracking-wide">{hash}</span>
+                    <span className="dark:text-zinc-500 text-zinc-400 tracking-wide">{hash}</span>
                     {isActive && (
                       <span className="dark:text-zinc-600 text-zinc-400 text-[10px]">
                         (HEAD → present)

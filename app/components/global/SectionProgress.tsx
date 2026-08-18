@@ -44,7 +44,7 @@ export default function SectionProgress() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 8 }}
                   transition={{ duration: 0.15 }}
-                  className="text-[10px] font-mono uppercase tracking-[0.2em] dark:text-accent text-amber-600 whitespace-nowrap"
+                  className="text-[10px] font-mono uppercase tracking-[0.2em] dark:text-zinc-300 text-zinc-600 whitespace-nowrap"
                 >
                   {section.label}
                 </motion.span>

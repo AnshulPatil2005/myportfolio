@@ -104,8 +104,8 @@ export default function CareerMode() {
       return;
     }
     if (e === "ending") {
-      localStorage.setItem(PROGRESS_KEY, "4");
-      setSaved(4);
+      localStorage.setItem(PROGRESS_KEY, "3");
+      setSaved(3);
       setPhase("ending");
     }
   }, []);
@@ -162,7 +162,7 @@ export default function CareerMode() {
                     <p className="font-mono text-[9px] uppercase tracking-[0.35em] text-zinc-500 mb-1.5">anshulpatil.is-a.dev presents</p>
                     <h2 className="font-display text-5xl text-accent leading-none mb-2">Career Mode</h2>
                     <p className="font-mono text-[10px] text-zinc-500">
-                      one path · 3 boss fights · at the end of the road, him
+                      one path · 2 boss fights · at the end of it, him
                     </p>
                   </div>
 
@@ -207,10 +207,10 @@ export default function CareerMode() {
 
                   <div className="flex items-center gap-6 mt-6">
                     <button
-                      onClick={() => enterWorld(saved >= 4 ? 3 : Math.min(saved, 3))}
+                      onClick={() => enterWorld(saved >= 3 ? 2 : Math.min(saved, 2))}
                       className="font-mono text-xs uppercase tracking-[0.2em] text-ink bg-accent px-8 py-2.5 hover:opacity-85 transition-opacity"
                     >
-                      {saved === 0 ? "Begin the journey" : saved >= 4 ? "Walk it again" : "Continue the journey"}
+                      {saved === 0 ? "Begin the journey" : saved >= 3 ? "Walk it again" : "Continue the journey"}
                     </button>
                     {saved > 0 && (
                       <button
@@ -221,7 +221,7 @@ export default function CareerMode() {
                       </button>
                     )}
                   </div>
-                  <p className="font-mono text-[9px] text-zinc-700 mt-3">first person · WASD move · shift to sprint · mouse look · hold click to shoot · R reload · 1-4 weapons · E to interact · desktop only</p>
+                  <p className="font-mono text-[9px] text-zinc-700 mt-3">first person · WASD move · shift to sprint · mouse look · hold click to shoot · R reload · 1-3 weapons · E to interact · desktop only</p>
                 </motion.div>
               )}
 
@@ -233,7 +233,7 @@ export default function CareerMode() {
                     <div className="max-w-xl w-full border border-amber-500/30 bg-[#0d0a08]/95 p-8">
                       <div className="flex items-baseline justify-between mb-1">
                         <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-zinc-500">Chapter {ROMAN[introChapter]} · {ic.year}</p>
-                        <p className="font-mono text-[10px] text-zinc-600">{introChapter + 1} / 3</p>
+                        <p className="font-mono text-[10px] text-zinc-600">{introChapter + 1} / 2</p>
                       </div>
                       <h3 className="font-display text-3xl text-zinc-100 mb-1">{ic.org}</h3>
                       <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-accent mb-5">{ic.role}</p>
@@ -316,7 +316,7 @@ export default function CareerMode() {
                     <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-green-400 mb-3">the only winning move</p>
                     <h3 className="font-display text-5xl text-zinc-100 mb-2">Offer Accepted</h3>
                     <p className="font-mono text-[11px] text-zinc-400 mb-8">
-                      Three bosses. One path. Every bullet bounced off the last obstacle.<br />
+                      Two bosses. One tunnel. Every bullet bounced off the last obstacle.<br />
                       He told you himself — now go message him about the job offer.
                     </p>
                     <div className="flex flex-wrap justify-center gap-4 mb-8">

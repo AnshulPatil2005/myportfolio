@@ -28,7 +28,7 @@ const docRag = projects.find((p) => p._id === "intelligent-doc-processing");
 function SectionHeading({ index, title }: { index: string; title: string }) {
   return (
     <div className="mb-10">
-      <p className="font-mono text-xs uppercase tracking-[0.22em] dark:text-accent text-amber-600 mb-3">
+      <p className="font-mono text-xs uppercase tracking-[0.22em] dark:text-zinc-500 text-zinc-500 mb-3">
         #<ScrambleIndex target={index} />
       </p>
       <h2 className="font-display font-normal text-5xl sm:text-7xl tracking-[-0.02em] leading-none">

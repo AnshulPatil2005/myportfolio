@@ -15,7 +15,7 @@ export default function FeaturedWork() {
   return (
     <section id="featured-work" className="scroll-mt-20 mt-32 md:mt-40">
       <div className="mb-10">
-        <p className="font-mono text-xs uppercase tracking-[0.22em] dark:text-accent text-amber-600 mb-3">
+        <p className="font-mono text-xs uppercase tracking-[0.22em] dark:text-zinc-500 text-zinc-500 mb-3">
           #<ScrambleIndex target="01" />
         </p>
         <h2 className="font-display font-normal text-5xl sm:text-7xl tracking-[-0.02em] leading-none mb-5">

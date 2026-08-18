@@ -43,7 +43,7 @@ export default function CloserLook() {
       <Slide delay={0.1}>
         <div className="flex items-end justify-between gap-4 mb-6 md:px-16 px-6">
           <div>
-            <p className="font-mono text-xs uppercase tracking-[0.22em] dark:text-accent text-amber-600 mb-3">
+            <p className="font-mono text-xs uppercase tracking-[0.22em] dark:text-zinc-500 text-zinc-500 mb-3">
               #<ScrambleIndex target="02" />
             </p>
             <h2 className="font-display font-normal text-5xl sm:text-7xl tracking-[-0.02em] leading-none">Take a closer look</h2>

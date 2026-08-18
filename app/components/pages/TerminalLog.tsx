@@ -24,7 +24,7 @@ export default function TerminalLog({ className = "" }: { className?: string }) 
           {lines.map((line, i) => (
             <p
               key={i}
-              className="font-mono text-[11px] leading-relaxed dark:text-accent text-amber-600 opacity-0"
+              className="font-mono text-[11px] leading-relaxed dark:text-zinc-400 text-zinc-500 opacity-0"
               style={{
                 animation: `termLine 0.25s ease forwards`,
                 animationDelay: `${0.35 + i * 0.45}s`,
@@ -38,7 +38,7 @@ export default function TerminalLog({ className = "" }: { className?: string }) 
 
           {/* blinking cursor */}
           <p
-            className="font-mono text-[11px] dark:text-accent text-amber-600 opacity-0"
+            className="font-mono text-[11px] dark:text-zinc-400 text-zinc-500 opacity-0"
             style={{
               animation: `termLine 0.25s ease forwards ${0.35 + lines.length * 0.45}s`,
             }}

@@ -10,21 +10,22 @@ import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.j
 import { useEffect, useRef } from "react";
 import { CHAPTERS, WEAPONS, IMMUNE_TEXTS, ANSHUL_DIALOGUE, SUMMON_NAMES, ROMAN } from "./data";
 
-// ── World: four zones — three boss arenas, then Anshul at the end ─────────────
-const ZONE_GAP = 34;
-const ZC = [0, 1, 2, 3].map(i => -i * ZONE_GAP);
-const FINAL = 3;
-const ROOM_HW = 14;
-const ROOM_HD = 11;
-const CORR_HW = 3;
+// ── World: two boss halls, then Anshul's chamber — built on a 4u tile grid ────
+const TILE = 4;
+const ROOM_HW = 14;   // 7 tiles wide
+const ROOM_HD = 10;   // 5 tiles deep
+const CORR_HW = 2;    // 1 tile wide
+const CORR_LEN = 12;  // 3 tiles long
+const ZONE_GAP = ROOM_HD * 2 + CORR_LEN; // 32
+const ZC = [0, 1, 2].map(i => -i * ZONE_GAP);
+const FINAL = 2;
 const RW = 960, RH = 540;
 const EYE = 1.6;
 
 const REDC = 0xff5555;
-const GREENC = 0x4ade80;
 
-const ZONE_COL = [0x4ade80, 0x38bdf8, 0xf87171, 0xffd88a];
-const ZONE_HEX = ["#4ade80", "#38bdf8", "#f87171", "#ffd88a"];
+const ZONE_COL = [0x4ade80, 0xf87171, 0xffd88a];
+const ZONE_HEX = ["#4ade80", "#f87171", "#ffd88a"];
 
 interface Props {
   initialCleared: number;
@@ -40,13 +41,16 @@ interface Hazard { x: number; z: number; r: number; warm: number; fade: number; 
 interface Wave { x: number; z: number; R: number; speed: number; max: number; dealt: boolean }
 
 const ROOMS = ZC.map(zc => ({ x1: -ROOM_HW, x2: ROOM_HW, z1: zc - ROOM_HD, z2: zc + ROOM_HD }));
-const CORRS = [0, 1, 2].map(i => ({ x1: -CORR_HW, x2: CORR_HW, z1: ZC[i] - ROOM_HD - (ZONE_GAP - ROOM_HD * 2), z2: ZC[i] - ROOM_HD }));
+const CORRS = [0, 1].map(i => ({ x1: -CORR_HW, x2: CORR_HW, z1: ZC[i] - ROOM_HD - CORR_LEN, z2: ZC[i] - ROOM_HD }));
 
-// no roaming guardians — each arena holds one boss who raises named skeletons
+// tile-grid helpers: floors sit on 4u centers, walls on 4u edges
+const ROOM_TX = [-12, -8, -4, 0, 4, 8, 12];
+const ROOM_TZ = [-8, -4, 0, 4, 8];
 
-const MAGS = [12, 6, 4, 8];
-const RELOAD_T = [1.0, 1.4, 2.0, 1.6];
-const WEAPON_TINT = [0xdff3ff, 0x4ade80, 0x9beeff, 0xffd88a];
+// three weapons: sidearm, spread, piercing rail
+const MAGS = [12, 6, 4];
+const RELOAD_T = [1.0, 1.4, 2.0];
+const WEAPON_TINT = [0xdff3ff, 0x4ade80, 0x9beeff];
 
 export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
@@ -237,219 +241,227 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       return tex;
     }
 
-    // ── Cave ───────────────────────────────────────────────────────────────
-    {
-      // rock ceiling over the whole cavern
-      const ceil = new THREE.Mesh(track(new THREE.PlaneGeometry(160, 280)), bmat(0x3a322a, { flatShading: true }));
-      ceil.rotation.x = Math.PI / 2;
-      ceil.position.set(0, 8.5, -51);
-      scene.add(ceil);
+    // ── Dungeon construction — assembled from modular KayKit tiles ─────────
+    const gltfLoader = new GLTFLoader();
+    const loadModel = (url: string) =>
+      new Promise<GLTF>((res, rej) => gltfLoader.load(url, res, undefined, rej));
+    const dummy = new THREE.Object3D();
 
-      // stalactites hanging from the ceiling
-      for (let i = 0; i < 60; i++) {
-        const px2 = -70 + ((i * 137) % 140);
-        const pz2 = 22 - ((i * 91) % 250);
-        const h = 1.2 + ((i * 53) % 30) / 10;
-        const m = new THREE.Mesh(
-          track(new THREE.ConeGeometry(0.35 + ((i * 29) % 10) / 18, h, 6)),
-          bmat(0x453b31, { flatShading: true })
-        );
-        m.rotation.x = Math.PI;
-        m.position.set(px2, 8.5 - h / 2 + 0.05, pz2);
-        scene.add(m);
-      }
-
-      // cavern walls closing in around the playable area
-      for (let i = 0; i < 26; i++) {
-        const a = (i / 26) * Math.PI * 2;
-        const dist = 38 + ((i * 37) % 26);
-        const h = 9 + ((i * 53) % 6);
-        const m = new THREE.Mesh(
-          track(new THREE.ConeGeometry(7 + ((i * 29) % 6), h, 5)),
-          bmat(0x3f362c, { flatShading: true })
-        );
-        m.position.set(Math.cos(a) * dist, h / 2 - 1.5, -51 + Math.sin(a) * dist * 1.35);
-        m.rotation.y = a;
-        scene.add(m);
-      }
-
-      // glowing crystal clusters in the cavern dark — distant color accents
-      for (let i = 0; i < 14; i++) {
-        const side = i % 2 === 0 ? 1 : -1;
-        const px2 = side * (19 + ((i * 31) % 16));
-        const pz2 = 12 - ((i * 67) % 130);
-        const zi = Math.max(0, Math.min(FINAL, Math.round(-pz2 / ZONE_GAP)));
-        const m = new THREE.Mesh(
-          track(new THREE.ConeGeometry(0.4, 1.2 + ((i * 17) % 10) / 8, 5)),
-          emat(ZONE_COL[zi], { transparent: true, opacity: 0.55 })
-        );
-        m.position.set(px2, 0.6, pz2);
-        m.rotation.z = ((i * 41) % 10 - 5) / 14;
-        scene.add(m);
-      }
+    // place many copies of one tile as a single instanced draw call
+    function instanceTiles(url: string, placements: [number, number, number, number][]) {
+      if (!placements.length) return;
+      loadModel(url).then(g => {
+        const meshes: THREE.Mesh[] = [];
+        g.scene.traverse(o => { const m = o as THREE.Mesh; if (m.isMesh) meshes.push(m); });
+        if (meshes.length === 1) {
+          const src = meshes[0];
+          const inst = new THREE.InstancedMesh(src.geometry, src.material, placements.length);
+          inst.castShadow = true;
+          inst.receiveShadow = true;
+          placements.forEach(([x, y, z, ry], i) => {
+            dummy.position.set(x, y, z);
+            dummy.rotation.set(0, ry, 0);
+            dummy.scale.setScalar(1);
+            dummy.updateMatrix();
+            inst.setMatrixAt(i, dummy.matrix);
+          });
+          inst.instanceMatrix.needsUpdate = true;
+          scene.add(inst);
+        } else {
+          for (const [x, y, z, ry] of placements) {
+            const c = g.scene.clone(true);
+            c.position.set(x, y, z);
+            c.rotation.y = ry;
+            c.traverse(o => { const m = o as THREE.Mesh; if (m.isMesh) { m.castShadow = true; m.receiveShadow = true; } });
+            scene.add(c);
+          }
+        }
+      }).catch(() => { /* offline — the shell still stands */ });
     }
 
-    // ── Terrain ────────────────────────────────────────────────────────────
-    const ground = new THREE.Mesh(track(new THREE.PlaneGeometry(140, 260)), bmat(0x2b2620));
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.set(0, -0.04, -51);
-    scene.add(ground);
+    // decorative props: loaded once, cloned per placement, auto ground-pivoted
+    function scatterProp(url: string, scale: number, spots: [number, number, number][], glowTop = false) {
+      if (!spots.length) return;
+      loadModel(url).then(g => {
+        const proto = g.scene;
+        proto.scale.setScalar(scale);
+        proto.traverse(o => {
+          const m = o as THREE.Mesh;
+          if (m.isMesh) { m.castShadow = true; m.receiveShadow = false; }
+        });
+        const box = new THREE.Box3().setFromObject(proto);
+        const y0 = -box.min.y;
+        for (const [x, z, ry] of spots) {
+          const c = proto.clone(true);
+          c.position.set(x, y0, z);
+          c.rotation.y = ry;
+          scene.add(c);
+          if (glowTop) {
+            const gs = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: glowTexture(), color: 0xffb060, transparent: true, opacity: 0.95, depthWrite: false, blending: THREE.AdditiveBlending })));
+            gs.scale.setScalar(0.7);
+            gs.position.set(x, y0 + box.max.y + 0.05, z);
+            scene.add(gs);
+          }
+        }
+      }).catch(() => {});
+    }
+
     const tint = (hex: number, k: number) => new THREE.Color(hex).multiplyScalar(k).getHex();
-    const stone = (hex: number, k: number) => new THREE.Color(0x4a4238).lerp(new THREE.Color(hex), k).getHex();
-    ZC.forEach((zc, i) => {
-      const floor = new THREE.Mesh(
-        track(new THREE.PlaneGeometry(ROOM_HW * 2, ROOM_HD * 2)),
-        bmat(stone(ZONE_COL[i], 0.2))
-      );
-      floor.rotation.x = -Math.PI / 2;
-      floor.position.set(0, -0.02, zc);
-      scene.add(floor);
-    });
-    CORRS.forEach((cr, i) => {
-      const floor = new THREE.Mesh(
-        track(new THREE.PlaneGeometry(CORR_HW * 2, cr.z2 - cr.z1)),
-        bmat(stone(ZONE_COL[i + 1], 0.26))
-      );
-      floor.rotation.x = -Math.PI / 2;
-      floor.position.set(0, -0.02, (cr.z1 + cr.z2) / 2);
-      scene.add(floor);
-    });
-    const grid = new THREE.GridHelper(260, 130, 0xffffff, 0xffffff);
-    (grid.material as THREE.Material).transparent = true;
-    (grid.material as THREE.Material).opacity = 0.05;
-    grid.position.z = -51;
-    scene.add(grid);
+    const WALL_H = 4;  // one tile row
+    const HALL_H = 8;  // two rows stacked — tall dungeon halls
 
-    const WALL_H = 2.6;
-    function mkWall(w: number, d: number, x: number, z: number, accent: number) {
-      const geo = track(new THREE.BoxGeometry(w, WALL_H, d));
-      const mesh = new THREE.Mesh(geo, bmat(stone(accent, 0.1)));
-      mesh.position.set(x, WALL_H / 2, z);
-      const e = edgesOf(geo, accent, 0.55);
-      e.position.copy(mesh.position);
-      const trim = new THREE.Mesh(track(new THREE.BoxGeometry(w + 0.04, 0.1, d + 0.04)), emat(accent, { transparent: true, opacity: 0.95 }));
-      trim.position.set(x, WALL_H - 0.28, z);
-      scene.add(mesh, e, trim);
-    }
-    const segW = ROOM_HW - CORR_HW;
+    // dark bedrock under everything so no gap ever shows through
+    const ground = new THREE.Mesh(track(new THREE.PlaneGeometry(160, 300)), bmat(0x231f1a));
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.set(0, -0.12, -ZONE_GAP);
+    scene.add(ground);
+
+    // vaulted ceiling
+    const ceil = new THREE.Mesh(track(new THREE.PlaneGeometry(160, 300)), bmat(0x2a251f));
+    ceil.rotation.x = Math.PI / 2;
+    ceil.position.set(0, HALL_H, -ZONE_GAP);
+    scene.add(ceil);
+
+    // ── floor tiles ──
+    const floorP: [number, number, number, number][] = [];
+    const grateP: [number, number, number, number][] = [];
+    ZC.forEach((zc, i) => {
+      ROOM_TX.forEach((tx, xi) => {
+        ROOM_TZ.forEach((tz, zj) => {
+          const spot: [number, number, number, number] = [tx, 0, zc + tz, 0];
+          if (i !== FINAL && (xi + zj * 3) % 11 === 4) grateP.push(spot);
+          else floorP.push(spot);
+        });
+      });
+    });
+    CORRS.forEach(cr => {
+      for (let z = cr.z2 - TILE / 2; z > cr.z1; z -= TILE) floorP.push([0, 0, z, 0]);
+    });
+    instanceTiles("/models/dg_floor_tile_large.glb", floorP);
+    instanceTiles("/models/dg_floor_tile_big_grate.glb", grateP);
+
+    // ── wall tiles: solid, cracked, and arched doorways ──
+    const wallP: [number, number, number, number][] = [];
+    const crackP: [number, number, number, number][] = [];
+    const archP: [number, number, number, number][] = [];
+    let wallSeed = 0;
+    const pushWall = (x: number, y: number, z: number, ry: number) => {
+      wallSeed = (wallSeed * 31 + 17) % 97;
+      (wallSeed % 5 === 0 ? crackP : wallP).push([x, y, z, ry]);
+    };
+    ZC.forEach((zc, i) => {
+      for (const tx of ROOM_TX) {
+        if (i > 0 && tx === 0) archP.push([tx, 0, zc + ROOM_HD, 0]);
+        else pushWall(tx, 0, zc + ROOM_HD, 0);
+        if (i < FINAL && tx === 0) archP.push([tx, 0, zc - ROOM_HD, 0]);
+        else pushWall(tx, 0, zc - ROOM_HD, 0);
+      }
+      for (const tz of ROOM_TZ) {
+        pushWall(-ROOM_HW, 0, zc + tz, Math.PI / 2);
+        pushWall(ROOM_HW, 0, zc + tz, Math.PI / 2);
+      }
+    });
+    CORRS.forEach(cr => {
+      for (let z = cr.z2 - TILE / 2; z > cr.z1; z -= TILE) {
+        pushWall(-CORR_HW, 0, z, Math.PI / 2);
+        pushWall(CORR_HW, 0, z, Math.PI / 2);
+      }
+    });
+    // second storey — solid stone above everything, archways included
+    const upperP: [number, number, number, number][] = [...wallP, ...crackP, ...archP]
+      .map(([x, , z, ry]) => [x, WALL_H, z, ry] as [number, number, number, number]);
+    instanceTiles("/models/dg_wall.glb", [...wallP, ...upperP]);
+    instanceTiles("/models/dg_wall_cracked.glb", crackP);
+    instanceTiles("/models/dg_wall_arched.glb", archP);
+
+    // ── zone identity: a glowing trim line and an arena ring per hall ──
     ZC.forEach((zc, i) => {
       const col = ZONE_COL[i];
-      if (i > 0) {
-        mkWall(segW, 0.5, -(CORR_HW + segW / 2), zc + ROOM_HD, col);
-        mkWall(segW, 0.5, CORR_HW + segW / 2, zc + ROOM_HD, col);
-      } else {
-        mkWall(ROOM_HW * 2 + 0.5, 0.5, 0, zc + ROOM_HD + 0.25, col);
+      const trimGeo = track(new THREE.BoxGeometry(ROOM_HW * 2, 0.09, 0.12));
+      for (const sz of [zc - ROOM_HD + 0.45, zc + ROOM_HD - 0.45]) {
+        const t = new THREE.Mesh(trimGeo, emat(col, { transparent: true, opacity: 0.85 }));
+        t.position.set(0, 2.9, sz);
+        scene.add(t);
       }
-      if (i < FINAL) {
-        mkWall(segW, 0.5, -(CORR_HW + segW / 2), zc - ROOM_HD, col);
-        mkWall(segW, 0.5, CORR_HW + segW / 2, zc - ROOM_HD, col);
-      } else {
-        mkWall(ROOM_HW * 2 + 0.5, 0.5, 0, zc - ROOM_HD - 0.25, col);
+      const sideGeo = track(new THREE.BoxGeometry(0.12, 0.09, ROOM_HD * 2));
+      for (const sx of [-ROOM_HW + 0.45, ROOM_HW - 0.45]) {
+        const t = new THREE.Mesh(sideGeo, emat(col, { transparent: true, opacity: 0.85 }));
+        t.position.set(sx, 2.9, zc);
+        scene.add(t);
       }
-      mkWall(0.5, ROOM_HD * 2, -ROOM_HW - 0.25, zc, col);
-      mkWall(0.5, ROOM_HD * 2, ROOM_HW + 0.25, zc, col);
-      const postGeo = track(new THREE.CylinderGeometry(0.09, 0.09, 3.6, 6));
-      for (const [sx, sz] of [[-ROOM_HW, zc - ROOM_HD], [ROOM_HW, zc - ROOM_HD], [ROOM_HW, zc + ROOM_HD], [-ROOM_HW, zc + ROOM_HD]] as [number, number][]) {
-        const post = new THREE.Mesh(postGeo, emat(col, { transparent: true, opacity: 0.85 }));
-        post.position.set(sx, 1.8, sz);
-        scene.add(post);
-      }
-      const ring = new THREE.Mesh(track(new THREE.RingGeometry(5.1, 5.24, 48)), emat(col, { transparent: true, opacity: 0.35, side: THREE.DoubleSide }));
+      const ring = new THREE.Mesh(track(new THREE.RingGeometry(5.1, 5.3, 48)), emat(col, { transparent: true, opacity: 0.4, side: THREE.DoubleSide }));
       ring.rotation.x = -Math.PI / 2;
-      ring.position.set(0, 0.02, i === FINAL ? zc : zc - 2);
+      ring.position.set(0, 0.12, i === FINAL ? zc : zc - 2);
       scene.add(ring);
     });
-    CORRS.forEach((cr, i) => {
-      const len = cr.z2 - cr.z1;
-      mkWall(0.5, len, -CORR_HW - 0.25, (cr.z1 + cr.z2) / 2, ZONE_COL[i + 1]);
-      mkWall(0.5, len, CORR_HW + 0.25, (cr.z1 + cr.z2) / 2, ZONE_COL[i + 1]);
-    });
 
-    // gates
+    // ── sealed gates at each corridor mouth ──
     const gates = CORRS.map((cr, i) => {
       const g = new THREE.Group();
-      const plane = new THREE.Mesh(track(new THREE.PlaneGeometry(CORR_HW * 2, WALL_H)), emat(ZONE_COL[i], { transparent: true, opacity: 0.18, side: THREE.DoubleSide }));
-      plane.position.y = WALL_H / 2;
-      const frame = edgesOf(track(new THREE.BoxGeometry(CORR_HW * 2, WALL_H, 0.06)), ZONE_COL[i], 0.7);
-      frame.position.y = WALL_H / 2;
+      const plane = new THREE.Mesh(track(new THREE.PlaneGeometry(CORR_HW * 2, 3.4)), emat(ZONE_COL[i], { transparent: true, opacity: 0.2, side: THREE.DoubleSide }));
+      plane.position.y = 1.7;
+      const frame = edgesOf(track(new THREE.BoxGeometry(CORR_HW * 2, 3.4, 0.06)), ZONE_COL[i], 0.75);
+      frame.position.y = 1.7;
       const lock = plateSprite("GATE SEALED", "#a63030", "rgba(252,252,254,0.94)", 0.4);
-      lock.position.y = WALL_H + 0.6;
+      lock.position.y = 4.2;
       g.add(plane, frame, lock);
       g.position.set(0, 0, cr.z2);
       scene.add(g);
       return { g, plane: plane.material as THREE.MeshBasicMaterial };
     });
 
-    // no floating story text — the story lives in the pre-level intro cards
-
-    // ambient colorful props
-    const propRand = (seed: number) => {
-      let s = seed;
-      return () => { s = (s * 16807) % 2147483647; return (s % 1000) / 1000; };
-    };
-    // surroundings beyond the walls — trees and rocks line the whole path
+    // ── set dressing ──
     {
-      const rnd = propRand(4242);
-      for (let k = 0; k < 44; k++) {
-        const side = k % 2 === 0 ? 1 : -1;
-        const px2 = side * (17 + rnd() * 12);
-        const pz2 = 14 - rnd() * (ZONE_GAP * 3 + 34);
-        const zi = Math.max(0, Math.min(FINAL, Math.round(-pz2 / ZONE_GAP)));
-        if (rnd() < 0.6) {
-          // stalagmite rising from the cave floor
-          const th = 1.2 + rnd() * 2.6;
-          const spire = new THREE.Mesh(
-            track(new THREE.ConeGeometry(0.5 + rnd() * 0.4, th, 6)),
-            bmat(new THREE.Color(0x4a4034).lerp(new THREE.Color(ZONE_COL[zi]), 0.12).getHex(), { flatShading: true })
-          );
-          spire.position.set(px2, th / 2, pz2);
-          spire.rotation.y = rnd() * Math.PI;
-          scene.add(spire);
-        } else {
-          const rock = new THREE.Mesh(track(new THREE.IcosahedronGeometry(0.5 + rnd() * 0.7, 0)), bmat(0x554a3e, { flatShading: true }));
-          rock.position.set(px2, 0.4, pz2);
-          rock.rotation.y = rnd() * Math.PI;
-          scene.add(rock);
+      const pillarSpots: [number, number, number][] = [];
+      const torchSpots: [number, number, number][] = [];
+      const barrelSpots: [number, number, number][] = [];
+      const crateSpots: [number, number, number][] = [];
+      const boxSpots: [number, number, number][] = [];
+      ZC.forEach((zc, i) => {
+        for (const tz of [-6, 6]) {
+          pillarSpots.push([-9.5, zc + tz, 0], [9.5, zc + tz, 0]);
         }
-      }
+        torchSpots.push([-13.2, zc - 4, Math.PI / 2], [13.2, zc - 4, -Math.PI / 2]);
+        torchSpots.push([-13.2, zc + 4, Math.PI / 2], [13.2, zc + 4, -Math.PI / 2]);
+        barrelSpots.push([-12.6, zc + 8.4, i * 1.3], [12.4, zc - 8.2, i * 2.1]);
+        crateSpots.push([12.7, zc + 7.9, i * 0.8]);
+        if (i !== FINAL) boxSpots.push([-12.8, zc - 7.6, i * 1.7]);
+      });
+      CORRS.forEach(cr => {
+        const mid = (cr.z1 + cr.z2) / 2;
+        torchSpots.push([-1.7, mid, Math.PI / 2], [1.7, mid, -Math.PI / 2]);
+      });
+      scatterProp("/models/pillar.glb", 0.9, pillarSpots);
+      scatterProp("/models/torch.glb", 1.25, torchSpots, true);
+      scatterProp("/models/barrel.glb", 1.15, barrelSpots);
+      scatterProp("/models/crates.glb", 1.05, crateSpots);
+      scatterProp("/models/boxes.glb", 1.0, boxSpots);
+      const bannerFiles = ["banner_green", "banner_red", "banner_yellow"];
+      ZC.forEach((zc, i) => {
+        scatterProp(`/models/${bannerFiles[i]}.glb`, 0.8, [
+          [-13.4, zc, Math.PI / 2],
+          [13.4, zc, -Math.PI / 2],
+        ]);
+      });
     }
 
-    ZC.forEach((zc, zi) => {
-      const rnd = propRand(zi * 977 + 13);
-      const col = ZONE_COL[zi];
-      for (let k = 0; k < 9; k++) {
-        const px2 = (rnd() - 0.5) * 24;
-        const pz2 = zc + (rnd() - 0.5) * 17;
-        if (Math.abs(px2) < 4.5 && Math.abs(pz2 - zc) < 6) continue;
-        const h = 0.7 + rnd() * 2.2;
-        let geo: THREE.BufferGeometry;
-        let py = h / 2;
-        if (zi === 0 || zi === 2) geo = track(new THREE.ConeGeometry(0.42 + rnd() * 0.3, h, 5));
-        else if (zi === FINAL) geo = track(new THREE.CylinderGeometry(0.2, 0.32, h, 6));
-        else { geo = track(new THREE.IcosahedronGeometry(0.5 + rnd() * 0.45, 0)); py = 0.55; }
-        const m = new THREE.Mesh(geo, bmat(new THREE.Color(col).lerp(new THREE.Color(0xffffff), 0.2).getHex(), { flatShading: true, emissive: tint(col, 0.1) }));
-        m.position.set(px2, py, pz2);
-        m.rotation.y = rnd() * Math.PI;
-        scene.add(m);
-      }
-    });
-
-    // pollen dust
+    // dust motes in the torchlight
     {
       const n = 300;
       const pos = new Float32Array(n * 3);
       for (let i = 0; i < n; i++) {
-        pos[i * 3] = (Math.random() - 0.5) * 60;
-        pos[i * 3 + 1] = Math.random() * 10 + 0.5;
-        pos[i * 3 + 2] = 20 - Math.random() * 150;
+        pos[i * 3] = (Math.random() - 0.5) * 30;
+        pos[i * 3 + 1] = Math.random() * 6 + 0.4;
+        pos[i * 3 + 2] = 12 - Math.random() * 90;
       }
       const g = track(new THREE.BufferGeometry());
       g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-      const ptsm = track(new THREE.PointsMaterial({ color: 0xd8c4a0, size: 0.09, transparent: true, opacity: 0.22, depthWrite: false }));
+      const ptsm = track(new THREE.PointsMaterial({ color: 0xd8c4a0, size: 0.07, transparent: true, opacity: 0.3, depthWrite: false }));
       const pts = new THREE.Points(g, ptsm);
       pts.frustumCulled = false;
       scene.add(pts);
     }
+
 
     // ── Viewmodel gun — layered sci-fi pistol ──────────────────────────────
     const gun = new THREE.Group();
@@ -537,9 +549,6 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     pbMesh.count = 0;
     scene.add(pbMesh);
     const m4 = new THREE.Matrix4();
-    const obMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.16, 8, 8)), emat(0xffd88a), 24);
-    obMesh.frustumCulled = false; obMesh.count = 0;
-    scene.add(obMesh);
     const railMat = emat(0x9beeff, { transparent: true, opacity: 0.9 });
     const railMesh = new THREE.Mesh(track(new THREE.BoxGeometry(0.07, 0.07, 1)), railMat);
     railMesh.visible = false;
@@ -725,80 +734,6 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       m.receiveShadow = !glow;
     });
 
-    // ── Model library — finished CC0 assets (KayKit), cloned per placement ──
-    const gltfLoader = new GLTFLoader();
-    const loadModel = (url: string) =>
-      new Promise<GLTF>((res, rej) => gltfLoader.load(url, res, undefined, rej));
-
-    function prepProp(root: THREE.Group, scale: number) {
-      root.scale.setScalar(scale);
-      root.traverse(o => {
-        const m = o as THREE.Mesh;
-        if (m.isMesh) { m.castShadow = true; m.receiveShadow = false; }
-      });
-      return root;
-    }
-    function scatterProp(url: string, scale: number, spots: [number, number, number][], glowTop = false) {
-      loadModel(url).then(g => {
-        const proto = prepProp(g.scene, scale);
-        const box = new THREE.Box3().setFromObject(proto);
-        const y0 = -box.min.y;
-        for (const [x, z, ry] of spots) {
-          const c = proto.clone(true);
-          c.position.set(x, y0, z);
-          c.rotation.y = ry;
-          scene.add(c);
-          if (glowTop) {
-            const gs = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: glowTexture(), color: 0xffc070, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending })));
-            gs.scale.setScalar(0.62);
-            gs.position.set(x, y0 + box.max.y + 0.05, z);
-            scene.add(gs);
-          }
-        }
-      }).catch(() => { /* offline — the procedural world still stands */ });
-    }
-
-    // set dressing: pillars ring every arena, torches mark gates and landmarks,
-    // supply clutter hugs the walls, and each zone flies its colored banners
-    {
-      const pillarSpots: [number, number, number][] = [];
-      ZC.forEach((zc, i) => {
-        const cz = i === FINAL ? zc : zc - 2;
-        for (let k = 0; k < 4; k++) {
-          const a = (k / 4) * Math.PI * 2 + Math.PI / 4;
-          pillarSpots.push([Math.cos(a) * 6.6, cz + Math.sin(a) * 6.6, -a]);
-        }
-      });
-      scatterProp("/models/pillar.glb", 0.85, pillarSpots);
-
-      const torchSpots: [number, number, number][] = [
-        [-3, 10.2, 0], [3, 10.2, 0],
-        [-2.6, ZC[FINAL] + 2.6, 0], [2.6, ZC[FINAL] + 2.6, 0],
-      ];
-      CORRS.forEach(cr => torchSpots.push([-2.4, cr.z2 + 0.6, 0], [2.4, cr.z2 + 0.6, 0]));
-      scatterProp("/models/torch.glb", 1.2, torchSpots, true);
-
-      const barrelSpots: [number, number, number][] = [];
-      const crateSpots: [number, number, number][] = [];
-      ZC.forEach((zc, i) => {
-        barrelSpots.push([-12.6, zc + 7.2, i * 1.3], [12.4, zc - 6.8, i * 2.1]);
-        crateSpots.push([12.6, zc + 6.4, i * 0.8]);
-      });
-      scatterProp("/models/barrel.glb", 1.15, barrelSpots);
-      scatterProp("/models/crates.glb", 1.05, crateSpots);
-      const boxSpots: [number, number, number][] = [[-6.5, 9.6, 0.4]];
-      CORRS.forEach((cr, i) => boxSpots.push([i % 2 === 0 ? 2.15 : -2.15, (cr.z1 + cr.z2) / 2, i]));
-      scatterProp("/models/boxes.glb", 1.0, boxSpots);
-
-      const bannerFiles = ["banner_green", "banner_blue", "banner_red", "banner_yellow"];
-      ZC.forEach((zc, i) => {
-        scatterProp(`/models/${bannerFiles[i]}.glb`, 0.72, [
-          [-ROOM_HW + 0.7, zc, Math.PI / 2],
-          [ROOM_HW - 0.7, zc, -Math.PI / 2],
-        ]);
-      });
-    }
-
     // ── Animated characters (KayKit rigs share one animation library) ───────
     const mixers: THREE.AnimationMixer[] = [];
     interface CharRig { root: THREE.Group; actions: Record<string, THREE.AnimationAction>; current?: string }
@@ -824,10 +759,10 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       rig.current = nm;
     }
     // boss characters — one individual per arena
-    const bossRigs: (CharRig | null)[] = [null, null, null];
-    (["knight", "rogue_hooded", "barbarian"] as const).forEach((file, zi) => {
+    const bossRigs: (CharRig | null)[] = [null, null];
+    (["knight", "barbarian"] as const).forEach((file, zi) => {
       loadModel(`/models/${file}.glb`).then(g => {
-        const rig = makeRig(g.scene, g.animations, [1.5, 1.4, 1.55][zi]);
+        const rig = makeRig(g.scene, g.animations, [1.5, 1.55][zi]);
         bossRigs[zi] = rig;
         const v = bossVis[zi];
         if (v.protoBody) v.protoBody.visible = false;
@@ -837,8 +772,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     });
 
     // summon pools — the boss raises named skeletons (2 per fight max)
-    const summonPools: (CharRig | null)[][] = [[null, null], [null, null], [null, null]];
-    (["skeleton_minion", "skeleton_mage", "skeleton_rogue"] as const).forEach((file, zi) => {
+    const summonPools: (CharRig | null)[][] = [[null, null], [null, null]];
+    (["skeleton_minion", "skeleton_rogue"] as const).forEach((file, zi) => {
       loadModel(`/models/${file}.glb`).then(g => {
         const roots = [g.scene, cloneSkeleton(g.scene) as THREE.Group];
         roots.forEach((root, k) => {
@@ -911,11 +846,10 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       bossX: 0, bossZ: 0, bossHp: 0, bossMax: 1,
       shake: 0, bossPulse: 0, noteT: 0,
       cdA: 2.4, cdB: 3.5,
-      sumT: 4, sumIdx: 0, blinkT: 3, enraged: false, bossMoving: false,
+      sumT: 4, sumIdx: 0, enraged: false, bossMoving: false,
       summons: [0, 1].map(() => ({ active: false, x: 0, z: 0, hp: 0, name: "", rig: null as CharRig | null, label: null as THREE.Sprite | null })),
-      weaponSel: Math.max(0, Math.min(3, initialCleared)),
+      weaponSel: Math.max(0, Math.min(2, initialCleared)),
       railT: 0, railLen: 0, railYaw: 0, railPitch: 0,
-      orbs: [] as { x: number; z: number; a: number; t: number; dead: boolean }[],
       dlgIdx: 0, dlgT: 1.2, nearAnshul: false, canOffer: false, cineT: -1,
       entered: new Set<number>(), introduced: new Set<number>(), bannerT: 0,
       hitSfxT: 0,
@@ -986,12 +920,12 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       st.vicT = -1;
       st.bossX = 0;
       st.bossZ = ZC[zone] - 2;
-      st.bossHp = st.bossMax = [180, 220, 260][zone];
+      st.bossHp = st.bossMax = [180, 240][zone];
       st.pb = [];
       st.hazards = [];
       st.waves = [];
       st.cdA = 2.6; st.cdB = 3.8;
-      st.sumT = 4; st.blinkT = 3; st.enraged = false; st.bossMoving = false;
+      st.sumT = 4; st.enraged = false; st.bossMoving = false;
       clearSummons();
       if (introNameRef.current) introNameRef.current.textContent = CHAPTERS[zone].bossName;
       if (introSubRef.current) introSubRef.current.textContent = CHAPTERS[zone].bossSub;
@@ -1021,8 +955,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       const k = e.key.toLowerCase();
       if (["w", "a", "s", "d", "shift", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) st.keys.add(k);
       const num = parseInt(k, 10);
-      if (num >= 1 && num <= 4 && num - 1 <= st.cleared && num - 1 !== st.weaponSel) {
-        st.weaponSel = Math.min(3, num - 1);
+      if (num >= 1 && num <= 3 && num - 1 <= st.cleared && num - 1 !== st.weaponSel) {
+        st.weaponSel = Math.min(2, num - 1);
         st.reloadT = 0;
       }
       if (k === "r") startReload();
@@ -1067,25 +1001,6 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         if (st.cdA <= 0) { st.cdA = 3.6; spawnWave(st.bossX, st.bossZ, 5.5, 9); }
         st.cdB -= dt;
         if (st.cdB <= 0) { st.cdB = 4.4; spawnHazard(st.px, st.pz, 2.1); }
-      } else if (zone === 1) {
-        // Non-determinism: a hooded rogue who blinks across the arena
-        st.blinkT -= dt;
-        if (st.blinkT <= 0) {
-          st.blinkT = 3.6;
-          burst(st.bossX, st.bossZ, 12, 0x66e0ff, 4, 1.4);
-          const a = Math.random() * Math.PI * 2;
-          st.bossX = Math.cos(a) * (4 + Math.random() * 3.5);
-          st.bossZ = oz - 2 + Math.sin(a) * (2 + Math.random() * 4);
-          burst(st.bossX, st.bossZ, 12, 0x66e0ff, 4, 1.4);
-          spawnWave(st.bossX, st.bossZ, 6, 6.5);
-        }
-        st.cdA -= dt;
-        if (st.cdA <= 0) {
-          st.cdA = 3.4;
-          const a = Math.random() * Math.PI * 2;
-          spawnHazard(st.px, st.pz, 1.9);
-          spawnHazard(st.px + Math.cos(a) * 2.6, st.pz + Math.sin(a) * 2.6, 1.9);
-        }
       } else {
         // Drift: a barbarian who enrages as he breaks
         if (!st.enraged && st.bossHp < st.bossMax * 0.4) {
@@ -1226,7 +1141,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           st.timeScale = 1;
           st.fightActive = false;
           st.cleared = st.fightZone + 1;
-          st.weaponSel = Math.min(3, st.cleared);
+          st.weaponSel = Math.min(2, st.cleared);
           st.ammo = MAGS.slice();
           st.php = 100;
           onEventRef.current("victory", st.fightZone);
@@ -1256,7 +1171,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         st.cineT += rdt;
         st.pb = [];
         st.hazards = []; st.waves = [];
-        if (st.cineT > 0.5 && Math.random() < 0.25) burst(st.bossX + (Math.random() - 0.5) * 2, st.bossZ + (Math.random() - 0.5) * 2, 8, Math.random() < 0.5 ? GREENC : 0xffd88a, 4, 1.5);
+        if (st.cineT > 0.5 && Math.random() < 0.25) burst(st.bossX + (Math.random() - 0.5) * 2, st.bossZ + (Math.random() - 0.5) * 2, 8, Math.random() < 0.5 ? 0x4ade80 : 0xffd88a, 4, 1.5);
         if (st.cineT > 0.4 && st.cineT < 0.5) note("He reads the offer…", 1.2);
         if (st.cineT > 1.7 && st.cineT < 1.8) note("CRITICAL HIT", 0.9);
         if (st.cineT > 2.6 && st.cineT < 2.7) note(`ANSHUL: "When do I start?"`, 1.4);
@@ -1370,7 +1285,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
               sfx("shot");
               for (let i = 0; i < 6; i++) spawnPellet((i / 5 - 0.5) * 0.55, 7, 0, 0.42, 21);
               st.shake = Math.max(st.shake, 0.5);
-            } else if (st.weaponSel === 2) {
+            } else {
               st.fireCd = 0.9;
               st.railT = 0.16;
               st.gunKick = 0.3;
@@ -1379,14 +1294,6 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
               st.railPitch = st.pitch;
               st.railLen = castRay(55, true);
               st.shake = Math.max(st.shake, 0.9);
-            } else {
-              st.fireCd = 0.32;
-              st.gunKick = 0.1;
-              sfx("shot");
-              if (st.orbs.length < 24) {
-                const fa = Math.atan2(-Math.cos(st.yaw), -Math.sin(st.yaw));
-                st.orbs.push({ x: st.px, z: st.pz, a: fa + (Math.random() - 0.5) * 0.5, t: 0, dead: false });
-              }
             }
             if (st.ammo[st.weaponSel] <= 0) startReload();
           }
@@ -1415,37 +1322,6 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           b.dead = true;
         }
       }
-
-      // homing orbs
-      for (const o of st.orbs) {
-        o.t += dt;
-        let tx: number | null = null, tz = 0, best = 20;
-        for (const s of st.summons) {
-          if (!s.active) continue;
-          const d = Math.hypot(s.x - o.x, s.z - o.z);
-          if (d < best) { best = d; tx = s.x; tz = s.z; }
-        }
-        if (tx === null && st.fightActive) { tx = st.bossX; tz = st.bossZ; }
-        if (tx !== null) {
-          const want = Math.atan2(tz - o.z, tx - o.x);
-          let dA = want - o.a;
-          while (dA > Math.PI) dA -= Math.PI * 2;
-          while (dA < -Math.PI) dA += Math.PI * 2;
-          o.a += Math.max(-6 * dt, Math.min(6 * dt, dA));
-        }
-        o.x += Math.cos(o.a) * 10.5 * dt;
-        o.z += Math.sin(o.a) * 10.5 * dt;
-        const probe: PB = { x: o.x, y: 1.2, z: o.z, vx: 0, vy: 0, vz: 0, dmg: 14, pierce: 0, life: 0, dead: false };
-        let hit = summonHit(probe);
-        if (!hit && st.fightActive && hitBoss(probe)) hit = true;
-        if (!hit && st.cleared >= FINAL && Math.hypot(o.x - 0, o.z - ZC[FINAL]) < 1.4) {
-          floatTxt(IMMUNE_TEXTS[(Math.random() * IMMUNE_TEXTS.length) | 0], "#8a94a8", o.x, o.z, 0.4, 1.5);
-          hit = true;
-        }
-        if (hit) registerHit();
-        if (hit || o.t > 2.6 || !insideWorld(o.x, o.z)) { o.dead = true; burst(o.x, o.z, 5, 0xffd88a, 3, 1.2); }
-      }
-      st.orbs = st.orbs.filter(o => !o.dead);
 
       // hazards: telegraph then pulse once
       for (const h of st.hazards) {
@@ -1550,9 +1426,6 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       let n = 0;
       for (const b of st.pb) { m4.setPosition(b.x, b.y, b.z); pbMesh.setMatrixAt(n++, m4); }
       pbMesh.count = n; pbMesh.instanceMatrix.needsUpdate = true;
-      n = 0;
-      for (const o of st.orbs) { m4.setPosition(o.x, 1.2, o.z); obMesh.setMatrixAt(n++, m4); }
-      obMesh.count = n; obMesh.instanceMatrix.needsUpdate = true;
 
       // rail flash
       if (st.railT > 0) {
@@ -1756,7 +1629,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       if (lockHintRef.current) lockHintRef.current.style.opacity = !st.locked && !seqActive() && !pausedRef.current ? "1" : "0";
       if (bannerRef.current) bannerRef.current.style.opacity = st.bannerT > 0.4 ? "1" : "0";
       if (promptRef.current) promptRef.current.style.opacity = st.canOffer && st.cineT < 0 ? "1" : "0";
-      if (weaponRef.current) weaponRef.current.textContent = `[${st.weaponSel + 1}] ${WEAPONS[st.weaponSel].name}${st.cleared > 0 ? ` · 1-${Math.min(4, st.cleared + 1)}` : ""}`;
+      if (weaponRef.current) weaponRef.current.textContent = `[${st.weaponSel + 1}] ${WEAPONS[st.weaponSel].name}${st.cleared > 0 ? ` · 1-${Math.min(3, st.cleared + 1)}` : ""}`;
       if (ammoRef.current) {
         const reloading = st.reloadT > 0;
         ammoRef.current.textContent = reloading ? "RELOADING" : `${Math.ceil(st.ammo[st.weaponSel])}`;
@@ -1764,7 +1637,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         ammoRef.current.style.opacity = reloading ? String(0.5 + Math.sin(st.t * 10) * 0.4) : "1";
       }
       if (zoneRef.current) {
-        const dots = Array.from({ length: 4 }, (_, i) => (i < st.cleared ? "◆" : i === FINAL ? "★" : "◇")).join(" ");
+        const dots = Array.from({ length: 3 }, (_, i) => (i < st.cleared ? "◆" : i === FINAL ? "★" : "◇")).join(" ");
         zoneRef.current.textContent = `${dots}   zone ${ROMAN[zAt]} — ${CHAPTERS[zAt].bossName}`;
       }
       if (objRef.current) {
