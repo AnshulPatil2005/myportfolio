@@ -737,8 +737,26 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     // ── Animated characters (KayKit rigs share one animation library) ───────
     const mixers: THREE.AnimationMixer[] = [];
     interface CharRig { root: THREE.Group; actions: Record<string, THREE.AnimationAction>; current?: string }
-    function makeRig(root: THREE.Group, anims: THREE.AnimationClip[], scale: number): CharRig {
+    // KayKit rigs ship every weapon variant attached at once — a knight
+    // wearing four shields. Hide everything outside the chosen loadout.
+    const LOADOUT: Record<string, string[]> = {
+      Knight: ["1H_Sword", "Round_Shield"],
+      Barbarian: ["2H_Axe"],
+      Mage: [], // he carries the holo-laptop instead
+    };
+    const ATTACH_RE = /sword|shield|axe|wand|staff|spellbook|mug|bow|dagger|quiver/i;
+    function applyLoadout(root: THREE.Group, kind: keyof typeof LOADOUT | null) {
+      if (!kind) return;
+      const keep = LOADOUT[kind] || [];
+      root.traverse(o => {
+        const nm = o.name || "";
+        if (ATTACH_RE.test(nm) && !keep.includes(nm)) o.visible = false;
+      });
+    }
+
+    function makeRig(root: THREE.Group, anims: THREE.AnimationClip[], scale: number, kind: keyof typeof LOADOUT | null = null): CharRig {
       root.scale.setScalar(scale);
+      applyLoadout(root, kind);
       root.traverse(o => {
         const m = o as THREE.Mesh;
         if (m.isMesh) m.castShadow = true;
@@ -762,7 +780,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     const bossRigs: (CharRig | null)[] = [null, null];
     (["knight", "barbarian"] as const).forEach((file, zi) => {
       loadModel(`/models/${file}.glb`).then(g => {
-        const rig = makeRig(g.scene, g.animations, [1.5, 1.55][zi]);
+        const rig = makeRig(g.scene, g.animations, [1.5, 1.55][zi], zi === 0 ? "Knight" : "Barbarian");
         bossRigs[zi] = rig;
         const v = bossVis[zi];
         if (v.protoBody) v.protoBody.visible = false;
@@ -808,6 +826,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     loadModel("/models/anshul.glb").then(gltf => {
       const model = gltf.scene;
       model.scale.setScalar(1.4);
+      applyLoadout(model, "Mage");
       model.traverse(o => {
         const mm = o as THREE.Mesh;
         if (mm.isMesh) { mm.castShadow = true; mm.receiveShadow = false; }
@@ -846,7 +865,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       bossX: 0, bossZ: 0, bossHp: 0, bossMax: 1,
       shake: 0, bossPulse: 0, noteT: 0,
       cdA: 2.4, cdB: 3.5,
-      sumT: 4, sumIdx: 0, enraged: false, bossMoving: false,
+      sumT: 4, sumIdx: 0, blinkT: 4.2, enraged: false, bossMoving: false,
       summons: [0, 1].map(() => ({ active: false, x: 0, z: 0, hp: 0, name: "", rig: null as CharRig | null, label: null as THREE.Sprite | null })),
       weaponSel: Math.max(0, Math.min(2, initialCleared)),
       railT: 0, railLen: 0, railYaw: 0, railPitch: 0,
@@ -920,12 +939,12 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       st.vicT = -1;
       st.bossX = 0;
       st.bossZ = ZC[zone] - 2;
-      st.bossHp = st.bossMax = [180, 240][zone];
+      st.bossHp = st.bossMax = [170, 240][zone];
       st.pb = [];
       st.hazards = [];
       st.waves = [];
       st.cdA = 2.6; st.cdB = 3.8;
-      st.sumT = 4; st.enraged = false; st.bossMoving = false;
+      st.sumT = 4; st.blinkT = 4.2; st.enraged = false; st.bossMoving = false;
       clearSummons();
       if (introNameRef.current) introNameRef.current.textContent = CHAPTERS[zone].bossName;
       if (introSubRef.current) introSubRef.current.textContent = CHAPTERS[zone].bossSub;
@@ -990,12 +1009,24 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       st.bossMoving = false;
 
       if (zone === 0) {
-        // the Monolith: a heavy knight — slow relentless advance, slams
+        // Non-determinism: an armored build that advances, then flickers
+        // to somewhere else entirely — the same operation, a different result
         if (dP > 2.6) {
           const a = Math.atan2(st.pz - st.bossZ, st.px - st.bossX);
-          st.bossX = Math.max(-11.5, Math.min(11.5, st.bossX + Math.cos(a) * 1.25 * dt));
-          st.bossZ = Math.max(oz - 9.5, Math.min(oz + 9.5, st.bossZ + Math.sin(a) * 1.25 * dt));
+          st.bossX = Math.max(-11.5, Math.min(11.5, st.bossX + Math.cos(a) * 1.35 * dt));
+          st.bossZ = Math.max(oz - 9.5, Math.min(oz + 9.5, st.bossZ + Math.sin(a) * 1.35 * dt));
           st.bossMoving = true;
+        }
+        st.blinkT -= dt;
+        if (st.blinkT <= 0) {
+          st.blinkT = 4.2;
+          burst(st.bossX, st.bossZ, 14, 0x9fd8ff, 4, 1.4);
+          spawnWave(st.bossX, st.bossZ, 6, 7);
+          const a = Math.random() * Math.PI * 2;
+          st.bossX = Math.max(-10, Math.min(10, st.px + Math.cos(a) * 7));
+          st.bossZ = Math.max(oz - 8, Math.min(oz + 8, st.pz + Math.sin(a) * 7));
+          burst(st.bossX, st.bossZ, 14, 0x9fd8ff, 4, 1.4);
+          st.bossMoving = false;
         }
         st.cdA -= dt;
         if (st.cdA <= 0) { st.cdA = 3.6; spawnWave(st.bossX, st.bossZ, 5.5, 9); }

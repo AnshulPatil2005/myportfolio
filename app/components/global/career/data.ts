@@ -5,18 +5,18 @@ export const ROMAN = ["I", "II", "III"];
 
 export const CHAPTERS = [
   {
-    year: "2025", org: "Techvisio Design", role: "Software Developer Intern",
+    year: "2026", org: "GSoC · BRL-CAD", role: "Selected Contributor · Manifold",
     story: [
-      "First real production system. A full-stack analytics dashboard —",
-      "React, Django REST, SQL — drowning under 10,000 user events a day,",
-      "300K+ monthly records flowing through AWS S3 pipelines.",
-      "The database had become something else. Something slow. Something huge.",
+      "Google Summer of Code. A C++ geometry engine that must produce",
+      "the exact same mesh on every platform, every compiler, every run.",
+      "But floating point drifts. Builds diverge. The same operation",
+      "returns a subtly different truth on every machine.",
     ],
-    bossName: "THE MONOLITH", bossSub: "a heavy knight — cut down the queries it summons",
-    bossMsg: "That's the Monolith down. In real life that fight took me a whole summer of query plans and caching — you did it in about two minutes. Keep moving.",
-    victory: "Reduced backend API latency by 40% through query optimization and caching, while processing 10K+ daily user events and 300K+ monthly records through AWS S3 pipelines.",
-    quip: "weak point found: the queries nobody ever EXPLAIN'd.",
-    unlock: "SQL BURST", unlockDesc: "shotgun — six pellets, close-range purge",
+    bossName: "NON-DETERMINISM", bossSub: "it will not hold still — keep your aim honest",
+    bossMsg: "Pinned. Non-determinism took me SHA256 checksums across three platforms and a pile of CI runs to beat — you just needed better aim. One gate left before you meet me.",
+    victory: "Designed cross-platform determinism checks with fixed mesh cases, canonical artifacts, and SHA256 comparison — plus Linux Clang ASan/UBSan testing and PR/weekly benchmark workflows with base-vs-head comparison and dashboard trend visualization.",
+    quip: "SHA256 matched on all platforms. reality agreed with itself again.",
+    unlock: "CHECKSUM BURST", unlockDesc: "shotgun — six pellets, every one identical",
     exitTo: "jobs",
   },
   {
@@ -51,7 +51,7 @@ export const CHAPTERS = [
 
 export const WEAPONS = [
   { name: "CONSOLE.LOG" },
-  { name: "SQL BURST" },
+  { name: "CHECKSUM BURST" },
   { name: "FULL STACK" },
 ];
 
@@ -59,15 +59,15 @@ export const IMMUNE_TEXTS = ["0", "IMMUNE", "0", "already fixed", "0", "skill is
 
 // the names each boss shouts as it raises its skeletons
 export const SUMMON_NAMES = [
-  ["SLOW QUERY", "N+1 QUERY", "FULL SCAN", "LOCKED TABLE"],
+  ["RACE CONDITION", "FLOAT DRIFT", "HEISENBUG", "OFF-BY-ONE"],
   ["auth", "api", "billing", "LEGACY CODE"],
 ];
 
 // the final meeting — said once, in order, then he sends you to LinkedIn
 export const ANSHUL_DIALOGUE = [
   "You actually made it. Most visitors just scroll.",
-  "You beat the database that taught me SQL, and the architecture drift my own product hunts.",
-  "Between those two I got into Google Summer of Code with BRL-CAD, making a C++ geometry engine produce the same mesh on every machine. That one doesn't fit in an arena.",
+  "You beat the bug that taught me rigor, and the architecture drift my own product hunts.",
+  "Before those there was a dashboard at Techvisio drowning in 10,000 events a day — I cut its API latency by 40%. That one was too slow to make a good boss.",
   "That was my résumé. You just played it.",
   "And as you've noticed — I'm immune to bullets. Not to opportunities.",
   "Now go message me about the job offer.",

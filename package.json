@@ -6,12 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "optimize:models": "node scripts/optimize-models.mjs",
+    "verify:models": "node scripts/verify-models.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.101.0",
     "@giscus/react": "^2.3.0",
-    "@types/three": "^0.185.4",
     "autoprefixer": "10.4.15",
     "cmdk": "^1.1.1",
     "eslint": "^8.45.0",
@@ -22,18 +23,18 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-github-calendar": "^4.1.5",
-    "react-icons": "^4.10.1",
-    "react-type-animation": "^3.2.0",
     "sharp": "^0.32.6",
-    "styled-components": "^6.1.11",
     "tailwindcss": "3.3.3",
-    "three": "^0.185.1"
+    "three": "^0.185.1",
+    "next-themes": "^0.2.1"
   },
   "devDependencies": {
+    "@gltf-transform/core": "^4.4.2",
+    "@gltf-transform/functions": "^4.4.2",
     "@types/node": "22.13.10",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
-    "next-themes": "^0.2.1",
+    "@types/three": "^0.185.4",
     "typescript": "5.8.2"
   }
 }
