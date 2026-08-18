@@ -96,12 +96,12 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xcfe4f5);
-    scene.fog = new THREE.Fog(0xcfe4f5, 30, 115);
+    scene.background = new THREE.Color(0x14100c);
+    scene.fog = new THREE.Fog(0x14100c, 16, 58);
 
-    // bright clean daylight
-    scene.add(new THREE.HemisphereLight(0xeaf4ff, 0xcabfa8, 1.0));
-    const sun = new THREE.DirectionalLight(0xfff2dc, 2.0);
+    // cave lighting — dim ambience, the colored arena lights carry the scene
+    scene.add(new THREE.HemisphereLight(0x574a3e, 0x241c14, 0.55));
+    const sun = new THREE.DirectionalLight(0xc9b494, 0.55);
     sun.position.set(18, 30, 10);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
@@ -111,10 +111,18 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     sun.shadow.bias = -0.002;
     scene.add(sun, sun.target);
     ZC.forEach((zc, i) => {
-      const pl = new THREE.PointLight(ZONE_COL[i], 40, 32, 1.8);
-      pl.position.set(0, 6.5, i === FINAL ? zc : zc - 2);
+      const pl = new THREE.PointLight(ZONE_COL[i], 110, 34, 1.7);
+      pl.position.set(0, 6, i === FINAL ? zc : zc - 2);
       scene.add(pl);
     });
+    // warm torchlight at the gates, the spawn, and the final platform
+    const torchLightSpots: [number, number][] = [[0, 10.2], [0, ZC[FINAL] + 2.6]];
+    CORRS.forEach(cr => torchLightSpots.push([0, cr.z2 + 0.6]));
+    for (const [lx, lz] of torchLightSpots) {
+      const tl = new THREE.PointLight(0xff9a50, 30, 13, 1.8);
+      tl.position.set(lx, 2.6, lz);
+      scene.add(tl);
+    }
 
     const camera = new THREE.PerspectiveCamera(62, RW / RH, 0.05, 300);
     scene.add(camera);
@@ -123,7 +131,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     composer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     composer.setSize(RW, RH);
     composer.addPass(new RenderPass(scene, camera));
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(RW, RH), 0.22, 0.3, 0.9));
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(RW, RH), 0.32, 0.35, 0.8));
     composer.addPass(new OutputPass());
 
     // ── Helpers ────────────────────────────────────────────────────────────
@@ -229,110 +237,69 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       return tex;
     }
 
-    // ── Sky ────────────────────────────────────────────────────────────────
+    // ── Cave ───────────────────────────────────────────────────────────────
     {
-      const skyGeo = track(new THREE.SphereGeometry(220, 24, 16));
-      const skyMat = track(new THREE.ShaderMaterial({
-        side: THREE.BackSide,
-        depthWrite: false,
-        uniforms: {
-          top: { value: new THREE.Color(0x3f8de0) },
-          mid: { value: new THREE.Color(0x9fd0f2) },
-          bot: { value: new THREE.Color(0xfdf0da) },
-        },
-        vertexShader: `varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-        fragmentShader: `varying vec3 vP; uniform vec3 top; uniform vec3 mid; uniform vec3 bot;
-          void main(){ float h = normalize(vP).y;
-          vec3 c = h > 0.12 ? mix(mid, top, smoothstep(0.12, 0.65, h)) : mix(bot, mid, smoothstep(-0.1, 0.12, h));
-          gl_FragColor = vec4(c, 1.0); }`,
-      }));
-      const sky = new THREE.Mesh(skyGeo, skyMat);
-      sky.position.set(0, 0, -51);
-      scene.add(sky);
-      const c = document.createElement("canvas");
-      c.width = c.height = 256;
-      const g2 = c.getContext("2d")!;
-      const grad = g2.createRadialGradient(128, 128, 10, 128, 128, 128);
-      grad.addColorStop(0, "rgba(255,250,235,1)");
-      grad.addColorStop(0.25, "rgba(255,235,190,0.8)");
-      grad.addColorStop(1, "rgba(255,225,170,0)");
-      g2.fillStyle = grad;
-      g2.fillRect(0, 0, 256, 256);
-      const tex = track(new THREE.CanvasTexture(c));
-      const sm = track(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false, fog: false }));
-      const glow = new THREE.Sprite(sm);
-      glow.scale.setScalar(75);
-      glow.position.set(0, 14, -255);
-      scene.add(glow);
-      for (let i = 0; i < 14; i++) {
-        const a = (i / 14) * Math.PI * 2;
-        const dist = 85 + ((i * 37) % 45);
-        const h = 16 + ((i * 53) % 22);
+      // rock ceiling over the whole cavern
+      const ceil = new THREE.Mesh(track(new THREE.PlaneGeometry(160, 280)), bmat(0x3a322a, { flatShading: true }));
+      ceil.rotation.x = Math.PI / 2;
+      ceil.position.set(0, 8.5, -51);
+      scene.add(ceil);
+
+      // stalactites hanging from the ceiling
+      for (let i = 0; i < 60; i++) {
+        const px2 = -70 + ((i * 137) % 140);
+        const pz2 = 22 - ((i * 91) % 250);
+        const h = 1.2 + ((i * 53) % 30) / 10;
         const m = new THREE.Mesh(
-          track(new THREE.ConeGeometry(9 + ((i * 29) % 8), h, 5)),
-          bmat(0x8fa8cc, { flatShading: true })
+          track(new THREE.ConeGeometry(0.35 + ((i * 29) % 10) / 18, h, 6)),
+          bmat(0x453b31, { flatShading: true })
         );
-        m.position.set(Math.cos(a) * dist, h / 2 - 2, -51 + Math.sin(a) * dist * 1.2);
+        m.rotation.x = Math.PI;
+        m.position.set(px2, 8.5 - h / 2 + 0.05, pz2);
+        scene.add(m);
+      }
+
+      // cavern walls closing in around the playable area
+      for (let i = 0; i < 26; i++) {
+        const a = (i / 26) * Math.PI * 2;
+        const dist = 38 + ((i * 37) % 26);
+        const h = 9 + ((i * 53) % 6);
+        const m = new THREE.Mesh(
+          track(new THREE.ConeGeometry(7 + ((i * 29) % 6), h, 5)),
+          bmat(0x3f362c, { flatShading: true })
+        );
+        m.position.set(Math.cos(a) * dist, h / 2 - 1.5, -51 + Math.sin(a) * dist * 1.35);
         m.rotation.y = a;
+        scene.add(m);
+      }
+
+      // glowing crystal clusters in the cavern dark — distant color accents
+      for (let i = 0; i < 14; i++) {
+        const side = i % 2 === 0 ? 1 : -1;
+        const px2 = side * (19 + ((i * 31) % 16));
+        const pz2 = 12 - ((i * 67) % 130);
+        const zi = Math.max(0, Math.min(FINAL, Math.round(-pz2 / ZONE_GAP)));
+        const m = new THREE.Mesh(
+          track(new THREE.ConeGeometry(0.4, 1.2 + ((i * 17) % 10) / 8, 5)),
+          emat(ZONE_COL[zi], { transparent: true, opacity: 0.55 })
+        );
+        m.position.set(px2, 0.6, pz2);
+        m.rotation.z = ((i * 41) % 10 - 5) / 14;
         scene.add(m);
       }
     }
 
-    // drifting clouds + floating islands
-    const cloudSprites: { s: THREE.Sprite; bx: number; sp: number }[] = [];
-    const islands: { g: THREE.Group; by: number }[] = [];
-    {
-      const c = document.createElement("canvas");
-      c.width = 256; c.height = 128;
-      const g2 = c.getContext("2d")!;
-      for (const [cx, cy, cr] of [[70, 74, 46], [128, 58, 56], [186, 76, 44], [110, 84, 40]] as [number, number, number][]) {
-        const grad = g2.createRadialGradient(cx, cy, 4, cx, cy, cr);
-        grad.addColorStop(0, "rgba(255,255,255,0.95)");
-        grad.addColorStop(1, "rgba(255,255,255,0)");
-        g2.fillStyle = grad;
-        g2.fillRect(0, 0, 256, 128);
-      }
-      const tex = track(new THREE.CanvasTexture(c));
-      for (let i = 0; i < 9; i++) {
-        const sm = track(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity: 0.7, depthWrite: false, fog: false }));
-        const s = new THREE.Sprite(sm);
-        const w = 20 + (i * 7) % 16;
-        s.scale.set(w, w * 0.42, 1);
-        const bx = -60 + (i * 137) % 120;
-        s.position.set(bx, 26 + (i * 31) % 16, 16 - (i * 53) % 150);
-        scene.add(s);
-        cloudSprites.push({ s, bx, sp: 0.14 + (i % 3) * 0.08 });
-      }
-      for (let i = 0; i < 4; i++) {
-        const g = new THREE.Group();
-        const top = new THREE.Mesh(track(new THREE.CylinderGeometry(2.6, 3.1, 1.1, 7)), bmat(0x9fbf8a, { flatShading: true }));
-        const under = new THREE.Mesh(track(new THREE.ConeGeometry(2.9, 3.4, 7)), bmat(0x8a7a68, { flatShading: true }));
-        under.rotation.x = Math.PI;
-        under.position.y = -2.2;
-        const treeT = new THREE.Mesh(track(new THREE.CylinderGeometry(0.09, 0.12, 0.8, 5)), bmat(0x7a5c40));
-        treeT.position.y = 0.95;
-        const treeC = new THREE.Mesh(track(new THREE.ConeGeometry(0.6, 1.4, 6)), bmat(0x5fae72, { flatShading: true }));
-        treeC.position.y = 1.9;
-        g.add(top, under, treeT, treeC);
-        const side = i % 2 === 0 ? 1 : -1;
-        const by = 17 + (i * 5) % 9;
-        g.position.set(side * (24 + (i * 11) % 14), by, -8 - i * 32);
-        scene.add(g);
-        islands.push({ g, by });
-      }
-    }
-
     // ── Terrain ────────────────────────────────────────────────────────────
-    const ground = new THREE.Mesh(track(new THREE.PlaneGeometry(140, 260)), bmat(0xcfc8b6));
+    const ground = new THREE.Mesh(track(new THREE.PlaneGeometry(140, 260)), bmat(0x2b2620));
     ground.rotation.x = -Math.PI / 2;
     ground.position.set(0, -0.04, -51);
     scene.add(ground);
     const tint = (hex: number, k: number) => new THREE.Color(hex).multiplyScalar(k).getHex();
-    const pastel = (hex: number, k: number) => new THREE.Color(0xe9e2d2).lerp(new THREE.Color(hex), k).getHex();
+    const stone = (hex: number, k: number) => new THREE.Color(0x4a4238).lerp(new THREE.Color(hex), k).getHex();
     ZC.forEach((zc, i) => {
       const floor = new THREE.Mesh(
         track(new THREE.PlaneGeometry(ROOM_HW * 2, ROOM_HD * 2)),
-        bmat(pastel(ZONE_COL[i], 0.22))
+        bmat(stone(ZONE_COL[i], 0.2))
       );
       floor.rotation.x = -Math.PI / 2;
       floor.position.set(0, -0.02, zc);
@@ -341,7 +308,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     CORRS.forEach((cr, i) => {
       const floor = new THREE.Mesh(
         track(new THREE.PlaneGeometry(CORR_HW * 2, cr.z2 - cr.z1)),
-        bmat(pastel(ZONE_COL[i + 1], 0.28))
+        bmat(stone(ZONE_COL[i + 1], 0.26))
       );
       floor.rotation.x = -Math.PI / 2;
       floor.position.set(0, -0.02, (cr.z1 + cr.z2) / 2);
@@ -349,14 +316,14 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     });
     const grid = new THREE.GridHelper(260, 130, 0xffffff, 0xffffff);
     (grid.material as THREE.Material).transparent = true;
-    (grid.material as THREE.Material).opacity = 0.1;
+    (grid.material as THREE.Material).opacity = 0.05;
     grid.position.z = -51;
     scene.add(grid);
 
     const WALL_H = 2.6;
     function mkWall(w: number, d: number, x: number, z: number, accent: number) {
       const geo = track(new THREE.BoxGeometry(w, WALL_H, d));
-      const mesh = new THREE.Mesh(geo, bmat(pastel(accent, 0.08)));
+      const mesh = new THREE.Mesh(geo, bmat(stone(accent, 0.1)));
       mesh.position.set(x, WALL_H / 2, z);
       const e = edgesOf(geo, accent, 0.55);
       e.position.copy(mesh.position);
@@ -428,19 +395,18 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         const px2 = side * (17 + rnd() * 12);
         const pz2 = 14 - rnd() * (ZONE_GAP * 3 + 34);
         const zi = Math.max(0, Math.min(FINAL, Math.round(-pz2 / ZONE_GAP)));
-        if (rnd() < 0.62) {
-          // stylized tree
-          const th = 1.4 + rnd() * 2.4;
-          const trunk = new THREE.Mesh(track(new THREE.CylinderGeometry(0.12, 0.16, th * 0.45, 6)), bmat(0x7a5c40));
-          trunk.position.set(px2, th * 0.22, pz2);
-          const crown = new THREE.Mesh(
-            track(new THREE.ConeGeometry(0.8 + rnd() * 0.5, th, 6)),
-            bmat(new THREE.Color(ZONE_COL[zi]).lerp(new THREE.Color(0x3f9f5f), 0.55).lerp(new THREE.Color(0xffffff), 0.1).getHex(), { flatShading: true })
+        if (rnd() < 0.6) {
+          // stalagmite rising from the cave floor
+          const th = 1.2 + rnd() * 2.6;
+          const spire = new THREE.Mesh(
+            track(new THREE.ConeGeometry(0.5 + rnd() * 0.4, th, 6)),
+            bmat(new THREE.Color(0x4a4034).lerp(new THREE.Color(ZONE_COL[zi]), 0.12).getHex(), { flatShading: true })
           );
-          crown.position.set(px2, th * 0.45 + th * 0.5, pz2);
-          scene.add(trunk, crown);
+          spire.position.set(px2, th / 2, pz2);
+          spire.rotation.y = rnd() * Math.PI;
+          scene.add(spire);
         } else {
-          const rock = new THREE.Mesh(track(new THREE.IcosahedronGeometry(0.5 + rnd() * 0.7, 0)), bmat(0xb8b0a2, { flatShading: true }));
+          const rock = new THREE.Mesh(track(new THREE.IcosahedronGeometry(0.5 + rnd() * 0.7, 0)), bmat(0x554a3e, { flatShading: true }));
           rock.position.set(px2, 0.4, pz2);
           rock.rotation.y = rnd() * Math.PI;
           scene.add(rock);
@@ -479,7 +445,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       }
       const g = track(new THREE.BufferGeometry());
       g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-      const ptsm = track(new THREE.PointsMaterial({ color: 0xffffff, size: 0.09, transparent: true, opacity: 0.3, depthWrite: false }));
+      const ptsm = track(new THREE.PointsMaterial({ color: 0xd8c4a0, size: 0.09, transparent: true, opacity: 0.22, depthWrite: false }));
       const pts = new THREE.Points(g, ptsm);
       pts.frustumCulled = false;
       scene.add(pts);
@@ -1760,19 +1726,12 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         (beacon.material as THREE.MeshBasicMaterial).color.setHex(ZONE_COL[zi2]);
       } else beacon.visible = false;
 
-      // drifting clouds + bobbing islands
-      cloudSprites.forEach((c2, i) => {
-        c2.s.position.x = c2.bx + Math.sin(st.t * 0.05 * (1 + c2.sp) + i * 2.1) * 9;
-      });
-      islands.forEach((is, i) => {
-        is.g.position.y = is.by + Math.sin(st.t * 0.5 + i * 1.7) * 0.5;
-        is.g.rotation.y = st.t * 0.04 * (i % 2 === 0 ? 1 : -1);
-      });
-
+      // the cave air takes on the current zone's glow
       const zAt = Math.max(0, Math.min(FINAL, Math.round(-st.pz / ZONE_GAP)));
-      colA.setHex(ZONE_COL[zAt]).multiplyScalar(0.08);
-      colB.setHex(0xc4daea).add(colA);
+      colA.setHex(ZONE_COL[zAt]).multiplyScalar(0.045);
+      colB.setHex(0x120e0a).add(colA);
       (scene.fog as THREE.Fog).color.lerp(colB, 0.03);
+      (scene.background as THREE.Color).copy((scene.fog as THREE.Fog).color);
 
       // HUD
       if (hpFillRef.current) {
