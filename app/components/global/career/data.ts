@@ -20,17 +20,18 @@ export const CHAPTERS = [
     exitTo: "jobs",
   },
   {
-    year: "2026", org: "Stratum", role: "Founder · Builder",
+    year: "2026", org: "Stratum · The Offer", role: "Founder · Builder",
     story: [
-      "Everything learned, fused into one product: an intelligence layer",
-      "that reviews pull requests, scores deployment risk, and correlates",
+      "Everything learned, fused into one product: Stratum — an intelligence",
+      "layer that reviews pull requests, scores deployment risk, and traces",
       "production incidents back to the code that caused them.",
-      "To build it, he had to face the thing it was built to detect.",
+      "Which leaves exactly one obstacle between you and hiring him.",
+      "It is not a bug. It is paperwork.",
     ],
-    bossName: "ARCHITECTURE DRIFT", bossSub: "it enrages as it breaks — finish it fast",
-    bossMsg: "Drift contained — that's literally what Stratum does every day. You've cleared my history. I'm waiting at the end of the tunnel. Come say hi.",
+    bossName: "THE APPLICATION", bossSub: "a job application form, four pages, fully weaponised",
+    bossMsg: "You filled it out. Nobody fills it out. That was the last thing standing between you and me — I'm waiting at the end of the tunnel. Come say hi.",
     victory: "Shipped Stratum — PR review with typed findings and risk scoring, deployment conflict detection, live architecture-drift mapping, and Sentry/Render/Railway incident correlation. 4 stages, 115 tests, 3 providers.",
-    quip: "drift contained. the modules hold. this is what the product does daily.",
+    quip: "section 4 complete. references verified. no fields left blank.",
     unlock: "FULL STACK", unlockDesc: "railgun — one exact answer, pierces everything",
     exitTo: "featured-work",
   },
@@ -60,13 +61,13 @@ export const IMMUNE_TEXTS = ["0", "IMMUNE", "0", "already fixed", "0", "skill is
 // the names each boss shouts as it raises its skeletons
 export const SUMMON_NAMES = [
   ["RACE CONDITION", "FLOAT DRIFT", "HEISENBUG", "OFF-BY-ONE"],
-  ["auth", "api", "billing", "LEGACY CODE"],
+  ["COVER LETTER", "REFERENCES", "NOTICE PERIOD", "SALARY EXPECTATION"],
 ];
 
 // the final meeting — said once, in order, then he sends you to LinkedIn
 export const ANSHUL_DIALOGUE = [
   "You actually made it. Most visitors just scroll.",
-  "You beat the bug that taught me rigor, and the architecture drift my own product hunts.",
+  "You beat the bug that taught me rigor, and then you beat my own hiring paperwork.",
   "Before those there was a dashboard at Techvisio drowning in 10,000 events a day — I cut its API latency by 40%. That one was too slow to make a good boss.",
   "That was my résumé. You just played it.",
   "And as you've noticed — I'm immune to bullets. Not to opportunities.",

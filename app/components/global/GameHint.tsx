@@ -57,13 +57,13 @@ export default function GameHint() {
               3D game through my actual experience.
             </p>
             <p className="font-mono text-[11px] dark:text-zinc-500 text-zinc-500 mb-7">
-              three bosses from my career · ~3 minutes · me at the end, asking for a job offer
+              two bosses from my career · ~3 minutes · me at the end, asking for a job offer
             </p>
             <div className="flex items-center justify-center gap-4">
               <button
                 onClick={() => {
                   dismiss();
-                  window.dispatchEvent(new KeyboardEvent("keydown", { key: "c", bubbles: true }));
+                  window.dispatchEvent(new CustomEvent("career-mode:open"));
                 }}
                 className="font-mono text-[12px] uppercase tracking-[0.18em] text-ink bg-accent px-6 py-2.5 hover:opacity-85 transition-opacity"
               >

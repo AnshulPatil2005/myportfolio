@@ -5,7 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 const backup = process.argv[2];
-const files = ["anshul", "knight", "barbarian", "skeleton_minion", "skeleton_rogue"];
+const files = ["anshul", "knight", "skeleton_minion", "skeleton_rogue"];
 
 function stats(p) {
   const buf = fs.readFileSync(p);

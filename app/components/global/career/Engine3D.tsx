@@ -8,7 +8,7 @@ import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { useEffect, useRef } from "react";
-import { CHAPTERS, WEAPONS, IMMUNE_TEXTS, ANSHUL_DIALOGUE, SUMMON_NAMES, ROMAN } from "./data";
+import { CHAPTERS, WEAPONS, IMMUNE_TEXTS, ANSHUL_DIALOGUE, SUMMON_NAMES, ROMAN, LINKEDIN_URL } from "./data";
 
 // ── World: two boss halls, then Anshul's chamber — built on a 4u tile grid ────
 const TILE = 4;
@@ -95,17 +95,17 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     mount.appendChild(renderer.domElement);
     const canvas = renderer.domElement;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
+    renderer.toneMappingExposure = 1.0;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x14100c);
-    scene.fog = new THREE.Fog(0x14100c, 16, 58);
+    scene.background = new THREE.Color(0x1b1a1f);
+    scene.fog = new THREE.Fog(0x1b1a1f, 22, 78);
 
     // cave lighting — dim ambience, the colored arena lights carry the scene
-    scene.add(new THREE.HemisphereLight(0x574a3e, 0x241c14, 0.55));
-    const sun = new THREE.DirectionalLight(0xc9b494, 0.55);
+    scene.add(new THREE.HemisphereLight(0xb9c2d0, 0x4a453f, 1.15));
+    const sun = new THREE.DirectionalLight(0xfff0d8, 1.05);
     sun.position.set(18, 30, 10);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
@@ -115,7 +115,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     sun.shadow.bias = -0.002;
     scene.add(sun, sun.target);
     ZC.forEach((zc, i) => {
-      const pl = new THREE.PointLight(ZONE_COL[i], 110, 34, 1.7);
+      const pl = new THREE.PointLight(ZONE_COL[i], 45, 30, 1.9);
       pl.position.set(0, 6, i === FINAL ? zc : zc - 2);
       scene.add(pl);
     });
@@ -123,7 +123,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     const torchLightSpots: [number, number][] = [[0, 10.2], [0, ZC[FINAL] + 2.6]];
     CORRS.forEach(cr => torchLightSpots.push([0, cr.z2 + 0.6]));
     for (const [lx, lz] of torchLightSpots) {
-      const tl = new THREE.PointLight(0xff9a50, 30, 13, 1.8);
+      const tl = new THREE.PointLight(0xffb070, 26, 15, 1.7);
       tl.position.set(lx, 2.6, lz);
       scene.add(tl);
     }
@@ -135,7 +135,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     composer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     composer.setSize(RW, RH);
     composer.addPass(new RenderPass(scene, camera));
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(RW, RH), 0.32, 0.35, 0.8));
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(RW, RH), 0.2, 0.3, 0.92));
     composer.addPass(new OutputPass());
 
     // ── Helpers ────────────────────────────────────────────────────────────
@@ -223,6 +223,112 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       return s;
     }
     // soft radial glow texture (muzzle flash) — no font glyphs involved
+    // the level II boss is a job application form — drawn to a canvas so the
+    // fields, section bands and page footer read exactly like the real thing
+    function applicationTexture(): THREE.CanvasTexture {
+      const key = "jobform";
+      const hit = texCache.get(key);
+      if (hit) return hit;
+      const W = 1024, H = 1400;
+      const c = document.createElement("canvas");
+      c.width = W; c.height = H;
+      const x = c.getContext("2d")!;
+      x.fillStyle = "#f4f2ec"; x.fillRect(0, 0, W, H);
+      x.strokeStyle = "#9aa0a8"; x.lineWidth = 3;
+      x.strokeRect(18, 18, W - 36, H - 36);
+
+      x.fillStyle = "#1d2430";
+      x.font = "bold 46px Arial, Helvetica, sans-serif";
+      x.textAlign = "center";
+      x.fillText("EMPLOYMENT / JOB APPLICATION", W / 2, 92);
+
+      const M = 52, IW = W - M * 2;
+      let y = 130;
+
+      const band = (label: string) => {
+        const g = x.createLinearGradient(0, y, 0, y + 40);
+        g.addColorStop(0, "#dfe6f0"); g.addColorStop(1, "#c3cfe0");
+        x.fillStyle = g;
+        x.fillRect(M, y, IW, 40);
+        x.strokeStyle = "#95a3b8"; x.lineWidth = 2;
+        x.strokeRect(M, y, IW, 40);
+        x.fillStyle = "#233047";
+        x.font = "bold 25px Arial, Helvetica, sans-serif";
+        x.textAlign = "center";
+        x.fillText(label, W / 2, y + 28);
+        y += 62;
+      };
+      // one row of labelled blanks; each entry is [label, width fraction]
+      const row = (fields: [string, number][], gap = 26) => {
+        let cx = M;
+        const avail = IW - gap * (fields.length - 1);
+        x.textAlign = "left";
+        for (const [label, frac] of fields) {
+          const w = avail * frac;
+          x.fillStyle = "#2b3442";
+          x.font = "bold 21px Arial, Helvetica, sans-serif";
+          const lw = x.measureText(label).width;
+          x.fillText(label, cx, y);
+          x.strokeStyle = "#5b6675"; x.lineWidth = 2;
+          x.beginPath();
+          x.moveTo(cx + lw + 10, y + 5);
+          x.lineTo(cx + w, y + 5);
+          x.stroke();
+          cx += w + gap;
+        }
+        y += 46;
+      };
+      const checks = (label: string) => {
+        x.textAlign = "left";
+        x.fillStyle = "#2b3442";
+        x.font = "bold 20px Arial, Helvetica, sans-serif";
+        x.fillText(label, M, y);
+        let cx = M + x.measureText(label).width + 22;
+        for (const t of ["YES", "NO"]) {
+          x.strokeStyle = "#5b6675"; x.lineWidth = 2;
+          x.strokeRect(cx, y - 15, 17, 17);
+          x.fillStyle = "#2b3442";
+          x.font = "18px Arial, Helvetica, sans-serif";
+          x.fillText(t, cx + 24, y);
+          cx += 84;
+        }
+        y += 42;
+      };
+
+      band("PERSONAL INFORMATION");
+      row([["FULL NAME:", 0.62], ["DATE:", 0.38]]);
+      row([["ADDRESS:", 1]]);
+      row([["CITY:", 0.4], ["STATE:", 0.3], ["ZIP:", 0.3]]);
+      row([["E-MAIL:", 0.55], ["PHONE:", 0.45]]);
+      row([["POSITION APPLIED FOR:", 1]]);
+      row([["DATE AVAILABLE:", 0.5], ["DESIRED PAY:", 0.5]]);
+
+      band("EMPLOYMENT ELIGIBILITY");
+      checks("ARE YOU A U.S. CITIZEN?");
+      checks("ARE YOU AUTHORIZED TO WORK IN THE U.S.?");
+      checks("HAVE YOU EVER WORKED FOR THIS COMPANY?");
+      checks("HAVE YOU EVER BEEN CONVICTED OF A FELONY?");
+      row([["IF YES, PLEASE EXPLAIN:", 1]]);
+
+      band("EDUCATION");
+      row([["HIGH SCHOOL:", 0.55], ["CITY / STATE:", 0.45]]);
+      row([["FROM:", 0.5], ["TO:", 0.5]]);
+      row([["COLLEGE:", 0.55], ["CITY / STATE:", 0.45]]);
+      row([["FROM:", 0.5], ["TO:", 0.5]]);
+      row([["GRADUATED?", 0.45], ["DEGREE:", 0.55]]);
+
+      x.fillStyle = "#5b6675";
+      x.font = "20px Arial, Helvetica, sans-serif";
+      x.textAlign = "right";
+      x.fillText("Page 1 of 4", W - M, H - 46);
+
+      const tex = track(new THREE.CanvasTexture(c));
+      tex.anisotropy = 4;
+      texCache.set(key, tex);
+      return tex;
+    }
+
+
     function glowTexture(): THREE.CanvasTexture {
       const key = "glow";
       const hit = texCache.get(key);
@@ -311,13 +417,13 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     const HALL_H = 8;  // two rows stacked — tall dungeon halls
 
     // dark bedrock under everything so no gap ever shows through
-    const ground = new THREE.Mesh(track(new THREE.PlaneGeometry(160, 300)), bmat(0x231f1a));
+    const ground = new THREE.Mesh(track(new THREE.PlaneGeometry(160, 300)), bmat(0x3a352e));
     ground.rotation.x = -Math.PI / 2;
     ground.position.set(0, -0.12, -ZONE_GAP);
     scene.add(ground);
 
     // vaulted ceiling
-    const ceil = new THREE.Mesh(track(new THREE.PlaneGeometry(160, 300)), bmat(0x2a251f));
+    const ceil = new THREE.Mesh(track(new THREE.PlaneGeometry(160, 300)), bmat(0x393530));
     ceil.rotation.x = Math.PI / 2;
     ceil.position.set(0, HALL_H, -ZONE_GAP);
     scene.add(ceil);
@@ -395,19 +501,21 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       scene.add(ring);
     });
 
-    // ── sealed gates at each corridor mouth ──
+    // ── corridor threshold: a lit strip on the floor, never a closed door ──
     const gates = CORRS.map((cr, i) => {
       const g = new THREE.Group();
-      const plane = new THREE.Mesh(track(new THREE.PlaneGeometry(CORR_HW * 2, 3.4)), emat(ZONE_COL[i], { transparent: true, opacity: 0.2, side: THREE.DoubleSide }));
-      plane.position.y = 1.7;
-      const frame = edgesOf(track(new THREE.BoxGeometry(CORR_HW * 2, 3.4, 0.06)), ZONE_COL[i], 0.75);
-      frame.position.y = 1.7;
-      const lock = plateSprite("GATE SEALED", "#a63030", "rgba(252,252,254,0.94)", 0.4);
-      lock.position.y = 4.2;
-      g.add(plane, frame, lock);
+      const strip = new THREE.Mesh(
+        track(new THREE.PlaneGeometry(CORR_HW * 2, 0.5)),
+        emat(ZONE_COL[i], { transparent: true, opacity: 0.5, side: THREE.DoubleSide })
+      );
+      strip.rotation.x = -Math.PI / 2;
+      strip.position.y = 0.14;
+      const lock = plateSprite("DEFEAT THE BOSS TO PASS", "#a63030", "rgba(252,252,254,0.94)", 0.34, 40);
+      lock.position.y = 2.4;
+      g.add(strip, lock);
       g.position.set(0, 0, cr.z2);
       scene.add(g);
-      return { g, plane: plane.material as THREE.MeshBasicMaterial };
+      return { g, plane: strip.material as THREE.MeshBasicMaterial };
     });
 
     // ── set dressing ──
@@ -644,16 +752,40 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       }
 
       if (zi !== FINAL) {
-        // simple stand-in figure until the character model loads
-        const col = [0x7a8f4a, 0x4a6a8f, 0x8f4a55][zi];
-        const proto = new THREE.Group();
-        const body = new THREE.Mesh(track(new THREE.CapsuleGeometry(0.5, 1.2, 4, 12)), bmat(col, { flatShading: true }));
-        body.position.y = 1.5;
-        const head = new THREE.Mesh(track(new THREE.SphereGeometry(0.4, 14, 12)), bmat(col));
-        head.position.y = 2.7;
-        proto.add(body, head);
-        v.protoBody = proto;
-        group.add(proto);
+        if (zi === 1) {
+          // THE APPLICATION — a four-page job application form, animate
+          const paper = new THREE.Mesh(
+            track(new THREE.PlaneGeometry(3.1, 4.24)),
+            track(new THREE.MeshLambertMaterial({ map: applicationTexture(), side: THREE.DoubleSide, emissive: 0x2b2c30 }))
+          );
+          paper.position.y = 2.5;
+          paper.castShadow = true;
+          // the pages behind it — four in total, as advertised
+          for (let k = 1; k <= 3; k++) {
+            const sheet = new THREE.Mesh(
+              track(new THREE.PlaneGeometry(3.1, 4.24)),
+              track(new THREE.MeshLambertMaterial({ color: 0xe6e3da, side: THREE.DoubleSide }))
+            );
+            sheet.position.set(k * 0.075, 2.5 + k * 0.06, -k * 0.11);
+            sheet.rotation.z = k * 0.022;
+            sheet.castShadow = true;
+            group.add(sheet);
+          }
+          const clip = new THREE.Mesh(track(new THREE.BoxGeometry(0.75, 0.16, 0.12)), bmat(0x9aa3ad));
+          clip.position.set(0, 4.6, 0.08);
+          group.add(paper, clip);
+          v.protoBody = undefined;
+        } else {
+          // stand-in figure until the character model loads
+          const proto = new THREE.Group();
+          const body = new THREE.Mesh(track(new THREE.CapsuleGeometry(0.5, 1.2, 4, 12)), bmat(0x7a8f4a, { flatShading: true }));
+          body.position.y = 1.5;
+          const head = new THREE.Mesh(track(new THREE.SphereGeometry(0.4, 14, 12)), bmat(0x7a8f4a));
+          head.position.y = 2.7;
+          proto.add(body, head);
+          v.protoBody = proto;
+          group.add(proto);
+        }
       } else {
         // ANSHUL — a properly built character, not a stick figure
         const skin = 0xe8c39a, outfit = 0x33415c, trim = 0xffd88a;
@@ -778,9 +910,9 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     }
     // boss characters — one individual per arena
     const bossRigs: (CharRig | null)[] = [null, null];
-    (["knight", "barbarian"] as const).forEach((file, zi) => {
+    (["knight"] as const).forEach((file, zi) => {
       loadModel(`/models/${file}.glb`).then(g => {
-        const rig = makeRig(g.scene, g.animations, [1.5, 1.55][zi], zi === 0 ? "Knight" : "Barbarian");
+        const rig = makeRig(g.scene, g.animations, 1.5, "Knight");
         bossRigs[zi] = rig;
         const v = bossVis[zi];
         if (v.protoBody) v.protoBody.visible = false;
@@ -984,6 +1116,9 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         st.pb = [];
         clearSummons();
         document.exitPointerLock();
+        // opened straight from the keypress so the browser treats it as a
+        // user gesture — a window.open after the cinematic would be blocked
+        window.open(LINKEDIN_URL, "_blank", "noopener,noreferrer");
         // he celebrates the offer
         if (anshulActions.cheer) {
           anshulActions.idle?.fadeOut(0.3);
@@ -1033,10 +1168,10 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         st.cdB -= dt;
         if (st.cdB <= 0) { st.cdB = 4.4; spawnHazard(st.px, st.pz, 2.1); }
       } else {
-        // Drift: a barbarian who enrages as he breaks
+        // THE APPLICATION: it escalates as pages are torn off
         if (!st.enraged && st.bossHp < st.bossMax * 0.4) {
           st.enraged = true;
-          note("ARCHITECTURE DRIFT ENRAGES", 1.8);
+          note("THE APPLICATION DEMANDS REFERENCES", 1.8);
           burst(st.bossX, st.bossZ, 24, 0xff8080, 6, 1.5);
         }
         const spd = st.enraged ? 2.6 : 1.6;
@@ -1092,7 +1227,10 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     }
 
     function hitBoss(b: PB): boolean {
-      if (Math.hypot(b.x - st.bossX, b.z - st.bossZ) < 1.2 && b.y > 0 && b.y < 3.2) {
+      // the form is a wide flat sheet, the knight a person — different volumes
+      const r = st.fightZone === 1 ? 1.7 : 1.2;
+      const top = st.fightZone === 1 ? 4.8 : 3.2;
+      if (Math.hypot(b.x - st.bossX, b.z - st.bossZ) < r && b.y > 0 && b.y < top) {
         st.bossHp -= b.dmg;
         st.bossPulse = 0.14;
         burst(b.x, b.z, 4, 0xffffff, 3, b.y);
@@ -1527,7 +1665,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       gates.forEach((g, i) => {
         const openGate = st.cleared >= i + 1;
         g.g.visible = !openGate;
-        if (!openGate) g.plane.opacity = 0.12 + Math.sin(st.t * 3 + i) * 0.05;
+        if (!openGate) g.plane.opacity = 0.35 + Math.sin(st.t * 3 + i) * 0.15;
       });
 
       // summons — the boss's named skeletons
@@ -1574,6 +1712,10 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           if (v.aura) v.aura.opacity = 0.1 + Math.sin(st.t * 3) * 0.06;
           if (v.halo) { v.halo.rotation.z = st.t * 0.8; v.halo.position.y = 3.25 + Math.sin(st.t * 2) * 0.06; }
           if (st.cineT >= 0 && v.screen) v.screen.opacity = 1;
+        } else if (zi === 1) {
+          // the form hovers and leafs in the air
+          v.group.position.y = Math.sin(st.t * 1.6) * 0.16;
+          v.group.rotation.z = Math.sin(st.t * 0.9) * 0.05;
         } else {
           rigPlay(bossRigs[zi], activeFight && st.bossMoving ? "Walking_A" : "Idle");
         }
@@ -1632,8 +1774,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
 
       // the cave air takes on the current zone's glow
       const zAt = Math.max(0, Math.min(FINAL, Math.round(-st.pz / ZONE_GAP)));
-      colA.setHex(ZONE_COL[zAt]).multiplyScalar(0.045);
-      colB.setHex(0x120e0a).add(colA);
+      colA.setHex(ZONE_COL[zAt]).multiplyScalar(0.02);
+      colB.setHex(0x1b1a1f).add(colA);
       (scene.fog as THREE.Fog).color.lerp(colB, 0.03);
       (scene.background as THREE.Color).copy((scene.fog as THREE.Fog).color);
 

@@ -20,10 +20,11 @@ const timeline = [
   { label: "root cause", detail: "auth.py:L214",  hot: true  },
 ];
 
+// a real heat ramp reads as risk far better than one colour at four opacities
 function riskColor(risk: number) {
-  if (risk > 0.8) return "bg-accent/80";
-  if (risk > 0.6) return "bg-accent/50";
-  if (risk > 0.4) return "bg-accent/30";
+  if (risk > 0.8) return "bg-red-500/70";
+  if (risk > 0.6) return "bg-orange-500/55";
+  if (risk > 0.4) return "bg-amber-500/35";
   return "bg-zinc-500/20";
 }
 
@@ -125,7 +126,7 @@ function IncidentTimeline() {
               <div
                 className={`absolute top-[15px] left-1/2 -translate-x-1/2 h-3.5 w-3.5 rounded-full border ${
                   event.hot
-                    ? "bg-accent/70 dark:border-accent/50 border-amber-400/50"
+                    ? "bg-red-500/70 dark:border-red-500/50 border-red-400/50"
                     : "dark:bg-zinc-950 bg-white dark:border-zinc-700 border-zinc-300"
                 }`}
               />
@@ -144,7 +145,7 @@ function IncidentTimeline() {
 
       {/* Root cause callout */}
       <motion.div
-        className="mt-5 border-l-2 border-accent pl-3"
+        className="mt-5 border-l-2 dark:border-zinc-700 border-zinc-300 pl-3"
         animate={{ opacity: [0.6, 1, 0.6] }}
         transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
       >

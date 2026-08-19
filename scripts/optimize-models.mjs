@@ -12,7 +12,6 @@ const DIR = "public/models";
 const KEEP = {
   "anshul.glb": ["Idle", "Cheer"],
   "knight.glb": ["Idle", "Walking_A"],
-  "barbarian.glb": ["Idle", "Walking_A"],
   "skeleton_minion.glb": ["Idle", "Walking_A", "Running_A", "Jump_Idle"],
   "skeleton_rogue.glb": ["Idle", "Walking_A", "Running_A", "Jump_Idle"],
 };

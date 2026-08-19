@@ -18,7 +18,6 @@ domain, no attribution required; credited out of courtesy.
 | `banner_red.glb` | Dungeon Remastered | banner_red |
 | `banner_yellow.glb` | Dungeon Remastered | banner_patternA_yellow |
 | `knight.glb` | Character Pack: Adventurers | Knight |
-| `barbarian.glb` | Character Pack: Adventurers | Barbarian |
 | `dg_floor_tile_large.glb` | Dungeon Remastered | floor_tile_large |
 | `dg_floor_tile_big_grate.glb` | Dungeon Remastered | floor_tile_big_grate |
 | `dg_wall.glb` | Dungeon Remastered | wall |

@@ -38,10 +38,15 @@ export default function CareerMode() {
   const phaseRef = useRef<Phase>("map");
   phaseRef.current = phase;
 
-  // C toggles the game
+  // opened by the C key or by any "▶ Play" button on the site
   useEffect(() => {
+    const openGame = () => {
+      setSaved(parseInt(localStorage.getItem(PROGRESS_KEY) || "0", 10) || 0);
+      setPhase("map");
+      setOpen(true);
+    };
     const onKey = (e: KeyboardEvent) => {
-      const tag = (e.target as HTMLElement).tagName;
+      const tag = (e.target as HTMLElement | null)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA") return;
       if ((e.key === "c" || e.key === "C") && !e.ctrlKey && !e.metaKey && !e.altKey) {
         setOpen(o => {
@@ -54,7 +59,11 @@ export default function CareerMode() {
       }
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("career-mode:open", openGame);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("career-mode:open", openGame);
+    };
   }, []);
 
   const enterWorld = useCallback((startCleared: number) => {

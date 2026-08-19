@@ -35,14 +35,14 @@ export default function Hero() {
           {/* Name */}
           <motion.h1
             className="font-display font-normal leading-none tracking-[-0.03em] mb-6"
-            style={{ fontSize: "clamp(4rem, 10vw, 9rem)" }}
+            style={{ fontSize: "clamp(3rem, 6.5vw, 6rem)" }}
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, delay: 0.08, ease: [0.25, 1, 0.5, 1] }}
           >
             {profile.fullName.split(" ").map((word, i, arr) =>
               i === arr.length - 1 ? (
-                <span key={i} className="italic text-accent block">
+                <span key={i} className="italic dark:text-zinc-300 text-zinc-600 block">
                   {word}
                 </span>
               ) : (
@@ -105,7 +105,7 @@ export default function Hero() {
             </Link>
             <button
               onClick={() =>
-                window.dispatchEvent(new KeyboardEvent("keydown", { key: "c", bubbles: true }))
+                window.dispatchEvent(new CustomEvent("career-mode:open"))
               }
               className="hidden md:inline-flex items-center gap-2.5 font-mono text-sm uppercase tracking-widest dark:text-zinc-300 text-zinc-700 border dark:border-zinc-700 border-zinc-300 px-4 py-1.5 dark:hover:border-amber-500/60 hover:border-amber-500/60 dark:hover:text-accent hover:text-amber-600 transition-colors duration-150"
             >

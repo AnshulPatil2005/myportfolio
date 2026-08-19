@@ -43,15 +43,15 @@ export default function RootLayout({
       <body
         className={`${sans.variable} ${mono.variable} ${display.variable} font-sans dark:bg-ink bg-paper dark:text-zinc-200 text-zinc-800`}
       >
-        {/* Hidden SVG: amber duotone filter — dark=#100d0b, light=#ffb000 */}
+        {/* Hidden SVG: duotone filter — warm stone, deliberately low-chroma */}
         <svg xmlns="http://www.w3.org/2000/svg" style={{ position: "absolute", width: 0, height: 0 }}>
           <defs>
             <filter id="amber-duotone" colorInterpolationFilters="sRGB">
               <feColorMatrix type="saturate" values="0" />
               <feComponentTransfer>
-                <feFuncR type="linear" slope="0.937" intercept="0.063" />
-                <feFuncG type="linear" slope="0.639" intercept="0.051" />
-                <feFuncB type="linear" slope="-0.043" intercept="0.043" />
+                <feFuncR type="linear" slope="0.734" intercept="0.078" />
+                <feFuncG type="linear" slope="0.702" intercept="0.067" />
+                <feFuncB type="linear" slope="0.651" intercept="0.055" />
               </feComponentTransfer>
             </filter>
           </defs>
