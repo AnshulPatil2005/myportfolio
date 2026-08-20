@@ -82,7 +82,7 @@ export default function Navbar() {
               className="hidden md:flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider dark:text-zinc-400 text-zinc-600 border dark:border-zinc-700 border-zinc-300 px-2.5 py-1 dark:hover:border-amber-500/60 hover:border-amber-500/60 dark:hover:text-accent hover:text-amber-600 transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-sm"
               aria-label="Play Career Mode game"
             >
-              <span className="text-[9px] dark:text-accent text-amber-600">▶</span> Play
+              <span className="text-[9px] dark:text-accent text-amber-600">▶</span> Play as a game
             </button>
             <button
               onClick={() =>
