@@ -933,7 +933,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
 
     // ── Animated characters (KayKit rigs share one animation library) ───────
     const mixers: THREE.AnimationMixer[] = [];
-    interface CharRig { root: THREE.Group; actions: Record<string, THREE.AnimationAction>; current?: string }
+    interface CharRig { root: THREE.Group; actions: Record<string, THREE.AnimationAction>; current?: string; oneShot?: boolean }
     // KayKit rigs ship every weapon variant attached at once — a knight
     // wearing four shields. Hide everything outside the chosen loadout.
     const LOADOUT: Record<string, string[]> = {
@@ -961,14 +961,31 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       const mixer = new THREE.AnimationMixer(root);
       mixers.push(mixer);
       const actions: Record<string, THREE.AnimationAction> = {};
-      for (const nm of ["Idle", "Walking_A", "Running_A", "Jump_Idle", "Cheer", "Spellcasting", "Taunt"]) {
+      for (const nm of ["Idle", "Walking_A", "Running_A", "Jump_Idle", "Cheer", "1H_Melee_Attack_Chop", "Hit_A"]) {
         const clip = THREE.AnimationClip.findByName(anims, nm);
         if (clip) actions[nm] = mixer.clipAction(clip);
       }
       return { root, actions };
     }
+    // fire a clip once (attack/flinch), then hand the rig back to its loop
+    function rigOnce(rig: CharRig | null, nm: string) {
+      if (!rig || !rig.actions[nm] || rig.oneShot) return;
+      const a = rig.actions[nm];
+      const prev = rig.current;
+      if (prev && rig.actions[prev]) rig.actions[prev].fadeOut(0.1);
+      a.setLoop(THREE.LoopOnce, 1);
+      a.clampWhenFinished = false;
+      a.reset().fadeIn(0.1).play();
+      rig.oneShot = true;
+      rig.current = undefined;
+      const ms = Math.max(160, a.getClip().duration * 1000 - 90);
+      setTimeout(() => {
+        rig.oneShot = false;
+        if (rig.root.parent && prev) rigPlay(rig, prev);
+      }, ms);
+    }
     function rigPlay(rig: CharRig | null, nm: string) {
-      if (!rig || rig.current === nm || !rig.actions[nm]) return;
+      if (!rig || rig.oneShot || rig.current === nm || !rig.actions[nm]) return;
       if (rig.current) rig.actions[rig.current]?.fadeOut(0.25);
       rig.actions[nm].reset().fadeIn(0.25).play();
       rig.current = nm;
@@ -1236,7 +1253,11 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         st.cdA -= dt;
         if (st.cdA <= 0) { st.cdA = 3.6; spawnWave(st.bossX, st.bossZ, 5.5, 9); }
         st.cdB -= dt;
-        if (st.cdB <= 0) { st.cdB = 4.4; spawnHazard(st.px, st.pz, 2.1); }
+        if (st.cdB <= 0) {
+          st.cdB = 4.4;
+          spawnHazard(st.px, st.pz, 2.1);
+          rigOnce(bossRigs[0], "1H_Melee_Attack_Chop");
+        }
       } else {
         // pages tear off as it takes damage — 4 pages, 3 thresholds
         const torn = [0.75, 0.5, 0.25].filter(th => st.bossHp / st.bossMax < th).length;
@@ -1312,6 +1333,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       if (Math.hypot(b.x - st.bossX, b.z - st.bossZ) < r && b.y > 0 && b.y < top) {
         st.bossHp -= b.dmg;
         st.bossPulse = 0.14;
+        if (st.fightZone === 0 && Math.random() < 0.12) rigOnce(bossRigs[0], "Hit_A");
         burst(b.x, b.z, 4, 0xffffff, 3, b.y);
         return true;
       }
@@ -1346,6 +1368,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           seen?.add(i);
           s.hp -= b.dmg;
           burst(b.x, b.z, 2, REDC, 3, b.y);
+          floatTxt(`-${Math.round(b.dmg)}`, "#ffd9d9", s.x, s.z, 0.34, 1.9);
           if (s.hp <= 0) killSummon(i);
           return true;
         }

@@ -11,7 +11,7 @@ const DIR = "public/models";
 // clips the engine actually asks for, per model
 const KEEP = {
   "anshul.glb": ["Idle", "Cheer"],
-  "knight.glb": ["Idle", "Walking_A"],
+  "knight.glb": ["Idle", "Walking_A", "1H_Melee_Attack_Chop", "Hit_A"],
   "skeleton_minion.glb": ["Idle", "Walking_A", "Running_A", "Jump_Idle"],
   "skeleton_rogue.glb": ["Idle", "Walking_A", "Running_A", "Jump_Idle"],
 };

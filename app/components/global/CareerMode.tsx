@@ -306,7 +306,27 @@ export default function CareerMode() {
               {/* ── PAUSE ── */}
               {phase === "pause" && (
                 <motion.div key="pause" {...fade} className="absolute inset-0 flex flex-col items-center justify-center text-center bg-black/55">
-                  <h3 className="font-display text-4xl text-zinc-100 mb-8">Paused</h3>
+                  <h3 className="font-display text-4xl text-zinc-100 mb-6">Paused</h3>
+                  <div className="mb-8 grid grid-cols-2 gap-x-10 gap-y-1.5 font-mono text-[10px] text-left">
+                    {[
+                      ["WASD", "move"],
+                      ["Shift", "sprint"],
+                      ["Mouse", "look"],
+                      ["Click", "shoot"],
+                      ["1 – 3", "weapons"],
+                      ["R", "reload"],
+                      ["E", "interact"],
+                      ["Esc", "pause"],
+                    ].map(([k, v]) => (
+                      <div key={k} className="flex items-center gap-3">
+                        <span className="min-w-[52px] text-zinc-300 border border-zinc-700 px-1.5 py-0.5 text-center">{k}</span>
+                        <span className="text-zinc-500 uppercase tracking-[0.15em]">{v}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="font-mono text-[10px] text-zinc-600 mb-6 max-w-xs">
+                    tip: the barrels in each hall explode — lure a boss past one
+                  </p>
                   <div className="flex flex-col gap-3">
                     <button onClick={() => setPhase("world")} className="font-mono text-xs uppercase tracking-[0.2em] text-ink bg-accent px-8 py-2.5 hover:opacity-85 transition-opacity">
                       Resume [esc]
