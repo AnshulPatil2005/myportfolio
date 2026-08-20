@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import { profile } from "@/lib/data";
 import { CHAPTERS, ROMAN, PROGRESS_KEY, LINKEDIN_URL } from "./career/data";
+import type { RunStats } from "./career/Engine3D";
 
 // Three.js world loads only when the game opens — stays out of the main bundle.
 const Engine3D = dynamic(() => import("./career/Engine3D"), {
@@ -35,6 +36,7 @@ export default function CareerMode() {
   const [introChapter, setIntroChapter] = useState(0);
   const [runId, setRunId] = useState(0);
   const [runStart, setRunStart] = useState(0);
+  const [stats, setStats] = useState<RunStats | null>(null);
   const phaseRef = useRef<Phase>("map");
   phaseRef.current = phase;
 
@@ -92,7 +94,7 @@ export default function CareerMode() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const onEngineEvent = useCallback((e: "victory" | "ending" | "pause" | "interlude", data?: number) => {
+  const onEngineEvent = useCallback((e: "victory" | "ending" | "pause" | "interlude", data?: number, runStats?: RunStats) => {
     if (e === "pause") {
       setPhase(p => (p === "world" ? "pause" : p));
       return;
@@ -113,6 +115,7 @@ export default function CareerMode() {
       return;
     }
     if (e === "ending") {
+      if (runStats) setStats(runStats);
       localStorage.setItem(PROGRESS_KEY, "3");
       setSaved(3);
       setPhase("ending");
@@ -328,6 +331,20 @@ export default function CareerMode() {
                       Two bosses. One tunnel. Every bullet bounced off the last obstacle.<br />
                       He told you himself — now go message him about the job offer.
                     </p>
+                    {stats && (
+                      <div className="flex justify-center gap-8 mb-8 font-mono">
+                        {[
+                          ["time", `${Math.floor(stats.seconds / 60)}:${String(stats.seconds % 60).padStart(2, "0")}`],
+                          ["deaths", String(stats.deaths)],
+                          ["accuracy", `${stats.accuracy}%`],
+                        ].map(([k, v]) => (
+                          <div key={k}>
+                            <p className="text-[9px] uppercase tracking-[0.25em] text-zinc-600 mb-1">{k}</p>
+                            <p className="text-xl text-zinc-100">{v}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <div className="flex flex-wrap justify-center gap-4 mb-8">
                       <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="font-mono text-xs uppercase tracking-[0.2em] text-ink bg-accent px-6 py-2.5 hover:opacity-85 transition-opacity">
                         Message me on LinkedIn

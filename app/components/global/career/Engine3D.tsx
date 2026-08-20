@@ -30,8 +30,10 @@ const ZONE_HEX = ["#4ade80", "#f87171", "#ffd88a"];
 interface Props {
   initialCleared: number;
   paused: boolean;
-  onEvent: (e: "victory" | "ending" | "pause" | "interlude", data?: number) => void;
+  onEvent: (e: "victory" | "ending" | "pause" | "interlude", data?: number, stats?: RunStats) => void;
 }
+
+export interface RunStats { seconds: number; deaths: number; accuracy: number }
 
 interface PB { x: number; y: number; z: number; vx: number; vy: number; vz: number; dmg: number; pierce: number; life: number; dead: boolean }
 interface Part { x: number; y: number; z: number; vx: number; vy: number; vz: number; t: number; max: number; r: number; g: number; b: number }
@@ -84,6 +86,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
   const loadBarRef = useRef<HTMLDivElement>(null);
   const loadPctRef = useRef<HTMLSpanElement>(null);
   const lowHpRef = useRef<HTMLDivElement>(null);
+  const dmgDirRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -535,6 +538,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     });
 
     // ── set dressing ──
+    const barrels: { obj: THREE.Object3D; x: number; z: number; alive: boolean }[] = [];
     {
       const pillarSpots: [number, number, number][] = [];
       const torchSpots: [number, number, number][] = [];
@@ -557,7 +561,21 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       });
       scatterProp("/models/pillar.glb", 0.9, pillarSpots);
       scatterProp("/models/torch.glb", 1.25, torchSpots, true);
-      scatterProp("/models/barrel.glb", 1.15, barrelSpots);
+      // barrels are live ordnance, not scenery — shoot them near a boss
+      loadModel("/models/barrel.glb").then(g => {
+        const proto = g.scene;
+        proto.scale.setScalar(1.15);
+        proto.traverse(o => { const m = o as THREE.Mesh; if (m.isMesh) m.castShadow = true; });
+        const box = new THREE.Box3().setFromObject(proto);
+        const y0 = -box.min.y;
+        for (const [x, z, ry] of barrelSpots) {
+          const c = proto.clone(true);
+          c.position.set(x, y0, z);
+          c.rotation.y = ry;
+          scene.add(c);
+          barrels.push({ obj: c, x, z, alive: true });
+        }
+      }).catch(() => {});
       scatterProp("/models/crates.glb", 1.05, crateSpots);
       scatterProp("/models/boxes.glb", 1.0, boxSpots);
       const bannerFiles = ["banner_green", "banner_red", "banner_yellow"];
@@ -1041,6 +1059,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       waves: [] as Wave[],
       pendingFight: -1,
       ready: false, readyT: 0.4, stepT: 0, pagesTorn: 0,
+      dmgAng: 0, dmgT: 0,
+      shots: 0, hits: 0, deaths: 0, runT: 0,
       fightActive: false, fightZone: -1, introT: -1, vicT: -1, deadT: -1,
       bossX: 0, bossZ: 0, bossHp: 0, bossMax: 1,
       shake: 0, bossPulse: 0, noteT: 0,
@@ -1073,6 +1093,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     // hitmarker pulse + throttled tick sound on every connected shot
     function registerHit() {
       st.hitT = 0.12;
+      st.hits++;
       if (st.t > st.hitSfxT) {
         st.hitSfxT = st.t + 0.09;
         sfx("tick");
@@ -1278,6 +1299,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         } else if (st.invuln <= 0) {
           st.php -= 8; st.invuln = 1; st.shake = 1;
           sfx("hurt");
+          markDamage(s.x, s.z);
           burst(st.px, st.pz, 8, REDC, 3, 1);
         }
       }
@@ -1297,6 +1319,24 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     }
 
     // ── Summon combat ──────────────────────────────────────────────────────
+    function killSummon(i: number) {
+      const s = st.summons[i];
+      if (!s || !s.active) return;
+      s.active = false;
+      if (s.rig) { s.rig.root.visible = false; s.rig = null; }
+      summonProtos[i].visible = false;
+      if (s.label) { scene.remove(s.label); s.label = null; }
+      burst(s.x, s.z, 18, 0xcfd6de, 5, 1.2);
+      sfx("boom");
+      feedKill(s.name);
+      st.php = Math.min(100, st.php + 4);
+      floatTxt("+4 HP", "#2f8f4f", s.x, s.z, 0.4, 2);
+    }
+    // remembers which way a hit came from so the HUD can point at it
+    function markDamage(sx: number, sz: number) {
+      st.dmgAng = Math.atan2(sx - st.px, sz - st.pz);
+      st.dmgT = 1.1;
+    }
     function summonHit(b: PB, seen?: Set<number>): boolean {
       for (let i = 0; i < st.summons.length; i++) {
         if (seen?.has(i)) continue;
@@ -1306,19 +1346,51 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           seen?.add(i);
           s.hp -= b.dmg;
           burst(b.x, b.z, 2, REDC, 3, b.y);
-          if (s.hp <= 0) {
-            s.active = false;
-            if (s.rig) { s.rig.root.visible = false; s.rig = null; }
-            summonProtos[i].visible = false;
-            if (s.label) { scene.remove(s.label); s.label = null; }
-            burst(s.x, s.z, 18, 0xcfd6de, 5, 1.2);
-            sfx("boom");
-            feedKill(s.name);
-            st.php = Math.min(100, st.php + 4);
-            floatTxt("+4 HP", "#2f8f4f", s.x, s.z, 0.4, 2);
-          }
+          if (s.hp <= 0) killSummon(i);
           return true;
         }
+      }
+      return false;
+    }
+
+    // a barrel goes up: hurts the boss, clears summons, and chains into
+    // any neighbouring barrel
+    function explodeBarrel(idx: number, depth = 0) {
+      const b = barrels[idx];
+      if (!b || !b.alive) return;
+      b.alive = false;
+      b.obj.visible = false;
+      burst(b.x, b.z, 34, 0xffa040, 7, 1);
+      sfx("boom");
+      st.shake = Math.max(st.shake, 1.6);
+      const R = 4.2;
+      for (const sm of st.summons) {
+        if (sm.active && Math.hypot(sm.x - b.x, sm.z - b.z) < R) {
+          sm.hp -= 40;
+          if (sm.hp <= 0) killSummon(st.summons.indexOf(sm));
+        }
+      }
+      if (st.fightActive && Math.hypot(st.bossX - b.x, st.bossZ - b.z) < R) {
+        st.bossHp -= 45;
+        st.bossPulse = 0.2;
+        floatTxt("-45", "#ffd0a0", st.bossX, st.bossZ, 0.55, 2.2);
+      }
+      if (st.invuln <= 0 && Math.hypot(st.px - b.x, st.pz - b.z) < R * 0.8) {
+        st.php -= 18; st.invuln = 1;
+        sfx("hurt");
+        markDamage(b.x, b.z);
+      }
+      if (depth < 3) {
+        barrels.forEach((o, i) => {
+          if (o.alive && Math.hypot(o.x - b.x, o.z - b.z) < 5) setTimeout(() => explodeBarrel(i, depth + 1), 110);
+        });
+      }
+    }
+    function barrelHit(x: number, y: number, z: number): boolean {
+      if (y > 1.5) return false;
+      for (let i = 0; i < barrels.length; i++) {
+        const b = barrels[i];
+        if (b.alive && Math.hypot(x - b.x, z - b.z) < 0.75) { explodeBarrel(i); return true; }
       }
       return false;
     }
@@ -1333,6 +1405,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         const probe: PB = { x: st.px + dx * s, y: EYE - 0.1 + dy * s, z: st.pz + dz * s, vx: 0, vy: 0, vz: 0, dmg, pierce: 0, life: 0, dead: false };
         if (probe.y <= 0.03 || probe.y > 8 || !insideWorld(probe.x, probe.z)) break;
         let hit = false;
+        if (barrelHit(probe.x, probe.y, probe.z)) hit = true;
         if (summonHit(probe, seen)) hit = true;
         if (!bossDone && st.fightActive && hitBoss(probe)) { hit = true; bossDone = true; }
         if (st.cleared >= FINAL && Math.hypot(probe.x - 0, probe.z - ZC[FINAL]) < 1.4) {
@@ -1368,6 +1441,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       if (st.railT > 0) st.railT -= rdt;
       if (st.gunKick > 0) st.gunKick = Math.max(0, st.gunKick - rdt * 5.5);
       if (st.hitT > 0) st.hitT -= rdt;
+      if (st.dmgT > 0) st.dmgT -= rdt;
+      st.runT += rdt;
 
       if (st.vicT >= 0) {
         st.vicT -= rdt;
@@ -1409,7 +1484,14 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         if (st.cineT > 0.4 && st.cineT < 0.5) note("He reads the offer…", 1.2);
         if (st.cineT > 1.7 && st.cineT < 1.8) note("CRITICAL HIT", 0.9);
         if (st.cineT > 2.6 && st.cineT < 2.7) note(`ANSHUL: "When do I start?"`, 1.4);
-        if (st.cineT > 4.0) { st.cineT = -1; onEventRef.current("ending"); }
+        if (st.cineT > 4.0) {
+          st.cineT = -1;
+          onEventRef.current("ending", undefined, {
+            seconds: Math.round(st.runT),
+            deaths: st.deaths,
+            accuracy: st.shots ? Math.round((st.hits / st.shots) * 100) : 0,
+          });
+        }
         return;
       }
       if (st.introT > 0) {
@@ -1516,6 +1598,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           } else {
             st.muzzleT = 0.06;
             st.ammo[st.weaponSel]--;
+            st.shots += st.weaponSel === 1 ? 6 : 1;
             if (st.weaponSel === 0) { st.fireCd = 0.23; st.gunKick = 0.12; sfx("shot"); spawnPellet(0, 10, 0, 99); }
             else if (st.weaponSel === 1) {
               st.fireCd = 0.6;
@@ -1548,6 +1631,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt;
         const range2 = (b.x - st.px) ** 2 + (b.z - st.pz) ** 2;
         if (b.y <= 0.02 || b.y > 8 || range2 > 1600 || !insideWorld(b.x, b.z)) { b.dead = true; burst(b.x, b.z, 2, 0xdff3ff, 1.5, Math.max(0.2, b.y)); continue; }
+        if (barrelHit(b.x, b.y, b.z)) { b.dead = true; continue; }
         if (summonHit(b)) {
           registerHit();
           if (b.pierce > 0) b.pierce--;
@@ -1570,6 +1654,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
             if (st.invuln <= 0 && Math.hypot(h.x - st.px, h.z - st.pz) < h.r) {
               st.php -= 12; st.invuln = 1; st.shake = 1.1;
               sfx("hurt");
+              markDamage(h.x, h.z);
               burst(st.px, st.pz, 10, REDC, 4, 1.2);
             }
           }
@@ -1589,6 +1674,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
             if (st.invuln <= 0) {
               st.php -= 10; st.invuln = 1; st.shake = 1;
               sfx("hurt");
+              markDamage(w.x, w.z);
               burst(st.px, st.pz, 10, REDC, 4, 1.2);
             }
           } else if (w.R > d + 0.6) w.dealt = true;
@@ -1599,6 +1685,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       if (st.fightActive && st.invuln <= 0 && Math.hypot(st.bossX - st.px, st.bossZ - st.pz) < 1.9) {
         st.php -= 12; st.invuln = 1.1; st.shake = 1.3;
         sfx("hurt");
+        markDamage(st.bossX, st.bossZ);
         burst(st.px, st.pz, 12, REDC, 5, 1.2);
       }
 
@@ -1607,6 +1694,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       if (st.php <= 0 && st.deadT < 0) {
         st.php = 0;
         st.deadT = 1.4;
+        st.deaths++;
         st.timeScale = 0.3;
         burst(st.px, st.pz, 40, REDC, 7, 1.2);
         note("you died", 1.5);
@@ -1859,6 +1947,15 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         if (loadPctRef.current) loadPctRef.current.textContent = pct + "%";
       }
 
+      // hit direction, relative to facing
+      if (dmgDirRef.current) {
+        dmgDirRef.current.style.opacity = st.dmgT > 0 ? String(Math.min(1, st.dmgT)) : "0";
+        if (st.dmgT > 0) {
+          const rel = st.dmgAng - st.yaw;
+          dmgDirRef.current.style.transform = `rotate(${(-rel * 180) / Math.PI}deg)`;
+        }
+      }
+
       // the screen tightens as you bleed out
       if (lowHpRef.current) {
         const f = Math.max(0, st.php) / 100;
@@ -1977,6 +2074,20 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         style={{ opacity: 0, background: "radial-gradient(ellipse at center, transparent 45%, rgba(220,40,40,0.55) 100%)" }}
       />
       <div ref={blackRef} className="absolute inset-0 pointer-events-none bg-black transition-opacity duration-200" style={{ opacity: 0 }} />
+
+      {/* which way that came from */}
+      <div ref={dmgDirRef} className="absolute inset-0 pointer-events-none flex items-center justify-center" style={{ opacity: 0 }}>
+        <div className="relative w-[260px] h-[260px]">
+          <div
+            className="absolute left-1/2 top-0 -translate-x-1/2 w-0 h-0"
+            style={{
+              borderLeft: "22px solid transparent",
+              borderRight: "22px solid transparent",
+              borderBottom: "30px solid rgba(255,70,70,0.85)",
+            }}
+          />
+        </div>
+      </div>
 
       {/* low-health vignette */}
       <div
