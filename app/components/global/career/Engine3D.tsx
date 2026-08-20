@@ -80,6 +80,10 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
   const ammoRef = useRef<HTMLDivElement>(null);
   const feedRef = useRef<HTMLDivElement>(null);
   const promptRef = useRef<HTMLDivElement>(null);
+  const loadRef = useRef<HTMLDivElement>(null);
+  const loadBarRef = useRef<HTMLDivElement>(null);
+  const loadPctRef = useRef<HTMLSpanElement>(null);
+  const lowHpRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const mount = mountRef.current;
@@ -349,8 +353,20 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
 
     // ── Dungeon construction — assembled from modular KayKit tiles ─────────
     const gltfLoader = new GLTFLoader();
-    const loadModel = (url: string) =>
-      new Promise<GLTF>((res, rej) => gltfLoader.load(url, res, undefined, rej));
+    // every load is counted so the game can hold the player at a loading
+    // screen instead of dropping them into a half-built dungeon
+    const assets = { total: 0, done: 0 };
+    const loadModel = (url: string) => {
+      assets.total++;
+      return new Promise<GLTF>((res, rej) =>
+        gltfLoader.load(
+          url,
+          g => { assets.done++; res(g); },
+          undefined,
+          e => { assets.done++; rej(e); }
+        )
+      );
+    };
     const dummy = new THREE.Object3D();
 
     // place many copies of one tile as a single instanced draw call
@@ -604,9 +620,29 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
 
     // ── SFX ────────────────────────────────────────────────────────────────
     let actx: AudioContext | null = null;
-    function sfx(type: "shot" | "rail" | "hurt" | "boom" | "tick") {
+    let ambientOn = false;
+    const ambientNodes: { stop: () => void }[] = [];
+    // a low cavern drone plus a slow airy layer — barely audible, but the
+    // dungeon feels dead without it
+    function startAmbient() {
+      if (ambientOn || !actx) return;
+      ambientOn = true;
       try {
-        if (!actx) actx = new AudioContext();
+        for (const [freq, gain, type] of [[42, 0.05, "sine"], [63, 0.022, "triangle"]] as [number, number, OscillatorType][]) {
+          const o = actx.createOscillator();
+          const g = actx.createGain();
+          o.type = type;
+          o.frequency.value = freq;
+          g.gain.value = gain;
+          o.connect(g); g.connect(actx.destination);
+          o.start();
+          ambientNodes.push({ stop: () => { try { o.stop(); } catch { /* already stopped */ } } });
+        }
+      } catch { /* audio unavailable */ }
+    }
+    function sfx(type: "shot" | "rail" | "hurt" | "boom" | "tick" | "step") {
+      try {
+        if (!actx) { actx = new AudioContext(); startAmbient(); }
         const t0 = actx.currentTime;
         const o = actx.createOscillator();
         const g = actx.createGain();
@@ -625,6 +661,13 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           g.gain.setValueAtTime(0.09, t0);
           g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.28);
           o.start(t0); o.stop(t0 + 0.3);
+        } else if (type === "step") {
+          o.type = "sine";
+          o.frequency.setValueAtTime(120, t0);
+          o.frequency.exponentialRampToValueAtTime(58, t0 + 0.07);
+          g.gain.setValueAtTime(0.03, t0);
+          g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.09);
+          o.start(t0); o.stop(t0 + 0.1);
         } else if (type === "tick") {
           o.type = "square";
           o.frequency.setValueAtTime(1050, t0);
@@ -736,6 +779,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       group: THREE.Group;
       screen?: THREE.MeshBasicMaterial; aura?: THREE.MeshBasicMaterial; halo?: THREE.Mesh;
       protoBody?: THREE.Group;
+      sheets?: THREE.Mesh[];
     }
     const bossVis: BossVis[] = ZC.map((zc, zi) => {
       const group = new THREE.Group();
@@ -761,6 +805,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           paper.position.y = 2.5;
           paper.castShadow = true;
           // the pages behind it — four in total, as advertised
+          const sheets: THREE.Mesh[] = [];
           for (let k = 1; k <= 3; k++) {
             const sheet = new THREE.Mesh(
               track(new THREE.PlaneGeometry(3.1, 4.24)),
@@ -769,8 +814,10 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
             sheet.position.set(k * 0.075, 2.5 + k * 0.06, -k * 0.11);
             sheet.rotation.z = k * 0.022;
             sheet.castShadow = true;
+            sheets.push(sheet);
             group.add(sheet);
           }
+          v.sheets = sheets;
           const clip = new THREE.Mesh(track(new THREE.BoxGeometry(0.75, 0.16, 0.12)), bmat(0x9aa3ad));
           clip.position.set(0, 4.6, 0.08);
           group.add(paper, clip);
@@ -993,6 +1040,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       hazards: [] as Hazard[],
       waves: [] as Wave[],
       pendingFight: -1,
+      ready: false, readyT: 0.4, stepT: 0, pagesTorn: 0,
       fightActive: false, fightZone: -1, introT: -1, vicT: -1, deadT: -1,
       bossX: 0, bossZ: 0, bossHp: 0, bossMax: 1,
       shake: 0, bossPulse: 0, noteT: 0,
@@ -1077,6 +1125,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       st.waves = [];
       st.cdA = 2.6; st.cdB = 3.8;
       st.sumT = 4; st.blinkT = 4.2; st.enraged = false; st.bossMoving = false;
+      st.pagesTorn = 0;
       clearSummons();
       if (introNameRef.current) introNameRef.current.textContent = CHAPTERS[zone].bossName;
       if (introSubRef.current) introSubRef.current.textContent = CHAPTERS[zone].bossSub;
@@ -1091,7 +1140,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       if (!st.locked && !seqActive() && st.pendingFight < 0 && !pausedRef.current) onEventRef.current("pause");
     };
     const onCanvasClick = () => {
-      if (!st.locked && !seqActive() && !pausedRef.current) canvas.requestPointerLock();
+      if (st.ready && !st.locked && !seqActive() && !pausedRef.current) canvas.requestPointerLock();
     };
     const onMouseMove = (e: MouseEvent) => {
       if (!st.locked) return;
@@ -1168,6 +1217,14 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         st.cdB -= dt;
         if (st.cdB <= 0) { st.cdB = 4.4; spawnHazard(st.px, st.pz, 2.1); }
       } else {
+        // pages tear off as it takes damage — 4 pages, 3 thresholds
+        const torn = [0.75, 0.5, 0.25].filter(th => st.bossHp / st.bossMax < th).length;
+        if (torn > st.pagesTorn) {
+          st.pagesTorn = torn;
+          burst(st.bossX, st.bossZ, 22, 0xf2efe6, 4, 2.6);
+          note(`PAGE ${torn} OF 4 TORN OFF`, 1.3);
+          sfx("tick");
+        }
         // THE APPLICATION: it escalates as pages are torn off
         if (!st.enraged && st.bossHp < st.bossMax * 0.4) {
           st.enraged = true;
@@ -1293,6 +1350,14 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
 
     // ── Main update ────────────────────────────────────────────────────────
     function update(rdt: number) {
+      // hold everything until the dungeon has actually loaded
+      if (!st.ready) {
+        if (assets.total > 0 && assets.done >= assets.total) {
+          st.readyT -= rdt;
+          if (st.readyT <= 0) st.ready = true;
+        }
+        return;
+      }
       const dt = rdt * st.timeScale;
       st.t += dt;
       if (st.noteT > 0) st.noteT -= rdt;
@@ -1388,6 +1453,10 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         else if (canStand(nx, st.pz)) st.px = nx;
         else if (canStand(st.px, nz)) st.pz = nz;
         st.bobT += dt * 11;
+        st.stepT -= dt;
+        if (st.stepT <= 0) { st.stepT = st.keys.has("shift") ? 0.31 : 0.42; sfx("step"); }
+      } else {
+        st.stepT = 0.12;
       }
 
       // zone entry: banner + boss trigger
@@ -1713,9 +1782,11 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           if (v.halo) { v.halo.rotation.z = st.t * 0.8; v.halo.position.y = 3.25 + Math.sin(st.t * 2) * 0.06; }
           if (st.cineT >= 0 && v.screen) v.screen.opacity = 1;
         } else if (zi === 1) {
-          // the form hovers and leafs in the air
+          // the form hovers and leafs in the air, shedding pages as it breaks
           v.group.position.y = Math.sin(st.t * 1.6) * 0.16;
           v.group.rotation.z = Math.sin(st.t * 0.9) * 0.05;
+          const torn = activeFight ? st.pagesTorn : 0;
+          v.sheets?.forEach((sh, k) => { sh.visible = k >= torn; });
         } else {
           rigPlay(bossRigs[zi], activeFight && st.bossMoving ? "Walking_A" : "Idle");
         }
@@ -1779,6 +1850,24 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       (scene.fog as THREE.Fog).color.lerp(colB, 0.03);
       (scene.background as THREE.Color).copy((scene.fog as THREE.Fog).color);
 
+      // loading screen
+      if (loadRef.current) {
+        const pct = assets.total ? Math.round((assets.done / assets.total) * 100) : 0;
+        loadRef.current.style.opacity = st.ready ? "0" : "1";
+        loadRef.current.style.pointerEvents = st.ready ? "none" : "auto";
+        if (loadBarRef.current) loadBarRef.current.style.width = pct + "%";
+        if (loadPctRef.current) loadPctRef.current.textContent = pct + "%";
+      }
+
+      // the screen tightens as you bleed out
+      if (lowHpRef.current) {
+        const f = Math.max(0, st.php) / 100;
+        const danger = f < 0.34 && st.php > 0 && st.deadT < 0;
+        lowHpRef.current.style.opacity = danger
+          ? String((0.34 - f) * 1.6 + Math.sin(st.t * 6) * 0.06)
+          : "0";
+      }
+
       // HUD
       if (hpFillRef.current) {
         const f = Math.max(0, st.php) / 100;
@@ -1799,7 +1888,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         const sc = 1 + (st.hitT > 0 ? st.hitT * 2.2 : 0) + (st.gunKick > 0.15 ? 0.15 : 0);
         crossRef.current.style.transform = `translate(-50%, -50%) scale(${sc.toFixed(3)})`;
       }
-      if (lockHintRef.current) lockHintRef.current.style.opacity = !st.locked && !seqActive() && !pausedRef.current ? "1" : "0";
+      if (lockHintRef.current) lockHintRef.current.style.opacity = st.ready && !st.locked && !seqActive() && !pausedRef.current ? "1" : "0";
       if (bannerRef.current) bannerRef.current.style.opacity = st.bannerT > 0.4 ? "1" : "0";
       if (promptRef.current) promptRef.current.style.opacity = st.canOffer && st.cineT < 0 ? "1" : "0";
       if (weaponRef.current) weaponRef.current.textContent = `[${st.weaponSel + 1}] ${WEAPONS[st.weaponSel].name}${st.cleared > 0 ? ` · 1-${Math.min(3, st.cleared + 1)}` : ""}`;
@@ -1851,6 +1940,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     // ── Cleanup ────────────────────────────────────────────────────────────
     return () => {
       cancelAnimationFrame(raf);
+      for (const n of ambientNodes) n.stop();
+      actx?.close().catch(() => {});
       if (document.pointerLockElement === canvas) document.exitPointerLock();
       document.removeEventListener("pointerlockchange", onLockChange);
       canvas.removeEventListener("click", onCanvasClick);
@@ -1886,6 +1977,28 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         style={{ opacity: 0, background: "radial-gradient(ellipse at center, transparent 45%, rgba(220,40,40,0.55) 100%)" }}
       />
       <div ref={blackRef} className="absolute inset-0 pointer-events-none bg-black transition-opacity duration-200" style={{ opacity: 0 }} />
+
+      {/* low-health vignette */}
+      <div
+        ref={lowHpRef}
+        className="absolute inset-0 pointer-events-none"
+        style={{ opacity: 0, background: "radial-gradient(ellipse at center, transparent 35%, rgba(190,20,20,0.75) 100%)" }}
+      />
+
+      {/* loading gate — the dungeon streams in before you can move */}
+      <div
+        ref={loadRef}
+        className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#0d0b09] transition-opacity duration-500"
+        style={{ opacity: 1 }}
+      >
+        <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-zinc-500 mb-4">entering the dungeon</p>
+        <div className="w-[260px] h-[3px] bg-zinc-800 overflow-hidden">
+          <div ref={loadBarRef} className="h-full bg-accent transition-[width] duration-200" style={{ width: "0%" }} />
+        </div>
+        <p className="font-mono text-[10px] tracking-[0.25em] text-zinc-600 mt-3">
+          <span ref={loadPctRef}>0%</span>
+        </p>
+      </div>
 
       {/* crosshair */}
       <div ref={crossRef} className="absolute left-1/2 top-1/2 pointer-events-none transition-opacity duration-200" style={{ transform: "translate(-50%, -50%)", opacity: 0 }}>
