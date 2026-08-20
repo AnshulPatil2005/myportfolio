@@ -642,6 +642,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     const ambientNodes: { stop: () => void }[] = [];
     // a low cavern drone plus a slow airy layer — barely audible, but the
     // dungeon feels dead without it
+    let combatGain: GainNode | null = null;
     function startAmbient() {
       if (ambientOn || !actx) return;
       ambientOn = true;
@@ -656,7 +657,26 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           o.start();
           ambientNodes.push({ stop: () => { try { o.stop(); } catch { /* already stopped */ } } });
         }
+        // a dissonant fifth that fades in only while a boss is alive
+        const co = actx.createOscillator();
+        const cg = actx.createGain();
+        co.type = "sawtooth";
+        co.frequency.value = 87;
+        cg.gain.value = 0;
+        const lp = actx.createBiquadFilter();
+        lp.type = "lowpass";
+        lp.frequency.value = 220;
+        co.connect(lp); lp.connect(cg); cg.connect(actx.destination);
+        co.start();
+        combatGain = cg;
+        ambientNodes.push({ stop: () => { try { co.stop(); } catch { /* already stopped */ } } });
       } catch { /* audio unavailable */ }
+    }
+    // called each frame — ramps the combat layer with the fight state
+    function setCombatIntensity(v: number) {
+      if (!combatGain || !actx) return;
+      const target = Math.max(0, Math.min(1, v)) * 0.035;
+      combatGain.gain.setTargetAtTime(target, actx.currentTime, 0.6);
     }
     function sfx(type: "shot" | "rail" | "hurt" | "boom" | "tick" | "step") {
       try {
@@ -1961,6 +1981,9 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       (scene.fog as THREE.Fog).color.lerp(colB, 0.03);
       (scene.background as THREE.Color).copy((scene.fog as THREE.Fog).color);
 
+      // music swells as the boss weakens
+      setCombatIntensity(st.fightActive && st.introT <= 0 ? 0.55 + (1 - st.bossHp / st.bossMax) * 0.45 : 0);
+
       // loading screen
       if (loadRef.current) {
         const pct = assets.total ? Math.round((assets.done / assets.total) * 100) : 0;
@@ -2090,6 +2113,12 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
   return (
     <div className="relative w-full h-full select-none">
       <div ref={mountRef} className="absolute inset-0" />
+
+      {/* constant cinematic vignette */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse at center, transparent 52%, rgba(0,0,0,0.55) 100%)" }}
+      />
 
       <div
         ref={flashRef}

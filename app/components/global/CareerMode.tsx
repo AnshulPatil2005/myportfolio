@@ -37,12 +37,15 @@ export default function CareerMode() {
   const [runId, setRunId] = useState(0);
   const [runStart, setRunStart] = useState(0);
   const [stats, setStats] = useState<RunStats | null>(null);
+  const [tooSmall, setTooSmall] = useState(false);
   const phaseRef = useRef<Phase>("map");
   phaseRef.current = phase;
 
   // opened by the C key or by any "▶ Play" button on the site
   useEffect(() => {
     const openGame = () => {
+      // pointer lock + WASD simply do not exist on a phone
+      setTooSmall(window.innerWidth < 860 || !window.matchMedia("(pointer: fine)").matches);
       setSaved(parseInt(localStorage.getItem(PROGRESS_KEY) || "0", 10) || 0);
       setPhase("map");
       setOpen(true);
@@ -53,6 +56,7 @@ export default function CareerMode() {
       if ((e.key === "c" || e.key === "C") && !e.ctrlKey && !e.metaKey && !e.altKey) {
         setOpen(o => {
           if (!o) {
+            setTooSmall(window.innerWidth < 860 || !window.matchMedia("(pointer: fine)").matches);
             setSaved(parseInt(localStorage.getItem(PROGRESS_KEY) || "0", 10) || 0);
             setPhase("map");
           }
@@ -128,7 +132,7 @@ export default function CareerMode() {
   }, []);
 
   const vc = CHAPTERS[vicChapter];
-  const engineMounted = open && phase !== "map";
+  const engineMounted = open && !tooSmall && phase !== "map";
 
   return (
     <AnimatePresence>
@@ -167,8 +171,27 @@ export default function CareerMode() {
             )}
 
             <AnimatePresence mode="wait">
+              {/* ── DESKTOP ONLY ── */}
+              {tooSmall && (
+                <motion.div key="toosmall" {...fade} className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-8 bg-[#0d0a08]">
+                  <p className="font-mono text-[9px] uppercase tracking-[0.35em] text-zinc-500 mb-3">career mode</p>
+                  <h2 className="font-display text-4xl text-zinc-100 mb-4">Needs a desktop</h2>
+                  <p className="text-[14px] leading-relaxed text-zinc-400 max-w-sm mb-8">
+                    It is a first-person game — it needs a mouse for pointer-lock aiming
+                    and a keyboard to move. Open the site on a laptop and press{" "}
+                    <kbd className="border border-zinc-700 px-1.5 py-0.5 font-mono text-[11px]">C</kbd>.
+                  </p>
+                  <button
+                    onClick={() => setOpen(false)}
+                    className="font-mono text-xs uppercase tracking-[0.2em] text-ink bg-accent px-7 py-2.5 hover:opacity-85 transition-opacity"
+                  >
+                    Back to the portfolio
+                  </button>
+                </motion.div>
+              )}
+
               {/* ── CAMPAIGN MAP ── */}
-              {phase === "map" && (
+              {!tooSmall && phase === "map" && (
                 <motion.div key="map" {...fade} className="absolute inset-0 flex flex-col items-center justify-center px-6 overflow-y-auto">
                   <div className="text-center mb-5">
                     <p className="font-mono text-[9px] uppercase tracking-[0.35em] text-zinc-500 mb-1.5">anshulpatil.is-a.dev presents</p>
