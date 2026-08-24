@@ -12,10 +12,10 @@ import { CHAPTERS, WEAPONS, IMMUNE_TEXTS, ANSHUL_DIALOGUE, SUMMON_NAMES, ROMAN, 
 
 // ── World: two boss halls, then Anshul's chamber — built on a 4u tile grid ────
 const TILE = 4;
-const ROOM_HW = 14;   // 7 tiles wide
-const ROOM_HD = 10;   // 5 tiles deep
-const CORR_HW = 2;    // 1 tile wide
-const CORR_LEN = 12;  // 3 tiles long
+const ROOM_HW = 24;   // 12 tiles wide
+const ROOM_HD = 18;   // 9 tiles deep
+const CORR_HW = 4;    // 2 tiles wide
+const CORR_LEN = 20;  // 5 tiles long
 const ZONE_GAP = ROOM_HD * 2 + CORR_LEN; // 32
 const ZC = [0, 1, 2].map(i => -i * ZONE_GAP);
 const FINAL = 2;
@@ -46,8 +46,10 @@ const ROOMS = ZC.map(zc => ({ x1: -ROOM_HW, x2: ROOM_HW, z1: zc - ROOM_HD, z2: z
 const CORRS = [0, 1].map(i => ({ x1: -CORR_HW, x2: CORR_HW, z1: ZC[i] - ROOM_HD - CORR_LEN, z2: ZC[i] - ROOM_HD }));
 
 // tile-grid helpers: floors sit on 4u centers, walls on 4u edges
-const ROOM_TX = [-12, -8, -4, 0, 4, 8, 12];
-const ROOM_TZ = [-8, -4, 0, 4, 8];
+const ROOM_TX = [-22, -18, -14, -10, -6, -2, 2, 6, 10, 14, 18, 22];
+const ROOM_TZ = [-16, -12, -8, -4, 0, 4, 8, 12, 16];
+// the two tile columns that line up with the corridor mouth
+const DOOR_TX = [-2, 2];
 
 // three weapons: sidearm, spread, piercing rail
 const MAGS = [12, 6, 4];
@@ -107,22 +109,22 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1b1a1f);
-    scene.fog = new THREE.Fog(0x1b1a1f, 22, 78);
+    scene.background = new THREE.Color(0x9fb0cc);
+    scene.fog = new THREE.Fog(0x8fa3c4, 60, 260);
 
     // cave lighting — dim ambience, the colored arena lights carry the scene
-    scene.add(new THREE.HemisphereLight(0xb9c2d0, 0x4a453f, 1.15));
-    const sun = new THREE.DirectionalLight(0xfff0d8, 1.05);
+    scene.add(new THREE.HemisphereLight(0xcfe0f5, 0x6b6154, 1.35));
+    const sun = new THREE.DirectionalLight(0xffeccd, 1.5);
     sun.position.set(18, 30, 10);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
-    sun.shadow.camera.left = -30; sun.shadow.camera.right = 30;
-    sun.shadow.camera.top = 30; sun.shadow.camera.bottom = -30;
+    sun.shadow.camera.left = -45; sun.shadow.camera.right = 45;
+    sun.shadow.camera.top = 45; sun.shadow.camera.bottom = -45;
     sun.shadow.camera.near = 1; sun.shadow.camera.far = 90;
     sun.shadow.bias = -0.002;
     scene.add(sun, sun.target);
     ZC.forEach((zc, i) => {
-      const pl = new THREE.PointLight(ZONE_COL[i], 45, 30, 1.9);
+      const pl = new THREE.PointLight(ZONE_COL[i], 60, 44, 1.9);
       pl.position.set(0, 6, i === FINAL ? zc : zc - 2);
       scene.add(pl);
     });
@@ -135,14 +137,14 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       scene.add(tl);
     }
 
-    const camera = new THREE.PerspectiveCamera(62, RW / RH, 0.05, 300);
+    const camera = new THREE.PerspectiveCamera(62, RW / RH, 0.05, 900);
     scene.add(camera);
 
     const composer = new EffectComposer(renderer);
     composer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     composer.setSize(RW, RH);
     composer.addPass(new RenderPass(scene, camera));
-    composer.addPass(new UnrealBloomPass(new THREE.Vector2(RW, RH), 0.2, 0.3, 0.92));
+    composer.addPass(new UnrealBloomPass(new THREE.Vector2(RW, RH), 0.34, 0.5, 0.86));
     composer.addPass(new OutputPass());
 
     // ── Helpers ────────────────────────────────────────────────────────────
@@ -436,16 +438,64 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     const HALL_H = 8;  // two rows stacked — tall dungeon halls
 
     // dark bedrock under everything so no gap ever shows through
-    const ground = new THREE.Mesh(track(new THREE.PlaneGeometry(160, 300)), bmat(0x3a352e));
+    const ground = new THREE.Mesh(track(new THREE.PlaneGeometry(700, 700)), bmat(0x6d6355));
     ground.rotation.x = -Math.PI / 2;
     ground.position.set(0, -0.12, -ZONE_GAP);
     scene.add(ground);
 
-    // vaulted ceiling
-    const ceil = new THREE.Mesh(track(new THREE.PlaneGeometry(160, 300)), bmat(0x393530));
-    ceil.rotation.x = Math.PI / 2;
-    ceil.position.set(0, HALL_H, -ZONE_GAP);
-    scene.add(ceil);
+    // open sky — the halls are roofless ruins, not a sealed cave
+    {
+      const skyGeo = track(new THREE.SphereGeometry(400, 24, 16));
+      const skyMat = track(new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        depthWrite: false,
+        fog: false,
+        uniforms: {
+          top: { value: new THREE.Color(0x1d3358) },
+          mid: { value: new THREE.Color(0x5f6f9a) },
+          bot: { value: new THREE.Color(0xd8a97a) },
+        },
+        vertexShader: "varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
+        fragmentShader: "varying vec3 vP; uniform vec3 top; uniform vec3 mid; uniform vec3 bot;" +
+          "void main(){ float h = normalize(vP).y;" +
+          "vec3 c = h > 0.10 ? mix(mid, top, smoothstep(0.10, 0.70, h)) : mix(bot, mid, smoothstep(-0.15, 0.10, h));" +
+          "gl_FragColor = vec4(c, 1.0); }",
+      }));
+      const sky = new THREE.Mesh(skyGeo, skyMat);
+      sky.position.set(0, 0, -ZONE_GAP);
+      scene.add(sky);
+
+      // low sun on the horizon, straight down the tunnel you are walking
+      const c = document.createElement("canvas");
+      c.width = c.height = 256;
+      const g2 = c.getContext("2d")!;
+      const grad = g2.createRadialGradient(128, 128, 6, 128, 128, 128);
+      grad.addColorStop(0, "rgba(255,246,226,1)");
+      grad.addColorStop(0.22, "rgba(255,214,160,0.75)");
+      grad.addColorStop(1, "rgba(255,190,140,0)");
+      g2.fillStyle = grad;
+      g2.fillRect(0, 0, 256, 256);
+      const sunSprite = new THREE.Sprite(track(new THREE.SpriteMaterial({
+        map: track(new THREE.CanvasTexture(c)), transparent: true, depthWrite: false, fog: false,
+      })));
+      sunSprite.scale.setScalar(120);
+      sunSprite.position.set(0, 26, -ZONE_GAP * 2 - 240);
+      scene.add(sunSprite);
+
+      // distant ridgeline so the horizon is not empty
+      for (let i = 0; i < 22; i++) {
+        const a = (i / 22) * Math.PI * 2;
+        const dist = 170 + ((i * 37) % 90);
+        const h = 30 + ((i * 53) % 40);
+        const m = new THREE.Mesh(
+          track(new THREE.ConeGeometry(24 + ((i * 29) % 16), h, 4)),
+          bmat(0x4a5570, { flatShading: true })
+        );
+        m.position.set(Math.cos(a) * dist, h / 2 - 6, -ZONE_GAP + Math.sin(a) * dist);
+        m.rotation.y = a;
+        scene.add(m);
+      }
+    }
 
     // ── floor tiles ──
     const floorP: [number, number, number, number][] = [];
@@ -476,9 +526,11 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     };
     ZC.forEach((zc, i) => {
       for (const tx of ROOM_TX) {
-        if (i > 0 && tx === 0) archP.push([tx, 0, zc + ROOM_HD, 0]);
+        const isDoor = DOOR_TX.includes(tx);
+        // entry side: leave the mouth genuinely empty, stone only overhead
+        if (i > 0 && isDoor) archP.push([tx, WALL_H, zc + ROOM_HD, 0]);
         else pushWall(tx, 0, zc + ROOM_HD, 0);
-        if (i < FINAL && tx === 0) archP.push([tx, 0, zc - ROOM_HD, 0]);
+        if (i < FINAL && isDoor) archP.push([tx, WALL_H, zc - ROOM_HD, 0]);
         else pushWall(tx, 0, zc - ROOM_HD, 0);
       }
       for (const tz of ROOM_TZ) {
@@ -493,30 +545,30 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       }
     });
     // second storey — solid stone above everything, archways included
-    const upperP: [number, number, number, number][] = [...wallP, ...crackP, ...archP]
+    const upperP: [number, number, number, number][] = [...wallP, ...crackP]
       .map(([x, , z, ry]) => [x, WALL_H, z, ry] as [number, number, number, number]);
-    instanceTiles("/models/dg_wall.glb", [...wallP, ...upperP]);
+    // archP holds only the lintels bridging each open doorway
+    instanceTiles("/models/dg_wall.glb", [...wallP, ...upperP, ...archP]);
     instanceTiles("/models/dg_wall_cracked.glb", crackP);
-    instanceTiles("/models/dg_wall_arched.glb", archP);
 
     // ── zone identity: a glowing trim line and an arena ring per hall ──
     ZC.forEach((zc, i) => {
       const col = ZONE_COL[i];
-      const trimGeo = track(new THREE.BoxGeometry(ROOM_HW * 2, 0.09, 0.12));
+      const trimGeo = track(new THREE.BoxGeometry(ROOM_HW * 2, 0.11, 0.14));
       for (const sz of [zc - ROOM_HD + 0.45, zc + ROOM_HD - 0.45]) {
         const t = new THREE.Mesh(trimGeo, emat(col, { transparent: true, opacity: 0.85 }));
         t.position.set(0, 2.9, sz);
         scene.add(t);
       }
-      const sideGeo = track(new THREE.BoxGeometry(0.12, 0.09, ROOM_HD * 2));
+      const sideGeo = track(new THREE.BoxGeometry(0.14, 0.11, ROOM_HD * 2));
       for (const sx of [-ROOM_HW + 0.45, ROOM_HW - 0.45]) {
         const t = new THREE.Mesh(sideGeo, emat(col, { transparent: true, opacity: 0.85 }));
         t.position.set(sx, 2.9, zc);
         scene.add(t);
       }
-      const ring = new THREE.Mesh(track(new THREE.RingGeometry(5.1, 5.3, 48)), emat(col, { transparent: true, opacity: 0.4, side: THREE.DoubleSide }));
+      const ring = new THREE.Mesh(track(new THREE.RingGeometry(8.4, 8.7, 64)), emat(col, { transparent: true, opacity: 0.4, side: THREE.DoubleSide }));
       ring.rotation.x = -Math.PI / 2;
-      ring.position.set(0, 0.12, i === FINAL ? zc : zc - 2);
+      ring.position.set(0, 0.12, i === FINAL ? zc : zc - 4);
       scene.add(ring);
     });
 
@@ -530,7 +582,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       strip.rotation.x = -Math.PI / 2;
       strip.position.y = 0.14;
       const lock = plateSprite("DEFEAT THE BOSS TO PASS", "#a63030", "rgba(252,252,254,0.94)", 0.34, 40);
-      lock.position.y = 2.4;
+      lock.position.y = 3.0;
       g.add(strip, lock);
       g.position.set(0, 0, cr.z2);
       scene.add(g);
@@ -545,19 +597,28 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       const barrelSpots: [number, number, number][] = [];
       const crateSpots: [number, number, number][] = [];
       const boxSpots: [number, number, number][] = [];
+      const WX = ROOM_HW - 1.1;   // just inside the side walls
       ZC.forEach((zc, i) => {
-        for (const tz of [-6, 6]) {
-          pillarSpots.push([-9.5, zc + tz, 0], [9.5, zc + tz, 0]);
+        // a colonnade down both sides of every hall
+        for (const tz of [-12, -4, 4, 12]) {
+          pillarSpots.push([-14, zc + tz, 0], [14, zc + tz, 0]);
         }
-        torchSpots.push([-13.2, zc - 4, Math.PI / 2], [13.2, zc - 4, -Math.PI / 2]);
-        torchSpots.push([-13.2, zc + 4, Math.PI / 2], [13.2, zc + 4, -Math.PI / 2]);
-        barrelSpots.push([-12.6, zc + 8.4, i * 1.3], [12.4, zc - 8.2, i * 2.1]);
-        crateSpots.push([12.7, zc + 7.9, i * 0.8]);
-        if (i !== FINAL) boxSpots.push([-12.8, zc - 7.6, i * 1.7]);
+        for (const tz of [-10, 0, 10]) {
+          torchSpots.push([-WX, zc + tz, Math.PI / 2], [WX, zc + tz, -Math.PI / 2]);
+        }
+        // barrels near the fighting floor, where luring a boss past pays off
+        barrelSpots.push(
+          [-9, zc + 9, i * 1.3], [9, zc + 9, i * 2.1],
+          [-9, zc - 11, i * 0.7], [9, zc - 11, i * 1.9],
+        );
+        crateSpots.push([WX - 1.6, zc + 14, i * 0.8], [-WX + 1.6, zc - 15, i * 1.4]);
+        if (i !== FINAL) boxSpots.push([-WX + 1.4, zc + 15, i * 1.7]);
       });
       CORRS.forEach(cr => {
-        const mid = (cr.z1 + cr.z2) / 2;
-        torchSpots.push([-1.7, mid, Math.PI / 2], [1.7, mid, -Math.PI / 2]);
+        for (const f of [0.25, 0.75]) {
+          const z = cr.z2 + (cr.z1 - cr.z2) * f;
+          torchSpots.push([-CORR_HW + 0.7, z, Math.PI / 2], [CORR_HW - 0.7, z, -Math.PI / 2]);
+        }
       });
       scatterProp("/models/pillar.glb", 0.9, pillarSpots);
       scatterProp("/models/torch.glb", 1.25, torchSpots, true);
@@ -580,21 +641,23 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       scatterProp("/models/boxes.glb", 1.0, boxSpots);
       const bannerFiles = ["banner_green", "banner_red", "banner_yellow"];
       ZC.forEach((zc, i) => {
-        scatterProp(`/models/${bannerFiles[i]}.glb`, 0.8, [
-          [-13.4, zc, Math.PI / 2],
-          [13.4, zc, -Math.PI / 2],
+        scatterProp(`/models/${bannerFiles[i]}.glb`, 0.95, [
+          [-ROOM_HW + 0.6, zc - 6, Math.PI / 2],
+          [ROOM_HW - 0.6, zc - 6, -Math.PI / 2],
+          [-ROOM_HW + 0.6, zc + 6, Math.PI / 2],
+          [ROOM_HW - 0.6, zc + 6, -Math.PI / 2],
         ]);
       });
     }
 
     // dust motes in the torchlight
     {
-      const n = 300;
+      const n = 520;
       const pos = new Float32Array(n * 3);
       for (let i = 0; i < n; i++) {
-        pos[i * 3] = (Math.random() - 0.5) * 30;
-        pos[i * 3 + 1] = Math.random() * 6 + 0.4;
-        pos[i * 3 + 2] = 12 - Math.random() * 90;
+        pos[i * 3] = (Math.random() - 0.5) * 90;
+        pos[i * 3 + 1] = Math.random() * 9 + 0.4;
+        pos[i * 3 + 2] = 20 - Math.random() * 170;
       }
       const g = track(new THREE.BufferGeometry());
       g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
@@ -632,7 +695,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     camera.add(gun);
     const muzzleMat = track(new THREE.SpriteMaterial({ map: glowTexture(), transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending }));
     const muzzle = new THREE.Sprite(muzzleMat);
-    muzzle.scale.setScalar(0.34);
+    muzzle.scale.setScalar(0.42);
     muzzle.position.set(0.32, -0.19, -1.1);
     camera.add(muzzle);
 
@@ -733,11 +796,23 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
 
     // ── Bullets / rail / orbs / particles ──────────────────────────────────
     const MAX_PB = 160;
-    const pbMesh = new THREE.InstancedMesh(track(new THREE.SphereGeometry(0.11, 8, 8)), emat(0x22d3ee), MAX_PB);
-    pbMesh.frustumCulled = false;
-    pbMesh.count = 0;
-    scene.add(pbMesh);
+    // a cylinder laid along +Z so an instance can simply look down its velocity
+    const tracerGeo = track(new THREE.CylinderGeometry(0.045, 0.02, 1, 6));
+    tracerGeo.rotateX(Math.PI / 2);
+    const pbMesh = new THREE.InstancedMesh(tracerGeo, emat(0xfff4d0), MAX_PB);
+    // a wider, softer sheath around each round so it glows through bloom
+    const glowGeo = track(new THREE.CylinderGeometry(0.14, 0.05, 1, 6));
+    glowGeo.rotateX(Math.PI / 2);
+    const pbGlow = new THREE.InstancedMesh(
+      glowGeo,
+      emat(0x59d8ff, { transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false }),
+      MAX_PB
+    );
+    pbMesh.frustumCulled = false; pbGlow.frustumCulled = false;
+    pbMesh.count = 0; pbGlow.count = 0;
+    scene.add(pbMesh, pbGlow);
     const m4 = new THREE.Matrix4();
+    const tracerDummy = new THREE.Object3D();
     const railMat = emat(0x9beeff, { transparent: true, opacity: 0.9 });
     const railMesh = new THREE.Mesh(track(new THREE.BoxGeometry(0.07, 0.07, 1)), railMat);
     railMesh.visible = false;
@@ -1083,7 +1158,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     const st = {
       t: 0, timeScale: 1,
       cleared: Math.max(0, Math.min(FINAL, initialCleared)),
-      px: 0, pz: ZC[Math.max(0, Math.min(FINAL, initialCleared))] + 8.5,
+      px: 0, pz: ZC[Math.max(0, Math.min(FINAL, initialCleared))] + ROOM_HD - 3,
       php: 100, invuln: 1.2, fireCd: 0,
       yaw: 0, pitch: 0, locked: false, firing: false, muzzleT: 0, bobT: 0, moving: false,
       gunKick: 0, hitT: 0,
@@ -1176,7 +1251,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       st.introT = 2.2;
       st.vicT = -1;
       st.bossX = 0;
-      st.bossZ = ZC[zone] - 2;
+      st.bossZ = ZC[zone] - 4;
       st.bossHp = st.bossMax = [170, 240][zone];
       st.pb = [];
       st.hazards = [];
@@ -1255,8 +1330,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         // to somewhere else entirely — the same operation, a different result
         if (dP > 2.6) {
           const a = Math.atan2(st.pz - st.bossZ, st.px - st.bossX);
-          st.bossX = Math.max(-11.5, Math.min(11.5, st.bossX + Math.cos(a) * 1.35 * dt));
-          st.bossZ = Math.max(oz - 9.5, Math.min(oz + 9.5, st.bossZ + Math.sin(a) * 1.35 * dt));
+          st.bossX = Math.max(-ROOM_HW + 3, Math.min(ROOM_HW - 3, st.bossX + Math.cos(a) * 2.1 * dt));
+          st.bossZ = Math.max(oz - ROOM_HD + 3, Math.min(oz + ROOM_HD - 3, st.bossZ + Math.sin(a) * 2.1 * dt));
           st.bossMoving = true;
         }
         st.blinkT -= dt;
@@ -1265,8 +1340,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           burst(st.bossX, st.bossZ, 14, 0x9fd8ff, 4, 1.4);
           spawnWave(st.bossX, st.bossZ, 6, 7);
           const a = Math.random() * Math.PI * 2;
-          st.bossX = Math.max(-10, Math.min(10, st.px + Math.cos(a) * 7));
-          st.bossZ = Math.max(oz - 8, Math.min(oz + 8, st.pz + Math.sin(a) * 7));
+          st.bossX = Math.max(-ROOM_HW + 4, Math.min(ROOM_HW - 4, st.px + Math.cos(a) * 11));
+          st.bossZ = Math.max(oz - ROOM_HD + 4, Math.min(oz + ROOM_HD - 4, st.pz + Math.sin(a) * 11));
           burst(st.bossX, st.bossZ, 14, 0x9fd8ff, 4, 1.4);
           st.bossMoving = false;
         }
@@ -1296,8 +1371,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         const spd = st.enraged ? 2.6 : 1.6;
         if (dP > 2.4) {
           const a = Math.atan2(st.pz - st.bossZ, st.px - st.bossX);
-          st.bossX = Math.max(-11.5, Math.min(11.5, st.bossX + Math.cos(a) * spd * dt));
-          st.bossZ = Math.max(oz - 9.5, Math.min(oz + 9.5, st.bossZ + Math.sin(a) * spd * dt));
+          st.bossX = Math.max(-ROOM_HW + 3, Math.min(ROOM_HW - 3, st.bossX + Math.cos(a) * spd * dt));
+          st.bossZ = Math.max(oz - ROOM_HD + 3, Math.min(oz + ROOM_HD - 3, st.bossZ + Math.sin(a) * spd * dt));
           st.bossMoving = true;
         }
         st.cdA -= dt;
@@ -1444,9 +1519,9 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       const seen = new Set<number>();
       let bossDone = false;
       let s = 1.0;
-      for (; s < 28; s += 0.55) {
+      for (; s < 48; s += 0.6) {
         const probe: PB = { x: st.px + dx * s, y: EYE - 0.1 + dy * s, z: st.pz + dz * s, vx: 0, vy: 0, vz: 0, dmg, pierce: 0, life: 0, dead: false };
-        if (probe.y <= 0.03 || probe.y > 8 || !insideWorld(probe.x, probe.z)) break;
+        if (probe.y <= 0.03 || probe.y > 12 || !insideWorld(probe.x, probe.z)) break;
         let hit = false;
         if (barrelHit(probe.x, probe.y, probe.z)) hit = true;
         if (summonHit(probe, seen)) hit = true;
@@ -1509,7 +1584,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           st.fightActive = false;
           st.php = 100;
           st.invuln = 2;
-          st.px = 0; st.pz = ZC[Math.max(0, zone)] + 9.3;
+          st.px = 0; st.pz = ZC[Math.max(0, zone)] + ROOM_HD - 2.5;
           st.pb = [];
           st.hazards = []; st.waves = [];
           clearSummons();
@@ -1571,7 +1646,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         let dx = fx * mz + rx * mx, dz = fz * mz + rz * mx;
         const l = Math.hypot(dx, dz);
         dx /= l; dz /= l;
-        const spd = st.keys.has("shift") ? 12.4 : 8.6;
+        const spd = st.keys.has("shift") ? 15.5 : 10.4;
         const nx = st.px + dx * spd * dt;
         const nz = st.pz + dz * spd * dt;
         if (canStand(nx, nz)) { st.px = nx; st.pz = nz; }
@@ -1592,7 +1667,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           st.bannerT = 3.2;
           if (bannerRef.current) bannerRef.current.textContent = `CHAPTER ${ROMAN[i]} · ${CHAPTERS[i].year} — ${CHAPTERS[i].org}`;
         }
-        if (i < FINAL && inRoom && st.cleared === i && !st.fightActive && st.pendingFight < 0 && st.pz < ZC[i] + 7.5) {
+        if (i < FINAL && inRoom && st.cleared === i && !st.fightActive && st.pendingFight < 0 && st.pz < ZC[i] + ROOM_HD - 5) {
           if (st.introduced.has(i)) {
             initFight(i); // retry after death — skip the story card, straight to the fight
           } else {
@@ -1673,7 +1748,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         if (b.life <= 0) { b.dead = true; burst(b.x, b.z, 2, 0xdff3ff, 1.5, Math.max(0.2, b.y)); continue; }
         b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt;
         const range2 = (b.x - st.px) ** 2 + (b.z - st.pz) ** 2;
-        if (b.y <= 0.02 || b.y > 8 || range2 > 1600 || !insideWorld(b.x, b.z)) { b.dead = true; burst(b.x, b.z, 2, 0xdff3ff, 1.5, Math.max(0.2, b.y)); continue; }
+        if (b.y <= 0.02 || b.y > 12 || range2 > 6400 || !insideWorld(b.x, b.z)) { b.dead = true; burst(b.x, b.z, 2, 0xdff3ff, 1.5, Math.max(0.2, b.y)); continue; }
         if (barrelHit(b.x, b.y, b.z)) { b.dead = true; continue; }
         if (summonHit(b)) {
           registerHit();
@@ -1791,10 +1866,22 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           .join("");
       }
 
-      // bullets
+      // bullets — each one stretched along the direction it is travelling
       let n = 0;
-      for (const b of st.pb) { m4.setPosition(b.x, b.y, b.z); pbMesh.setMatrixAt(n++, m4); }
+      for (const b of st.pb) {
+        const sp = Math.hypot(b.vx, b.vy, b.vz) || 1;
+        tracerDummy.position.set(b.x, b.y, b.z);
+        tracerDummy.lookAt(b.x + b.vx / sp, b.y + b.vy / sp, b.z + b.vz / sp);
+        tracerDummy.scale.set(1, 1, 1.25);
+        tracerDummy.updateMatrix();
+        pbMesh.setMatrixAt(n, tracerDummy.matrix);
+        tracerDummy.scale.set(1, 1, 2.1);
+        tracerDummy.updateMatrix();
+        pbGlow.setMatrixAt(n, tracerDummy.matrix);
+        n++;
+      }
       pbMesh.count = n; pbMesh.instanceMatrix.needsUpdate = true;
+      pbGlow.count = n; pbGlow.instanceMatrix.needsUpdate = true;
 
       // rail flash
       if (st.railT > 0) {
@@ -1900,7 +1987,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         v.group.visible = true;
         const oz = ZC[zi];
         const bx = activeFight ? st.bossX : 0;
-        const bz = activeFight ? st.bossZ : (zi === FINAL ? oz : oz - 2);
+        const bz = activeFight ? st.bossZ : (zi === FINAL ? oz : oz - 4);
         v.group.position.set(bx, 0, bz);
         const pulse = 1 + (activeFight && st.bossPulse > 0 ? st.bossPulse * 0.5 : 0);
         v.group.scale.setScalar(pulse);
@@ -1967,7 +2054,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       // objective beacon
       if (!st.fightActive && st.cineT < 0 && st.deadT < 0) {
         const zi2 = Math.min(st.cleared, FINAL);
-        const bz2 = zi2 === FINAL ? ZC[FINAL] : ZC[zi2] - 2;
+        const bz2 = zi2 === FINAL ? ZC[FINAL] : ZC[zi2] - 4;
         beacon.visible = true;
         beacon.position.set(0, 5.6 + Math.sin(st.t * 2.4) * 0.25, bz2);
         beacon.rotation.y = st.t * 1.5;
@@ -1976,8 +2063,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
 
       // the cave air takes on the current zone's glow
       const zAt = Math.max(0, Math.min(FINAL, Math.round(-st.pz / ZONE_GAP)));
-      colA.setHex(ZONE_COL[zAt]).multiplyScalar(0.02);
-      colB.setHex(0x1b1a1f).add(colA);
+      colA.setHex(ZONE_COL[zAt]).multiplyScalar(0.03);
+      colB.setHex(0x8fa3c4).add(colA);
       (scene.fog as THREE.Fog).color.lerp(colB, 0.03);
       (scene.background as THREE.Color).copy((scene.fog as THREE.Fog).color);
 
