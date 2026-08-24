@@ -53,7 +53,7 @@ export default function About() {
                     priority
                   />
                 ) : (
-                  <div className="h-96 w-[400px] border dark:border-zinc-800 border-zinc-300 mb-4"></div>
+                  <div className="h-72 sm:h-96 w-full max-w-[400px] border dark:border-zinc-800 border-zinc-300 mb-4"></div>
                 )}
 
                 <div className="flex flex-col text-center gap-y-4">

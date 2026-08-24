@@ -49,7 +49,7 @@ function DriftHeatmap() {
         </motion.span>
       </div>
 
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {modules.map((item, i) => (
           <div
             key={item.name}
@@ -120,7 +120,7 @@ function IncidentTimeline() {
           transition={{ duration: 3.5, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
         />
 
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {timeline.map((event) => (
             <div key={event.label} className="relative pt-11">
               <div

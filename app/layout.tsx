@@ -1,5 +1,5 @@
 import "@/app/styles/globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { sans, mono, display } from "./assets/font/font";
 import Navbar from "./components/global/Navbar";
 import Footer from "./components/global/Footer";
@@ -33,6 +33,18 @@ export const metadata: Metadata = {
   },
 };
 
+// explicit so phones lay the page out at device width and can still zoom
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#100d0b" },
+    { media: "(prefers-color-scheme: light)", color: "#faf9f7" },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -41,7 +53,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="scroll-smooth">
       <body
-        className={`${sans.variable} ${mono.variable} ${display.variable} font-sans dark:bg-ink bg-paper dark:text-zinc-200 text-zinc-800`}
+        className={`${sans.variable} ${mono.variable} ${display.variable} font-sans dark:bg-ink bg-paper dark:text-zinc-200 text-zinc-800 overflow-x-hidden`}
       >
         {/* Hidden SVG: duotone filter — warm stone, deliberately low-chroma */}
         <svg xmlns="http://www.w3.org/2000/svg" style={{ position: "absolute", width: 0, height: 0 }}>

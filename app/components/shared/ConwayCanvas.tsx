@@ -39,6 +39,11 @@ export default function ConwayCanvas() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    // it renders at 6% opacity behind the hero — not worth a phone's battery,
+    // and pointless for anyone who asked for less motion
+    const small = window.matchMedia("(max-width: 767px)").matches;
+    const calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (small || calm) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
@@ -81,6 +86,7 @@ export default function ConwayCanvas() {
 
     draw();
     const timer = setInterval(() => {
+      if (document.hidden) return;
       grid = step(grid, cols(), rows());
       draw();
     }, INTERVAL);
@@ -95,7 +101,7 @@ export default function ConwayCanvas() {
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-auto"
+      className="absolute inset-0 w-full h-full hidden md:block pointer-events-auto"
       style={{ opacity: 0.06 }}
       aria-hidden="true"
     />

@@ -39,3 +39,58 @@ h3, h4 {
     scroll-behavior: auto !important;
   }
 }
+
+/* ── Mobile ─────────────────────────────────────────────────────────────── */
+
+/* iOS momentum scrolling without the rubber-band jank, and no sideways drift */
+html {
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* respect the notch / home indicator */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+@media (max-width: 767px) {
+  /* kill the 300ms tap delay and the grey flash on tap */
+  a,
+  button,
+  [role="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* comfortable line length and rhythm on a narrow column */
+  p {
+    line-height: 1.65;
+  }
+
+  /* long identifiers (URLs, package names) must wrap, not overflow */
+  h1, h2, h3, h4, p, li, span {
+    overflow-wrap: anywhere;
+  }
+
+  /* the desktop scrollbar styling makes mobile overlays feel heavy */
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+}
+
+/* hover styling should not stick after a tap on touch devices */
+@media (hover: none) {
+  a:hover,
+  button:hover {
+    opacity: 1;
+  }
+}

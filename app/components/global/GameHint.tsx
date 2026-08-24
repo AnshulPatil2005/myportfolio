@@ -8,9 +8,12 @@ import { motion, AnimatePresence } from "framer-motion";
 // needs pointer lock and a keyboard.
 export default function GameHint() {
   const [visible, setVisible] = useState(false);
+  const [compact, setCompact] = useState(false);
 
   useEffect(() => {
-    if (window.innerWidth < 768) return;
+    // phones get a short note instead of the full takeover — the game needs
+    // pointer lock and a keyboard, so it is an invitation, not an offer
+    setCompact(window.innerWidth < 860 || !window.matchMedia("(pointer: fine)").matches);
     const show = setTimeout(() => setVisible(true), 550);
     return () => clearTimeout(show);
   }, []);
@@ -23,6 +26,7 @@ export default function GameHint() {
       if (e.key === "Escape") dismiss();
     };
     window.addEventListener("keydown", onKey);
+    if (compact) return () => window.removeEventListener("keydown", onKey);
     // hold the page still while the takeover is up
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -30,12 +34,55 @@ export default function GameHint() {
       window.removeEventListener("keydown", onKey);
       document.body.style.overflow = prev;
     };
-  }, [visible]);
+  }, [visible, compact]);
 
   const play = () => {
     dismiss();
     window.dispatchEvent(new CustomEvent("career-mode:open"));
   };
+
+  if (compact) {
+    return (
+      <AnimatePresence>
+        {visible && (
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 24 }}
+            transition={{ duration: 0.35, ease: [0.25, 1, 0.5, 1] }}
+            className="fixed bottom-4 inset-x-4 z-[80] border dark:border-zinc-700 border-zinc-300 dark:bg-ink/97 bg-paper/97 backdrop-blur-md p-5 shadow-2xl shadow-black/30"
+          >
+            <p className="font-mono text-[9px] uppercase tracking-[0.3em] dark:text-accent text-amber-600 mb-2">
+              ▶ this portfolio is playable
+            </p>
+            <p className="text-[15px] leading-relaxed dark:text-zinc-200 text-zinc-800 mb-1.5">
+              There is a first-person game built out of my actual experience —
+              two bosses from my career, and me at the end asking for a job offer.
+            </p>
+            <p className="font-mono text-[11px] leading-relaxed dark:text-zinc-500 text-zinc-500 mb-4">
+              It needs a mouse and keyboard, so it only runs on a computer.
+              Open this page on a laptop to play it.
+            </p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={dismiss}
+                className="flex-1 font-mono text-[12px] uppercase tracking-[0.18em] text-ink bg-accent px-4 py-3 active:opacity-80 transition-opacity"
+              >
+                Got it
+              </button>
+              <a
+                href="/#featured-work"
+                onClick={dismiss}
+                className="font-mono text-[11px] uppercase tracking-[0.18em] dark:text-zinc-400 text-zinc-500 border dark:border-zinc-700 border-zinc-300 px-4 py-3 active:opacity-80 transition-opacity"
+              >
+                See the work
+              </a>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    );
+  }
 
   return (
     <AnimatePresence>

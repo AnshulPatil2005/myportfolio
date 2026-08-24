@@ -10,7 +10,7 @@ const lines = [
 export default function TerminalLog({ className = "" }: { className?: string }) {
   return (
     <div className={`shrink-0 ${className}`} aria-hidden="true">
-      <div className="w-[220px] border dark:border-zinc-800 border-zinc-200 dark:bg-zinc-950 bg-zinc-50 overflow-hidden">
+      <div className="w-full max-w-[220px] border dark:border-zinc-800 border-zinc-200 dark:bg-zinc-950 bg-zinc-50 overflow-hidden">
         {/* title bar */}
         <div className="flex items-center gap-1.5 px-3 py-2 border-b dark:border-zinc-800 border-zinc-200">
           <span className="w-2 h-2 rounded-full dark:bg-zinc-700 bg-zinc-300" />

@@ -124,7 +124,7 @@ export default function PipelineAnimation({
         <Packet delay={0} top="31px" />
         <Packet delay={1.35} top="55px" />
 
-        <div className="grid grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
           {pipeline.steps.map((step, index) => (
             <motion.div
               key={step.id}

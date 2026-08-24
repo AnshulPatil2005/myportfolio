@@ -135,7 +135,7 @@ export default function Hero() {
           </motion.div>
 
           <motion.p
-            className="mt-6 font-mono text-[10px] uppercase tracking-[0.22em] dark:text-zinc-700 text-zinc-400 select-none flex items-center gap-3"
+            className="mt-6 font-mono text-[10px] uppercase tracking-[0.22em] dark:text-zinc-700 text-zinc-400 select-none hidden md:flex items-center gap-3"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 1.1, ease: "easeOut" }}
