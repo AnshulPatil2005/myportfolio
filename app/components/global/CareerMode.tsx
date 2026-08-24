@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
 import { profile } from "@/lib/data";
-import { CHAPTERS, ROMAN, PROGRESS_KEY, LINKEDIN_URL } from "./career/data";
+import { CHAPTERS, ROMAN, PROGRESS_KEY, LINKEDIN_URL, INTERVIEW, FOCUS_PITCH } from "./career/data";
 import type { RunStats } from "./career/Engine3D";
 
 // Three.js world loads only when the game opens — stays out of the main bundle.
@@ -19,7 +19,7 @@ const Engine3D = dynamic(() => import("./career/Engine3D"), {
   ),
 });
 
-type Phase = "map" | "world" | "interlude" | "victory" | "pause" | "ending";
+type Phase = "map" | "world" | "interlude" | "victory" | "pause" | "interview" | "ending";
 
 const fade = {
   initial: { opacity: 0, y: 8 },
@@ -38,6 +38,12 @@ export default function CareerMode() {
   const [runStart, setRunStart] = useState(0);
   const [stats, setStats] = useState<RunStats | null>(null);
   const [tooSmall, setTooSmall] = useState(false);
+  const [cue, setCue] = useState(0);
+  const [qIdx, setQIdx] = useState(0);
+  const [answers, setAnswers] = useState<string[]>([]);
+  const [reply, setReply] = useState<string | null>(null);
+  const [rank, setRank] = useState<{ runs: number; percentile: number | null } | null>(null);
+  const [copied, setCopied] = useState(false);
   const phaseRef = useRef<Phase>("map");
   phaseRef.current = phase;
 
@@ -86,6 +92,7 @@ export default function CareerMode() {
       const ph = phaseRef.current;
       if ([" ", "arrowup", "arrowdown", "arrowleft", "arrowright"].includes(k)) e.preventDefault();
       if (k === "escape") {
+        if (ph === "interview" || ph === "ending") return;
         if (ph === "world") setPhase("pause");
         else if (ph === "pause") setPhase("world");
         else if (ph === "victory" || ph === "interlude") setPhase("world");
@@ -98,9 +105,16 @@ export default function CareerMode() {
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const onEngineEvent = useCallback((e: "victory" | "ending" | "pause" | "interlude", data?: number, runStats?: RunStats) => {
+  const onEngineEvent = useCallback((e: "victory" | "ending" | "pause" | "interlude" | "interview", data?: number, runStats?: RunStats) => {
     if (e === "pause") {
       setPhase(p => (p === "world" ? "pause" : p));
+      return;
+    }
+    if (e === "interview") {
+      setQIdx(0);
+      setAnswers([]);
+      setReply(null);
+      setPhase("interview");
       return;
     }
     if (e === "interlude") {
@@ -119,12 +133,93 @@ export default function CareerMode() {
       return;
     }
     if (e === "ending") {
-      if (runStats) setStats(runStats);
+      if (runStats) {
+        setStats(runStats);
+        fetch("/api/career-score", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(runStats),
+        })
+          .then(r => (r.ok ? r.json() : null))
+          .then(d => { if (d) setRank({ runs: d.runs, percentile: d.percentile }); })
+          .catch(() => { /* ranking is a nicety, never block the ending */ });
+      }
       localStorage.setItem(PROGRESS_KEY, "3");
       setSaved(3);
       setPhase("ending");
     }
   }, []);
+
+  // a postable result card, drawn to a canvas so there is nothing to host
+  const shareCard = useCallback(async () => {
+    if (!stats) return;
+    const W = 1200, H = 630;
+    const c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    const x = c.getContext("2d");
+    if (!x) return;
+
+    x.fillStyle = "#100d0b"; x.fillRect(0, 0, W, H);
+    x.strokeStyle = "rgba(255,176,0,0.35)"; x.lineWidth = 2;
+    x.strokeRect(28, 28, W - 56, H - 56);
+
+    x.fillStyle = "#ffb000";
+    x.font = "600 20px 'JetBrains Mono', monospace";
+    x.fillText("CAREER MODE  ·  COMPLETE", 70, 108);
+
+    x.fillStyle = "#f4f4f5";
+    x.font = "italic 82px 'Instrument Serif', Georgia, serif";
+    x.fillText("I hired Anshul Patil", 70, 214);
+
+    x.fillStyle = "#a1a1aa";
+    x.font = "22px 'JetBrains Mono', monospace";
+    x.fillText("beat both bosses, then made him an offer", 70, 262);
+
+    const mm = Math.floor(stats.seconds / 60);
+    const ss = String(stats.seconds % 60).padStart(2, "0");
+    const cells: [string, string][] = [
+      ["TIME", `${mm}:${ss}`],
+      ["DEATHS", String(stats.deaths)],
+      ["ACCURACY", `${stats.accuracy}%`],
+    ];
+    cells.forEach(([k, v], i) => {
+      const cx = 70 + i * 250;
+      x.fillStyle = "#71717a";
+      x.font = "16px 'JetBrains Mono', monospace";
+      x.fillText(k, cx, 380);
+      x.fillStyle = "#ffffff";
+      x.font = "600 62px 'JetBrains Mono', monospace";
+      x.fillText(v, cx, 448);
+    });
+
+    if (rank?.percentile != null) {
+      x.fillStyle = "#4ade80";
+      x.font = "22px 'JetBrains Mono', monospace";
+      x.fillText(`faster than ${rank.percentile}% of visitors`, 70, 512);
+    }
+
+    x.fillStyle = "#ffb000";
+    x.font = "600 24px 'JetBrains Mono', monospace";
+    x.fillText("anshulpatil.is-a.dev", 70, H - 74);
+
+    const blob: Blob | null = await new Promise(res => c.toBlob(res, "image/png"));
+    if (!blob) return;
+    const file = new File([blob], "career-mode.png", { type: "image/png" });
+
+    const nav = navigator as Navigator & { canShare?: (d: { files: File[] }) => boolean };
+    if (nav.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: "Career Mode", text: "I hired Anshul Patil." });
+        return;
+      } catch { /* user dismissed the sheet — fall through to download */ }
+    }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "career-mode.png";
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [stats, rank]);
 
   const exitTo = useCallback((sectionId: string) => {
     setOpen(false);
@@ -133,6 +228,7 @@ export default function CareerMode() {
 
   const vc = CHAPTERS[vicChapter];
   const engineMounted = open && !tooSmall && phase !== "map";
+  const focus = FOCUS_PITCH[answers[0]] ?? FOCUS_PITCH.browsing;
 
   return (
     <AnimatePresence>
@@ -158,7 +254,7 @@ export default function CareerMode() {
             )}
 
             {engineMounted && (
-              <Engine3D key={runId} initialCleared={runStart} paused={phase !== "world"} onEvent={onEngineEvent} />
+              <Engine3D key={runId} initialCleared={runStart} paused={phase !== "world"} onEvent={onEngineEvent} cinematicCue={cue} />
             )}
 
             {phase === "world" && (
@@ -291,6 +387,51 @@ export default function CareerMode() {
                 );
               })()}
 
+              {/* ── THE REVERSE INTERVIEW ── */}
+              {phase === "interview" && (
+                <motion.div key={`iv-${qIdx}-${reply ? 1 : 0}`} {...fade} className="absolute inset-0 flex items-center justify-center px-8 bg-black/70">
+                  <div className="max-w-2xl w-full border border-amber-500/35 bg-[#0d0a08]/97 p-9">
+                    <div className="flex items-baseline justify-between mb-5">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-accent">anshul is asking</p>
+                      <p className="font-mono text-[10px] text-zinc-600">{Math.min(qIdx + 1, INTERVIEW.length)} / {INTERVIEW.length}</p>
+                    </div>
+
+                    {reply ? (
+                      <>
+                        <p className="text-[17px] leading-relaxed text-zinc-100 mb-8">&ldquo;{reply}&rdquo;</p>
+                        <button
+                          onClick={() => {
+                            setReply(null);
+                            if (qIdx + 1 >= INTERVIEW.length) { setCue(c => c + 1); setPhase("world"); }
+                            else setQIdx(i => i + 1);
+                          }}
+                          className="font-mono text-xs uppercase tracking-[0.2em] text-ink bg-accent px-7 py-2.5 hover:opacity-85 transition-opacity"
+                        >
+                          {qIdx + 1 >= INTERVIEW.length ? "Finish" : "Next question"}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <h3 className="font-display text-3xl text-zinc-100 mb-7 leading-snug">{INTERVIEW[qIdx].q}</h3>
+                        <div className="flex flex-col gap-2.5">
+                          {INTERVIEW[qIdx].options.map(o => (
+                            <button
+                              key={o.tag}
+                              onClick={() => { setAnswers(a => [...a, o.tag]); setReply(o.reply); }}
+                              className="group text-left border border-zinc-800 hover:border-amber-500/60 bg-zinc-950/40 px-5 py-3.5 transition-colors"
+                            >
+                              <span className="font-mono text-[13px] text-zinc-300 group-hover:text-accent transition-colors">
+                                {o.label}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+
               {/* ── VICTORY ── */}
               {phase === "victory" && (
                 <motion.div key={`vic-${vicChapter}`} {...fade} className="absolute inset-0 flex items-center justify-center px-8 bg-black/45">
@@ -370,10 +511,24 @@ export default function CareerMode() {
                   <div className="max-w-xl w-full border border-green-400/40 bg-[#0d0a08]/95 p-8 text-center">
                     <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-green-400 mb-3">the only winning move</p>
                     <h3 className="font-display text-5xl text-zinc-100 mb-2">Offer Accepted</h3>
-                    <p className="font-mono text-[11px] text-zinc-400 mb-8">
+                    <p className="font-mono text-[11px] text-zinc-400 mb-6">
                       Two bosses. One tunnel. Every bullet bounced off the last obstacle.<br />
                       He told you himself — now go message him about the job offer.
                     </p>
+
+                    {/* what he highlights depends on what they said they wanted */}
+                    <div className="border dark:border-amber-500/30 border-amber-500/40 bg-amber-500/5 p-4 mb-6 text-left">
+                      <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-accent mb-2">
+                        ▸ picked for you — {focus.title}
+                      </p>
+                      <p className="text-[13.5px] leading-relaxed text-zinc-200 mb-3">{focus.body}</p>
+                      <button
+                        onClick={() => exitTo(focus.section)}
+                        className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-400 hover:text-zinc-100 transition-colors"
+                      >
+                        take me to it ↗
+                      </button>
+                    </div>
                     {stats && (
                       <div className="flex justify-center gap-8 mb-8 font-mono">
                         {[
@@ -388,10 +543,21 @@ export default function CareerMode() {
                         ))}
                       </div>
                     )}
-                    <div className="flex flex-wrap justify-center gap-4 mb-8">
+                    {rank?.percentile != null && (
+                      <p className="font-mono text-[11px] text-green-400 mb-6">
+                        faster than {rank.percentile}% of {rank.runs} recorded runs
+                      </p>
+                    )}
+                    <div className="flex flex-wrap justify-center gap-4 mb-4">
                       <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="font-mono text-xs uppercase tracking-[0.2em] text-ink bg-accent px-6 py-2.5 hover:opacity-85 transition-opacity">
                         Message me on LinkedIn
                       </a>
+                      <button
+                        onClick={shareCard}
+                        className="font-mono text-xs uppercase tracking-[0.2em] dark:text-zinc-300 text-zinc-600 border dark:border-zinc-700 border-zinc-300 px-6 py-2.5 hover:dark:border-zinc-500 hover:border-zinc-400 transition-colors"
+                      >
+                        Share result card
+                      </button>
                       <a href="mailto:anshulpatil1022@gmail.com" className="font-mono text-xs uppercase tracking-[0.2em] text-accent border border-amber-500/40 px-6 py-2.5 hover:border-amber-500 transition-colors">
                         Email instead
                       </a>
@@ -399,6 +565,17 @@ export default function CareerMode() {
                         Résumé
                       </a>
                     </div>
+                    <button
+                      onClick={() => {
+                        const msg = `Hi Anshul — I played Career Mode on your site and finished it in ${Math.floor((stats?.seconds ?? 0) / 60)}m ${String((stats?.seconds ?? 0) % 60).padStart(2, "0")}s. We're hiring for ${focus.title.toLowerCase()} and your ${answers[1] === "tests" ? "testing discipline" : answers[1] === "owns" ? "production ownership" : "shipping pace"} stood out. Can we talk?`;
+                        navigator.clipboard?.writeText(msg);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2200);
+                      }}
+                      className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500 hover:text-zinc-200 transition-colors mb-6 block mx-auto"
+                    >
+                      {copied ? "✓ copied — paste it to him" : "copy an opening message ⧉"}
+                    </button>
                     <p className="font-mono text-[10px] text-zinc-600 mb-6">anshulpatil1022@gmail.com · github.com/AnshulPatil2005</p>
                     <button onClick={() => exitTo("contact")} className="font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-600 hover:text-zinc-300 transition-colors">
                       roll credits — return to portfolio ↗

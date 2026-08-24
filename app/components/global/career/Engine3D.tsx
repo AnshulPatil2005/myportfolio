@@ -8,7 +8,7 @@ import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
 import { useEffect, useRef } from "react";
-import { CHAPTERS, WEAPONS, IMMUNE_TEXTS, ANSHUL_DIALOGUE, SUMMON_NAMES, ROMAN, LINKEDIN_URL } from "./data";
+import { CHAPTERS, WEAPONS, IMMUNE_TEXTS, ANSHUL_DIALOGUE, SUMMON_NAMES, ROMAN, LINKEDIN_URL, ARTIFACTS } from "./data";
 
 // ── World: two boss halls, then Anshul's chamber — built on a 4u tile grid ────
 const TILE = 4;
@@ -30,7 +30,9 @@ const ZONE_HEX = ["#4ade80", "#f87171", "#ffd88a"];
 interface Props {
   initialCleared: number;
   paused: boolean;
-  onEvent: (e: "victory" | "ending" | "pause" | "interlude", data?: number, stats?: RunStats) => void;
+  onEvent: (e: "victory" | "ending" | "pause" | "interlude" | "interview", data?: number, stats?: RunStats) => void;
+  // bumped by the shell once the interview is answered — plays the send-off
+  cinematicCue?: number;
 }
 
 export interface RunStats { seconds: number; deaths: number; accuracy: number }
@@ -56,8 +58,9 @@ const MAGS = [12, 6, 4];
 const RELOAD_T = [1.0, 1.4, 2.0];
 const WEAPON_TINT = [0xdff3ff, 0x4ade80, 0x9beeff];
 
-export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
+export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue = 0 }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
+  const cueRef = useRef<(() => void) | null>(null);
   const pausedRef = useRef(paused);
   const onEventRef = useRef(onEvent);
   pausedRef.current = paused;
@@ -83,11 +86,12 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
   const weaponRef = useRef<HTMLDivElement>(null);
   const ammoRef = useRef<HTMLDivElement>(null);
   const feedRef = useRef<HTMLDivElement>(null);
-  const promptRef = useRef<HTMLDivElement>(null);
+  const promptRef = useRef<HTMLParagraphElement>(null);
   const loadRef = useRef<HTMLDivElement>(null);
   const loadBarRef = useRef<HTMLDivElement>(null);
   const loadPctRef = useRef<HTMLSpanElement>(null);
   const lowHpRef = useRef<HTMLDivElement>(null);
+  const artiRef = useRef<HTMLDivElement>(null);
   const dmgDirRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -189,8 +193,8 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       s.scale.set((img.width / img.height) * worldH, worldH, 1);
       return s;
     }
-    // crisp rounded plate with text — for signs, names, and labels
-    function plateSprite(txt: string, fg = "#233150", bg = "rgba(252,252,254,0.94)", worldH = 0.42, fontPx = 44): THREE.Sprite {
+    // crisp rounded plate texture — shared so labels can be swapped at runtime
+    function plateTexture(txt: string, fg = "#233150", bg = "rgba(252,252,254,0.94)", fontPx = 44): THREE.CanvasTexture {
       const key = `p|${txt}|${fg}|${bg}|${fontPx}`;
       let tex = texCache.get(key);
       if (!tex) {
@@ -225,11 +229,22 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         tex.anisotropy = 4;
         texCache.set(key, tex);
       }
+      return tex;
+    }
+    function plateSprite(txt: string, fg = "#233150", bg = "rgba(252,252,254,0.94)", worldH = 0.42, fontPx = 44): THREE.Sprite {
+      const tex = plateTexture(txt, fg, bg, fontPx);
       const m = track(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
       const s = new THREE.Sprite(m);
       const img = tex.image as HTMLCanvasElement;
       s.scale.set((img.width / img.height) * worldH, worldH, 1);
       return s;
+    }
+    // keeps a plate's aspect correct when its text is swapped
+    function setPlate(sp: THREE.Sprite, txt: string, fg: string, bg: string, worldH: number, fontPx: number) {
+      const tex = plateTexture(txt, fg, bg, fontPx);
+      (sp.material as THREE.SpriteMaterial).map = tex;
+      const img = tex.image as HTMLCanvasElement;
+      sp.scale.set((img.width / img.height) * worldH, worldH, 1);
     }
     // soft radial glow texture (muzzle flash) — no font glyphs involved
     // the level II boss is a job application form — drawn to a canvas so the
@@ -887,6 +902,52 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     beacon.rotation.x = Math.PI;
     scene.add(beacon);
 
+    // ── Artifacts: real evidence you can walk up to and read ──────────────
+    const artifactVis = ARTIFACTS.map(a => {
+      const g = new THREE.Group();
+      const base = new THREE.Mesh(track(new THREE.CylinderGeometry(0.62, 0.78, 0.55, 8)), bmat(0x6f6656, { flatShading: true }));
+      base.position.y = 0.28;
+      base.castShadow = true;
+      const core = new THREE.Mesh(
+        track(new THREE.IcosahedronGeometry(0.34, 0)),
+        emat(ZONE_COL[a.zone], { transparent: true, opacity: 0.95 })
+      );
+      core.position.y = 1.25;
+      const halo = new THREE.Mesh(track(new THREE.TorusGeometry(0.55, 0.028, 8, 28)), emat(ZONE_COL[a.zone], { transparent: true, opacity: 0.75 }));
+      halo.rotation.x = Math.PI / 2;
+      halo.position.y = 1.25;
+      const beam = new THREE.Mesh(
+        track(new THREE.CylinderGeometry(0.3, 0.3, 5, 10, 1, true)),
+        emat(ZONE_COL[a.zone], { transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false })
+      );
+      beam.position.y = 3.2;
+      const label = plateSprite(a.name, "#233150", "rgba(252,252,254,0.94)", 0.34, 40);
+      label.position.y = 2.1;
+      g.add(base, core, halo, beam, label);
+      g.position.set(a.x, 0, ZC[a.zone] + a.z);
+      scene.add(g);
+      return { g, core, halo, taken: false };
+    });
+
+    // ── The determinism puzzle ─────────────────────────────────────────────
+    // Only the instance whose hash matches the canonical build takes full
+    // damage, so the player has to read the wall to fight the GSoC boss.
+    const HEX = "0123456789abcdef";
+    function randHash() {
+      let out = "";
+      for (let i = 0; i < 6; i++) out += HEX[(Math.random() * 16) | 0];
+      return out;
+    }
+    // the canonical hash, mounted on the wall of the first hall
+    const canonPlate = plateSprite("CANONICAL BUILD   ------", "#1a5276", "rgba(252,252,254,0.95)", 0.86, 46);
+    canonPlate.position.set(0, 4.6, ZC[0] - ROOM_HD + 0.9);
+    canonPlate.visible = false;
+    scene.add(canonPlate);
+    // the hash the boss is currently running under, floating over its head
+    const bossHashPlate = plateSprite("------", "#a63030", "rgba(252,252,254,0.95)", 0.5, 44);
+    bossHashPlate.visible = false;
+    scene.add(bossHashPlate);
+
     // ── Bosses — one individual per arena, character models on top ─────────
     interface BossVis {
       group: THREE.Group;
@@ -1171,13 +1232,15 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       waves: [] as Wave[],
       pendingFight: -1,
       ready: false, readyT: 0.4, stepT: 0, pagesTorn: 0,
-      dmgAng: 0, dmgT: 0,
+      dmgAng: 0, dmgT: 0, interviewed: false, noPause: false,
+      artifacts: ARTIFACTS.map(() => false), nearArtifact: -1, dmgBuff: 1,
       shots: 0, hits: 0, deaths: 0, runT: 0,
       fightActive: false, fightZone: -1, introT: -1, vicT: -1, deadT: -1,
       bossX: 0, bossZ: 0, bossHp: 0, bossMax: 1,
       shake: 0, bossPulse: 0, noteT: 0,
       cdA: 2.4, cdB: 3.5,
       sumT: 4, sumIdx: 0, blinkT: 4.2, enraged: false, bossMoving: false,
+      canonHash: "", bossHash: "", hashMatch: false,
       summons: [0, 1].map(() => ({ active: false, x: 0, z: 0, hp: 0, name: "", rig: null as CharRig | null, label: null as THREE.Sprite | null })),
       weaponSel: Math.max(0, Math.min(2, initialCleared)),
       railT: 0, railLen: 0, railYaw: 0, railPitch: 0,
@@ -1259,6 +1322,15 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       st.cdA = 2.6; st.cdB = 3.8;
       st.sumT = 4; st.blinkT = 4.2; st.enraged = false; st.bossMoving = false;
       st.pagesTorn = 0;
+      if (zone === 0) {
+        st.canonHash = randHash();
+        st.bossHash = randHash();
+        st.hashMatch = false;
+        if (canonPlate) {
+          canonPlate.visible = true;
+          setPlate(canonPlate, `CANONICAL BUILD   ${st.canonHash}`, "#1a5276", "rgba(252,252,254,0.95)", 0.86, 46);
+        }
+      } else if (canonPlate) canonPlate.visible = false;
       clearSummons();
       if (introNameRef.current) introNameRef.current.textContent = CHAPTERS[zone].bossName;
       if (introSubRef.current) introSubRef.current.textContent = CHAPTERS[zone].bossSub;
@@ -1270,7 +1342,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     const seqActive = () => st.vicT >= 0 || st.deadT >= 0 || st.cineT >= 0 || st.introT > 0;
     const onLockChange = () => {
       st.locked = document.pointerLockElement === canvas;
-      if (!st.locked && !seqActive() && st.pendingFight < 0 && !pausedRef.current) onEventRef.current("pause");
+      if (!st.locked && !seqActive() && !st.noPause && st.pendingFight < 0 && !pausedRef.current) onEventRef.current("pause");
     };
     const onCanvasClick = () => {
       if (st.ready && !st.locked && !seqActive() && !pausedRef.current) canvas.requestPointerLock();
@@ -1293,19 +1365,32 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         st.reloadT = 0;
       }
       if (k === "r") startReload();
-      if (k === "e" && st.canOffer && st.cineT < 0) {
-        st.cineT = 0;
+      if (k === "e" && st.nearArtifact >= 0) {
+        const i = st.nearArtifact;
+        const a = ARTIFACTS[i];
+        st.artifacts[i] = true;
+        st.nearArtifact = -1;
+        artifactVis[i].taken = true;
+        artifactVis[i].g.visible = false;
+        burst(a.x, ZC[a.zone] + a.z, 26, ZONE_COL[a.zone], 5, 1.3);
+        sfx("tick");
+        feedKill(`ARTIFACT · ${a.name}`);
+        const got = st.artifacts.filter(Boolean).length;
+        note(`${a.name} — ${a.line}`, 6.5);
+        if (got >= ARTIFACTS.length) {
+          st.dmgBuff = 1.35;
+          setTimeout(() => note("ALL ARTIFACTS RECOVERED — WEAPONS UPGRADED +35%", 4), 6600);
+        }
+        return;
+      }
+      if (k === "e" && st.canOffer && st.cineT < 0 && !st.interviewed) {
+        st.interviewed = true;
+        st.noPause = true;
         st.pb = [];
         clearSummons();
         document.exitPointerLock();
-        // opened straight from the keypress so the browser treats it as a
-        // user gesture — a window.open after the cinematic would be blocked
-        window.open(LINKEDIN_URL, "_blank", "noopener,noreferrer");
-        // he celebrates the offer
-        if (anshulActions.cheer) {
-          anshulActions.idle?.fadeOut(0.3);
-          anshulActions.cheer.reset().fadeIn(0.3).play();
-        }
+        onEventRef.current("interview");
+        return;
       }
     };
     const onKeyUp = (e: KeyboardEvent) => st.keys.delete(e.key.toLowerCase());
@@ -1344,6 +1429,10 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           st.bossZ = Math.max(oz - ROOM_HD + 4, Math.min(oz + ROOM_HD - 4, st.pz + Math.sin(a) * 11));
           burst(st.bossX, st.bossZ, 14, 0x9fd8ff, 4, 1.4);
           st.bossMoving = false;
+          st.bossHash = Math.random() < 0.4 ? st.canonHash : randHash();
+          const nowMatch = st.bossHash === st.canonHash;
+          if (nowMatch && !st.hashMatch) note("HASHES MATCH — FIRE NOW", 1.5);
+          st.hashMatch = nowMatch;
         }
         st.cdA -= dt;
         if (st.cdA <= 0) { st.cdA = 3.6; spawnWave(st.bossX, st.bossZ, 5.5, 9); }
@@ -1426,10 +1515,18 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       const r = st.fightZone === 1 ? 1.7 : 1.2;
       const top = st.fightZone === 1 ? 4.8 : 3.2;
       if (Math.hypot(b.x - st.bossX, b.z - st.bossZ) < r && b.y > 0 && b.y < top) {
-        st.bossHp -= b.dmg;
+        // the determinism boss only really takes damage while its build hash
+        // matches the canonical one posted on the wall
+        const mult = st.fightZone === 0 && !st.hashMatch ? 0.2 : 1;
+        st.bossHp -= b.dmg * mult;
         st.bossPulse = 0.14;
-        if (st.fightZone === 0 && Math.random() < 0.12) rigOnce(bossRigs[0], "Hit_A");
-        burst(b.x, b.z, 4, 0xffffff, 3, b.y);
+        if (mult < 1) {
+          if (Math.random() < 0.25) floatTxt("MISMATCH", "#8aa0b8", b.x, b.z, 0.34, b.y + 0.4);
+          burst(b.x, b.z, 2, 0x8899aa, 2.4, b.y);
+        } else {
+          if (st.fightZone === 0 && Math.random() < 0.12) rigOnce(bossRigs[0], "Hit_A");
+          burst(b.x, b.z, 4, 0xffffff, 3, b.y);
+        }
         return true;
       }
       return false;
@@ -1679,6 +1776,17 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         }
       }
 
+      // artifacts: nearest uncollected pedestal within reach
+      st.nearArtifact = -1;
+      if (!st.fightActive) {
+        let best = 2.6;
+        ARTIFACTS.forEach((a, i) => {
+          if (st.artifacts[i]) return;
+          const d = Math.hypot(a.x - st.px, ZC[a.zone] + a.z - st.pz);
+          if (d < best) { best = d; st.nearArtifact = i; }
+        });
+      }
+
       // the final meeting — he speaks once, in order, then points you at the offer
       if (st.cleared >= FINAL) {
         const dAn = Math.hypot(st.px - 0, st.pz - ZC[FINAL]);
@@ -1707,7 +1815,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           if (st.pb.length >= MAX_PB - 2) return;
           const ya = st.yaw + off;
           const dx = -Math.sin(ya) * cp, dy = sp2, dz = -Math.cos(ya) * cp;
-          st.pb.push({ x: st.px + dx * 0.6, y: EYE - 0.12 + dy * 0.6, z: st.pz + dz * 0.6, vx: dx * speed, vy: dy * speed, vz: dz * speed, dmg, pierce, life, dead: false });
+          st.pb.push({ x: st.px + dx * 0.6, y: EYE - 0.12 + dy * 0.6, z: st.pz + dz * 0.6, vx: dx * speed, vy: dy * speed, vz: dz * speed, dmg: dmg * st.dmgBuff, pierce, life, dead: false });
         };
         const canFire = st.reloadT <= 0;
         if (st.fireCd <= 0 && canFire) {
@@ -1731,7 +1839,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
               sfx("rail");
               st.railYaw = st.yaw;
               st.railPitch = st.pitch;
-              st.railLen = castRay(55, true);
+              st.railLen = castRay(55 * st.dmgBuff, true);
               st.shake = Math.max(st.shake, 0.9);
             }
             if (st.ammo[st.weaponSel] <= 0) startReload();
@@ -1955,6 +2063,17 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         if (!openGate) g.plane.opacity = 0.35 + Math.sin(st.t * 3 + i) * 0.15;
       });
 
+      // artifacts hover and spin until taken
+      artifactVis.forEach((av, i) => {
+        if (av.taken) return;
+        const near = st.nearArtifact === i;
+        av.core.rotation.y = st.t * 1.1;
+        av.core.rotation.x = st.t * 0.6;
+        av.core.position.y = 1.25 + Math.sin(st.t * 1.8 + i) * 0.12;
+        av.halo.rotation.z = st.t * 0.9;
+        av.core.scale.setScalar(near ? 1.25 + Math.sin(st.t * 8) * 0.08 : 1);
+      });
+
       // summons — the boss's named skeletons
       st.summons.forEach((s, i) => {
         const proto = summonProtos[i];
@@ -1999,14 +2118,25 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           if (v.aura) v.aura.opacity = 0.1 + Math.sin(st.t * 3) * 0.06;
           if (v.halo) { v.halo.rotation.z = st.t * 0.8; v.halo.position.y = 3.25 + Math.sin(st.t * 2) * 0.06; }
           if (st.cineT >= 0 && v.screen) v.screen.opacity = 1;
+        } else if (zi === 0) {
+          rigPlay(bossRigs[0], activeFight && st.bossMoving ? "Walking_A" : "Idle");
+          if (activeFight) {
+            bossHashPlate.visible = true;
+            bossHashPlate.position.set(bx, 4.5, bz);
+            setPlate(
+              bossHashPlate,
+              `build ${st.bossHash}`,
+              st.hashMatch ? "#1f7a44" : "#a63030",
+              st.hashMatch ? "rgba(226,250,235,0.96)" : "rgba(252,252,254,0.95)",
+              0.5, 44
+            );
+          } else bossHashPlate.visible = false;
         } else if (zi === 1) {
           // the form hovers and leafs in the air, shedding pages as it breaks
           v.group.position.y = Math.sin(st.t * 1.6) * 0.16;
           v.group.rotation.z = Math.sin(st.t * 0.9) * 0.05;
           const torn = activeFight ? st.pagesTorn : 0;
           v.sheets?.forEach((sh, k) => { sh.visible = k >= torn; });
-        } else {
-          rigPlay(bossRigs[zi], activeFight && st.bossMoving ? "Walking_A" : "Idle");
         }
       }
 
@@ -2120,7 +2250,21 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       }
       if (lockHintRef.current) lockHintRef.current.style.opacity = st.ready && !st.locked && !seqActive() && !pausedRef.current ? "1" : "0";
       if (bannerRef.current) bannerRef.current.style.opacity = st.bannerT > 0.4 ? "1" : "0";
-      if (promptRef.current) promptRef.current.style.opacity = st.canOffer && st.cineT < 0 ? "1" : "0";
+      if (promptRef.current) {
+        const showOffer = st.canOffer && st.cineT < 0 && st.nearArtifact < 0;
+        const showPick = st.nearArtifact >= 0;
+        promptRef.current.style.opacity = showOffer || showPick ? "1" : "0";
+        promptRef.current.textContent = showPick
+          ? `[ E ] examine ${ARTIFACTS[st.nearArtifact].name}`
+          : "[ E ] extend the job offer";
+        promptRef.current.style.color = showPick ? "#dff3ff" : "#86efac";
+        promptRef.current.style.borderColor = showPick ? "rgba(160,210,255,0.5)" : "rgba(74,222,128,0.5)";
+      }
+      if (artiRef.current) {
+        const got = st.artifacts.filter(Boolean).length;
+        artiRef.current.textContent = `ARTIFACTS ${got}/${ARTIFACTS.length}${st.dmgBuff > 1 ? "  ·  +35% DMG" : ""}`;
+        artiRef.current.style.color = got >= ARTIFACTS.length ? "#86efac" : "rgba(255,255,255,0.75)";
+      }
       if (weaponRef.current) weaponRef.current.textContent = `[${st.weaponSel + 1}] ${WEAPONS[st.weaponSel].name}${st.cleared > 0 ? ` · 1-${Math.min(3, st.cleared + 1)}` : ""}`;
       if (ammoRef.current) {
         const reloading = st.reloadT > 0;
@@ -2149,6 +2293,19 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
       }
       for (let i = parts.length - 1; i >= 0; i--) if (parts[i].t >= parts[i].max) parts.splice(i, 1);
     }
+
+    // the shell answers the interview, then cues the celebration
+    cueRef.current = () => {
+      if (st.cineT >= 0) return;
+      st.noPause = false;
+      st.cineT = 0;
+      st.pb = [];
+      clearSummons();
+      if (anshulActions.cheer) {
+        anshulActions.idle?.fadeOut(0.3);
+        anshulActions.cheer.reset().fadeIn(0.3).play();
+      }
+    };
 
     // ── Loop ───────────────────────────────────────────────────────────────
     let raf = 0;
@@ -2196,6 +2353,11 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // the shell bumps this once the interview is answered
+  useEffect(() => {
+    if (cinematicCue > 0) cueRef.current?.();
+  }, [cinematicCue]);
 
   return (
     <div className="relative w-full h-full select-none">
@@ -2273,10 +2435,12 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
         style={{ opacity: 0, textShadow: "0 2px 14px rgba(0,0,0,0.5)" }}
       />
 
-      <div ref={promptRef} className="absolute bottom-[22%] inset-x-0 flex justify-center pointer-events-none transition-opacity duration-300" style={{ opacity: 0 }}>
-        <p className="font-mono text-[12px] uppercase tracking-[0.25em] text-green-300 border border-green-400/60 bg-[#10141e]/85 px-5 py-2.5 animate-pulse">
-          [ E ] extend the job offer
-        </p>
+      <div className="absolute bottom-[22%] inset-x-0 flex justify-center pointer-events-none">
+        <p
+          ref={promptRef}
+          className="font-mono text-[12px] uppercase tracking-[0.25em] border bg-[#10141e]/85 px-5 py-2.5 transition-opacity duration-300"
+          style={{ opacity: 0, color: "#86efac", borderColor: "rgba(74,222,128,0.5)" }}
+        />
       </div>
 
       {/* HUD */}
@@ -2287,6 +2451,7 @@ export default function Engine3D({ initialCleared, paused, onEvent }: Props) {
           <div ref={bossFillRef} className="h-full" style={{ width: "100%", background: "#4ade80" }} />
         </div>
       </div>
+      <div ref={artiRef} className="absolute top-7 left-4 font-mono text-[9px] uppercase tracking-[0.2em] pointer-events-none" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.6)" }} />
       <div ref={feedRef} className="absolute top-10 right-4 pointer-events-none flex flex-col items-end gap-1" />
       <div ref={noteRef} className="absolute top-16 inset-x-0 text-center font-mono text-[12px] font-bold text-white pointer-events-none px-8" style={{ opacity: 0, textShadow: "0 1px 8px rgba(0,0,0,0.6)" }} />
       <div className="absolute bottom-3 left-4 pointer-events-none flex items-end gap-2.5">
