@@ -10,6 +10,7 @@ import { FXAAPass } from "three/examples/jsm/postprocessing/FXAAPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
+import { Reflector } from "three/examples/jsm/objects/Reflector.js";
 import { useEffect, useRef } from "react";
 import { CHAPTERS, WEAPONS, IMMUNE_TEXTS, ANSHUL_DIALOGUE, SUMMON_NAMES, ROMAN, LINKEDIN_URL, ARTIFACTS } from "./data";
 
@@ -556,6 +557,25 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
     ground.rotation.x = -Math.PI / 2;
     ground.position.set(0, -0.12, -ZONE_GAP);
     scene.add(ground);
+
+    // the final chamber floor is polished: the statue, torches and banners all
+    // read twice in it. A half-res target keeps the extra render cheap.
+    const mirror = new Reflector(new THREE.PlaneGeometry(ROOM_HW * 2 - 1, ROOM_HD * 2 - 1), {
+      textureWidth: 512,
+      textureHeight: 512,
+      color: 0x6a6a72,
+    });
+    mirror.rotation.x = -Math.PI / 2;
+    mirror.position.set(0, 0.02, ZC[FINAL]);
+    scene.add(mirror);
+    // a translucent stone layer over it so the floor reads wet, not glassy
+    const wet = new THREE.Mesh(
+      track(new THREE.PlaneGeometry(ROOM_HW * 2 - 1, ROOM_HD * 2 - 1)),
+      track(new THREE.MeshLambertMaterial({ color: 0x8a8274, transparent: true, opacity: 0.6 }))
+    );
+    wet.rotation.x = -Math.PI / 2;
+    wet.position.set(0, 0.035, ZC[FINAL]);
+    scene.add(wet);
 
     // open sky — the halls are roofless ruins, not a sealed cave
     {
@@ -1315,6 +1335,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       const v = bossVis[FINAL];
       if (v.protoBody) v.protoBody.visible = false;
       v.group.add(model);
+
       const mixer = new THREE.AnimationMixer(model);
       mixers.push(mixer);
       const idleClip = THREE.AnimationClip.findByName(gltf.animations, "Idle") || gltf.animations[0];
@@ -1324,8 +1345,102 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
         anshulActions.idle.play();
       }
       if (cheerClip) anshulActions.cheer = mixer.clipAction(cheerClip);
+
+      // the same model, weathered and eight times the size, standing at the
+      // far wall — the real one waits small at its base
+      const statue = cloneSkeleton(gltf.scene) as THREE.Group;
+      statue.scale.setScalar(11);
+      statue.position.set(0, 0, ZC[FINAL] - ROOM_HD + 5.5);
+      statue.rotation.y = Math.PI;
+      const stoneMat = track(new THREE.MeshLambertMaterial({ color: 0x8d8676, flatShading: false }));
+      statue.traverse(o => {
+        const m = o as THREE.Mesh;
+        if (m.isMesh) { m.material = stoneMat; m.castShadow = true; m.receiveShadow = true; }
+      });
+      applyLoadout(statue, "Mage");
+      scene.add(statue);
+
+      // plinth
+      const plinth = new THREE.Mesh(track(new THREE.CylinderGeometry(5.4, 6.4, 1.6, 12)), bmat(0x7c7568, { flatShading: true }));
+      plinth.position.set(0, 0.8, ZC[FINAL] - ROOM_HD + 5.5);
+      plinth.receiveShadow = true;
+      plinth.castShadow = true;
+      scene.add(plinth);
+
+      // light falling across its face
+      for (const off of [-3.2, 3.2]) {
+        const shaft = new THREE.Mesh(
+          track(new THREE.CylinderGeometry(1.6, 3.4, 26, 12, 1, true)),
+          emat(0xffe6b8, { transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false })
+        );
+        shaft.position.set(off, 13, ZC[FINAL] - ROOM_HD + 8);
+        shaft.rotation.z = off > 0 ? -0.16 : 0.16;
+        scene.add(shaft);
+      }
     }).catch(() => { /* offline — procedural body stays */ });
 
+    // ── weather, one system per hall, keyed to that hall's fiction ─────────
+    const weather = ZC.map((zc, zi) => {
+      const n = 220;
+      const pos = new Float32Array(n * 3);
+      const vel = new Float32Array(n);
+      for (let i = 0; i < n; i++) {
+        pos[i * 3] = (Math.random() - 0.5) * ROOM_HW * 2;
+        pos[i * 3 + 1] = Math.random() * 14;
+        pos[i * 3 + 2] = zc + (Math.random() - 0.5) * ROOM_HD * 2;
+        vel[i] = 0.4 + Math.random() * 1.1;
+      }
+      const g = track(new THREE.BufferGeometry());
+      g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+      // ash falls, paper tumbles, motes rise
+      const look = [
+        { color: 0xb9b3aa, size: 0.11, up: false },
+        { color: 0xf3efe3, size: 0.16, up: false },
+        { color: 0xffd88a, size: 0.13, up: true },
+      ][zi];
+      const m = track(new THREE.PointsMaterial({
+        color: look.color, size: look.size, transparent: true,
+        opacity: 0.55, depthWrite: false,
+      }));
+      const pts = new THREE.Points(g, m);
+      pts.frustumCulled = false;
+      scene.add(pts);
+      return { pts, pos, vel, zc, up: look.up };
+    });
+
+    // ── scorch decals: explosions and pulses leave the floor marked ────────
+    const decalTex = (() => {
+      const c = document.createElement("canvas");
+      c.width = c.height = 128;
+      const x = c.getContext("2d")!;
+      const g = x.createRadialGradient(64, 64, 4, 64, 64, 62);
+      g.addColorStop(0, "rgba(20,14,10,0.85)");
+      g.addColorStop(0.6, "rgba(30,20,14,0.45)");
+      g.addColorStop(1, "rgba(40,28,18,0)");
+      x.fillStyle = g;
+      x.fillRect(0, 0, 128, 128);
+      return track(new THREE.CanvasTexture(c));
+    })();
+    const decals = Array.from({ length: 28 }, () => {
+      const m = new THREE.Mesh(
+        track(new THREE.PlaneGeometry(1, 1)),
+        track(new THREE.MeshBasicMaterial({ map: decalTex, transparent: true, opacity: 0, depthWrite: false }))
+      );
+      m.rotation.x = -Math.PI / 2;
+      m.position.y = 0.13;
+      m.visible = false;
+      scene.add(m);
+      return m;
+    });
+    let decalIdx = 0;
+    function scorch(x: number, z: number, size = 3.4, strength = 0.9) {
+      const d = decals[decalIdx++ % decals.length];
+      d.visible = true;
+      d.position.set(x, 0.13, z);
+      d.rotation.z = Math.random() * Math.PI;
+      d.scale.setScalar(size * (0.85 + Math.random() * 0.3));
+      (d.material as THREE.MeshBasicMaterial).opacity = strength;
+    }
     // ── State ──────────────────────────────────────────────────────────────
     const st = {
       t: 0, timeScale: 1,
@@ -1697,6 +1812,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       b.alive = false;
       b.obj.visible = false;
       burst(b.x, b.z, 34, 0xffa040, 7, 1);
+      scorch(b.x, b.z, 4.2, 0.92);
       sfx("boom");
       st.shake = Math.max(st.shake, 1.6);
       const R = 4.2;
@@ -2000,6 +2116,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
           h.warm -= dt;
           if (h.warm <= 0) {
             burst(h.x, h.z, 14, 0xff7050, 5, 0.4);
+            scorch(h.x, h.z, h.r * 1.5, 0.5);
             if (st.invuln <= 0 && Math.hypot(h.x - st.px, h.z - st.pz) < h.r) {
               st.php -= 12; st.invuln = 1; st.shake = 1.1;
               sfx("hurt");
@@ -2059,6 +2176,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
         feedKill(CHAPTERS[st.fightZone].bossName);
         burst(st.bossX, st.bossZ, 60, ZONE_COL[st.fightZone], 8, 1.5);
         burst(st.bossX, st.bossZ, 40, 0xffffff, 5, 1.5);
+        scorch(st.bossX, st.bossZ, 7, 0.8);
         document.exitPointerLock();
       }
     }
@@ -2324,6 +2442,24 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       (scene.background as THREE.Color).lerp(colB, 0.05);
       (scene.background as THREE.Color).copy((scene.fog as THREE.Fog).color);
 
+      // weather drifts through each hall
+      for (const w of weather) {
+        const attr = w.pts.geometry.getAttribute("position") as THREE.BufferAttribute;
+        for (let i = 0; i < w.vel.length; i++) {
+          const y = i * 3 + 1;
+          if (w.up) {
+            w.pos[y] += w.vel[i] * 0.011;
+            if (w.pos[y] > 15) w.pos[y] = 0;
+          } else {
+            w.pos[y] -= w.vel[i] * 0.014;
+            if (w.pos[y] < 0) w.pos[y] = 15;
+          }
+          // a slow lateral sway so nothing falls in a straight line
+          w.pos[i * 3] += Math.sin(st.t * 0.6 + i) * 0.004;
+        }
+        attr.needsUpdate = true;
+      }
+
       // ── arena activation: the hall itself reacts to the fight ──
       {
         const A = st.arenaT;
@@ -2477,12 +2613,15 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
         for (const mx of mixers) mx.update(rdt);
       }
       syncVisuals();
-      // depth-only prepass that feeds the outline shader
+      // depth-only prepass that feeds the outline shader. The mirror renders
+      // its own view on demand, so hide it or that render lands as depth.
+      mirror.visible = false;
       scene.overrideMaterial = depthMat;
       renderer.setRenderTarget(depthRT);
       renderer.render(scene, camera);
       renderer.setRenderTarget(null);
       scene.overrideMaterial = null;
+      mirror.visible = true;
       composer.render();
       raf = requestAnimationFrame(loop);
     };
@@ -2513,6 +2652,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       for (const d of disposables) d.dispose();
       depthRT.dispose();
       depthMat.dispose();
+      mirror.dispose();
       composer.dispose();
       renderer.dispose();
       if (canvas.parentElement === mount) mount.removeChild(canvas);
