@@ -4,6 +4,9 @@ import * as THREE from "three";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { GTAOPass } from "three/examples/jsm/postprocessing/GTAOPass.js";
+import { ShaderPass } from "three/examples/jsm/postprocessing/ShaderPass.js";
+import { FXAAPass } from "three/examples/jsm/postprocessing/FXAAPass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 import { GLTFLoader, type GLTF } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { clone as cloneSkeleton } from "three/examples/jsm/utils/SkeletonUtils.js";
@@ -117,7 +120,8 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
     scene.fog = new THREE.Fog(0x8fa3c4, 60, 260);
 
     // cave lighting — dim ambience, the colored arena lights carry the scene
-    scene.add(new THREE.HemisphereLight(0xcfe0f5, 0x6b6154, 1.35));
+    const hemi = new THREE.HemisphereLight(0xcfe0f5, 0x6b6154, 1.35);
+    scene.add(hemi);
     const sun = new THREE.DirectionalLight(0xffeccd, 1.5);
     sun.position.set(18, 30, 10);
     sun.castShadow = true;
@@ -127,10 +131,16 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
     sun.shadow.camera.near = 1; sun.shadow.camera.far = 90;
     sun.shadow.bias = -0.002;
     scene.add(sun, sun.target);
+    // rim light: cool, low, opposite the sun — edges characters against stone
+    const rim = new THREE.DirectionalLight(0x9fc4ff, 0.85);
+    rim.position.set(-14, 7, -18);
+    scene.add(rim, rim.target);
+    const zoneLights: THREE.PointLight[] = [];
     ZC.forEach((zc, i) => {
       const pl = new THREE.PointLight(ZONE_COL[i], 60, 44, 1.9);
-      pl.position.set(0, 6, i === FINAL ? zc : zc - 2);
+      pl.position.set(0, 6, i === FINAL ? zc : zc - 4);
       scene.add(pl);
+      zoneLights.push(pl);
     });
     // warm torchlight at the gates, the spawn, and the final platform
     const torchLightSpots: [number, number][] = [[0, 10.2], [0, ZC[FINAL] + 2.6]];
@@ -144,12 +154,99 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
     const camera = new THREE.PerspectiveCamera(62, RW / RH, 0.05, 900);
     scene.add(camera);
 
+    // ── Art direction stack ────────────────────────────────────────────────
+    // depth-only copy of the frame, used by the ink-outline pass below
+    const depthRT = new THREE.WebGLRenderTarget(RW, RH, {
+      minFilter: THREE.NearestFilter,
+      magFilter: THREE.NearestFilter,
+    });
+    depthRT.depthTexture = new THREE.DepthTexture(RW, RH);
+    depthRT.depthTexture.type = THREE.UnsignedIntType;
+    const depthMat = new THREE.MeshDepthMaterial();
+
+    // Sobel over depth: dark ink lines wherever geometry steps away from
+    // itself. Low-poly assets read as deliberate art instead of raw meshes.
+    const OutlineShader = {
+      uniforms: {
+        tDiffuse: { value: null },
+        tDepth: { value: depthRT.depthTexture },
+        texel: { value: new THREE.Vector2(1 / RW, 1 / RH) },
+        near: { value: 0.05 },
+        far: { value: 900 },
+        strength: { value: 0.85 },
+      },
+      vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+      fragmentShader: `
+        #include <packing>
+        varying vec2 vUv;
+        uniform sampler2D tDiffuse;
+        uniform sampler2D tDepth;
+        uniform vec2 texel;
+        uniform float near, far, strength;
+        float lin(vec2 uv){
+          float d = texture2D(tDepth, uv).x;
+          return viewZToOrthographicDepth(perspectiveDepthToViewZ(d, near, far), near, far);
+        }
+        void main(){
+          vec4 col = texture2D(tDiffuse, vUv);
+          float c = lin(vUv);
+          // wider sampling on distant geometry keeps lines from shimmering
+          float sp = 1.0 + c * 2.0;
+          float l = lin(vUv - vec2(texel.x, 0.0) * sp);
+          float r = lin(vUv + vec2(texel.x, 0.0) * sp);
+          float u = lin(vUv - vec2(0.0, texel.y) * sp);
+          float d = lin(vUv + vec2(0.0, texel.y) * sp);
+          float g = abs(l - c) + abs(r - c) + abs(u - c) + abs(d - c);
+          // scale the threshold with distance so far walls do not go solid black
+          float edge = smoothstep(0.0012 + c * 0.02, 0.006 + c * 0.05, g);
+          edge *= 1.0 - smoothstep(0.55, 0.95, c);
+          gl_FragColor = vec4(mix(col.rgb, col.rgb * 0.18, edge * strength), col.a);
+        }`,
+    };
+
+    // warm highlights, cool shadows, a little bite in the contrast
+    const GradeShader = {
+      uniforms: {
+        tDiffuse: { value: null },
+        warm: { value: new THREE.Color(0xffe6c4) },
+        cool: { value: new THREE.Color(0x2c3a58) },
+        amount: { value: 0.22 },
+        contrast: { value: 1.09 },
+        sat: { value: 1.12 },
+      },
+      vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+      fragmentShader: `
+        varying vec2 vUv;
+        uniform sampler2D tDiffuse;
+        uniform vec3 warm, cool;
+        uniform float amount, contrast, sat;
+        void main(){
+          vec3 c = texture2D(tDiffuse, vUv).rgb;
+          float l = dot(c, vec3(0.299, 0.587, 0.114));
+          // split tone: shadows toward cool, highlights toward warm
+          c = mix(c, c * cool * 2.0, (1.0 - l) * amount);
+          c = mix(c, c * warm, l * amount);
+          c = (c - 0.5) * contrast + 0.5;
+          c = mix(vec3(dot(c, vec3(0.299, 0.587, 0.114))), c, sat);
+          gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
+        }`,
+    };
+
     const composer = new EffectComposer(renderer);
     composer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     composer.setSize(RW, RH);
     composer.addPass(new RenderPass(scene, camera));
+    // contact shadows in every corner — the biggest single lift in solidity
+    const gtao = new GTAOPass(scene, camera, RW, RH);
+    gtao.blendIntensity = 0.85;
+    gtao.updateGtaoMaterial({ radius: 0.35, distanceExponent: 1.2, thickness: 1.0, scale: 1.0, samples: 12 });
+    composer.addPass(gtao);
     composer.addPass(new UnrealBloomPass(new THREE.Vector2(RW, RH), 0.34, 0.5, 0.86));
+    const outlinePass = new ShaderPass(OutlineShader);
+    composer.addPass(outlinePass);
+    composer.addPass(new ShaderPass(GradeShader));
     composer.addPass(new OutputPass());
+    composer.addPass(new FXAAPass());
 
     // ── Helpers ────────────────────────────────────────────────────────────
     const disposables: { dispose: () => void }[] = [];
@@ -421,6 +518,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       }).catch(() => { /* offline — the shell still stands */ });
     }
 
+    const torchGlows: THREE.Sprite[] = [];
     // decorative props: loaded once, cloned per placement, auto ground-pivoted
     function scatterProp(url: string, scale: number, spots: [number, number, number][], glowTop = false) {
       if (!spots.length) return;
@@ -443,6 +541,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
             gs.scale.setScalar(0.7);
             gs.position.set(x, y0 + box.max.y + 0.05, z);
             scene.add(gs);
+            torchGlows.push(gs);
           }
         }
       }).catch(() => {});
@@ -567,6 +666,9 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
     instanceTiles("/models/dg_wall_cracked.glb", crackP);
 
     // ── zone identity: a glowing trim line and an arena ring per hall ──
+    const arenaRings: THREE.Mesh[] = [];
+    const arenaSweeps: THREE.Mesh[] = [];
+    const zoneTrims: THREE.Mesh[][] = ZC.map(() => []);
     ZC.forEach((zc, i) => {
       const col = ZONE_COL[i];
       const trimGeo = track(new THREE.BoxGeometry(ROOM_HW * 2, 0.11, 0.14));
@@ -574,17 +676,26 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
         const t = new THREE.Mesh(trimGeo, emat(col, { transparent: true, opacity: 0.85 }));
         t.position.set(0, 2.9, sz);
         scene.add(t);
+        zoneTrims[i].push(t);
       }
       const sideGeo = track(new THREE.BoxGeometry(0.14, 0.11, ROOM_HD * 2));
       for (const sx of [-ROOM_HW + 0.45, ROOM_HW - 0.45]) {
         const t = new THREE.Mesh(sideGeo, emat(col, { transparent: true, opacity: 0.85 }));
         t.position.set(sx, 2.9, zc);
         scene.add(t);
+        zoneTrims[i].push(t);
       }
       const ring = new THREE.Mesh(track(new THREE.RingGeometry(8.4, 8.7, 64)), emat(col, { transparent: true, opacity: 0.4, side: THREE.DoubleSide }));
       ring.rotation.x = -Math.PI / 2;
       ring.position.set(0, 0.12, i === FINAL ? zc : zc - 4);
       scene.add(ring);
+      arenaRings.push(ring);
+      // a second ring that sweeps outward when the fight begins
+      const sweep = new THREE.Mesh(track(new THREE.RingGeometry(0.94, 1, 64)), emat(col, { transparent: true, opacity: 0, side: THREE.DoubleSide }));
+      sweep.rotation.x = -Math.PI / 2;
+      sweep.position.copy(ring.position);
+      scene.add(sweep);
+      arenaSweeps.push(sweep);
     });
 
     // ── corridor threshold: a lit strip on the floor, never a closed door ──
@@ -1233,6 +1344,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       pendingFight: -1,
       ready: false, readyT: 0.4, stepT: 0, pagesTorn: 0,
       dmgAng: 0, dmgT: 0, interviewed: false, noPause: false,
+      arenaT: 0, arenaZone: -1,
       artifacts: ARTIFACTS.map(() => false), nearArtifact: -1, dmgBuff: 1,
       shots: 0, hits: 0, deaths: 0, runT: 0,
       fightActive: false, fightZone: -1, introT: -1, vicT: -1, deadT: -1,
@@ -1322,6 +1434,15 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       st.cdA = 2.6; st.cdB = 3.8;
       st.sumT = 4; st.blinkT = 4.2; st.enraged = false; st.bossMoving = false;
       st.pagesTorn = 0;
+      // the hall wakes up: sky drops, runes sweep, torches flare
+      st.arenaT = 0;
+      st.arenaZone = zone;
+      sfx("boom");
+      st.shake = Math.max(st.shake, 1.4);
+      for (let k = 0; k < 26; k++) {
+        const a = (k / 26) * Math.PI * 2;
+        burst(Math.cos(a) * 8.5, ZC[zone] - 4 + Math.sin(a) * 8.5, 3, ZONE_COL[zone], 3.5, 0.3);
+      }
       if (zone === 0) {
         st.canonHash = randHash();
         st.bossHash = randHash();
@@ -1657,6 +1778,8 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       if (st.gunKick > 0) st.gunKick = Math.max(0, st.gunKick - rdt * 5.5);
       if (st.hitT > 0) st.hitT -= rdt;
       if (st.dmgT > 0) st.dmgT -= rdt;
+      if (st.fightActive && st.arenaT < 1) st.arenaT = Math.min(1, st.arenaT + rdt / 2.2);
+      if (!st.fightActive && st.arenaT > 0) st.arenaT = Math.max(0, st.arenaT - rdt / 1.4);
       st.runT += rdt;
 
       if (st.vicT >= 0) {
@@ -2180,6 +2303,8 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
 
       sun.position.set(st.px + 18, 30, st.pz + 10);
       sun.target.position.set(st.px, 0, st.pz);
+      rim.position.set(st.px - 14, 7, st.pz - 18);
+      rim.target.position.set(st.px, 1.2, st.pz);
 
       // objective beacon
       if (!st.fightActive && st.cineT < 0 && st.deadT < 0) {
@@ -2193,10 +2318,43 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
 
       // the cave air takes on the current zone's glow
       const zAt = Math.max(0, Math.min(FINAL, Math.round(-st.pz / ZONE_GAP)));
-      colA.setHex(ZONE_COL[zAt]).multiplyScalar(0.03);
-      colB.setHex(0x8fa3c4).add(colA);
-      (scene.fog as THREE.Fog).color.lerp(colB, 0.03);
+      colA.setHex(ZONE_COL[zAt]).multiplyScalar(0.03 + st.arenaT * 0.05);
+      colB.setHex(0x8fa3c4).multiplyScalar(1 - st.arenaT * 0.62).add(colA);
+      (scene.fog as THREE.Fog).color.lerp(colB, 0.05);
+      (scene.background as THREE.Color).lerp(colB, 0.05);
       (scene.background as THREE.Color).copy((scene.fog as THREE.Fog).color);
+
+      // ── arena activation: the hall itself reacts to the fight ──
+      {
+        const A = st.arenaT;
+        const zi = st.arenaZone >= 0 ? st.arenaZone : 0;
+        // hold the sun down and drain the sky while a boss is alive
+        sun.intensity = 1.5 - A * 0.75;
+        rim.intensity = 0.85 + A * 0.5;
+        hemi.intensity = 1.35 - A * 0.6;
+        zoneLights.forEach((pl, i) => {
+          pl.intensity = i === zi ? 60 + A * 190 : 60;
+        });
+        zoneTrims.forEach((set, i) => {
+          const on = i === zi ? 0.85 + A * (0.15 + Math.sin(st.t * 6) * 0.1) : 0.85;
+          set.forEach(t => ((t.material as THREE.MeshBasicMaterial).opacity = on));
+        });
+        arenaRings.forEach((r, i) => {
+          const m = r.material as THREE.MeshBasicMaterial;
+          m.opacity = i === zi ? 0.4 + A * 0.5 : 0.4;
+          r.scale.setScalar(i === zi ? 1 + A * 0.03 : 1);
+        });
+        // one rune sweep racing outward as the arena comes online
+        arenaSweeps.forEach((sw, i) => {
+          const m = sw.material as THREE.MeshBasicMaterial;
+          if (i !== zi || A <= 0 || A >= 1) { m.opacity = 0; return; }
+          sw.scale.setScalar(1 + A * 26);
+          m.opacity = 0.85 * (1 - A);
+        });
+        torchGlows.forEach((g, i) => {
+          g.scale.setScalar(0.7 + A * 0.55 + Math.sin(st.t * 5 + i) * 0.05);
+        });
+      }
 
       // music swells as the boss weakens
       setCombatIntensity(st.fightActive && st.introT <= 0 ? 0.55 + (1 - st.bossHp / st.bossMax) * 0.45 : 0);
@@ -2319,6 +2477,12 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
         for (const mx of mixers) mx.update(rdt);
       }
       syncVisuals();
+      // depth-only prepass that feeds the outline shader
+      scene.overrideMaterial = depthMat;
+      renderer.setRenderTarget(depthRT);
+      renderer.render(scene, camera);
+      renderer.setRenderTarget(null);
+      scene.overrideMaterial = null;
       composer.render();
       raf = requestAnimationFrame(loop);
     };
@@ -2347,6 +2511,8 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
         }
       });
       for (const d of disposables) d.dispose();
+      depthRT.dispose();
+      depthMat.dispose();
       composer.dispose();
       renderer.dispose();
       if (canvas.parentElement === mount) mount.removeChild(canvas);
