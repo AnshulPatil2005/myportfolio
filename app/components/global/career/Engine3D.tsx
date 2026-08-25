@@ -52,12 +52,32 @@ const ROOMS = ZC.map(zc => ({ x1: -ROOM_HW, x2: ROOM_HW, z1: zc - ROOM_HD, z2: z
 const CORRS = [0, 1].map(i => ({ x1: -CORR_HW, x2: CORR_HW, z1: ZC[i] - ROOM_HD - CORR_LEN, z2: ZC[i] - ROOM_HD }));
 
 // tile-grid helpers: floors sit on 4u centers, walls on 4u edges
+// hall II is sunken — you descend a flight of steps into that fight
+const ZONE_Y = [0, -4, 0];
 const ROOM_TX = [-22, -18, -14, -10, -6, -2, 2, 6, 10, 14, 18, 22];
 const ROOM_TZ = [-16, -12, -8, -4, 0, 4, 8, 12, 16];
 // the two tile columns that line up with the corridor mouth
 const DOOR_TX = [-2, 2];
 
 // three weapons: sidearm, spread, piercing rail
+// ground height anywhere in the world: flat inside a hall, a ramp along the
+// corridor that joins two halls at different heights. Total, so it can never
+// return undefined for a stray projectile.
+function floorY(x: number, z: number): number {
+  for (let i = 0; i < ROOMS.length; i++) {
+    const r = ROOMS[i];
+    if (x > r.x1 - 1.5 && x < r.x2 + 1.5 && z > r.z1 - 0.5 && z < r.z2 + 0.5) return ZONE_Y[i];
+  }
+  for (let i = 0; i < CORRS.length; i++) {
+    const c = CORRS[i];
+    if (x > c.x1 - 1.5 && x < c.x2 + 1.5 && z > c.z1 - 1 && z < c.z2 + 1) {
+      const t = Math.min(1, Math.max(0, (c.z2 - z) / (c.z2 - c.z1)));
+      return ZONE_Y[i] + (ZONE_Y[i + 1] - ZONE_Y[i]) * t;
+    }
+  }
+  return 0;
+}
+
 const MAGS = [12, 6, 4];
 const RELOAD_T = [1.0, 1.4, 2.0];
 const WEAPON_TINT = [0xdff3ff, 0x4ade80, 0x9beeff];
@@ -139,7 +159,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
     const zoneLights: THREE.PointLight[] = [];
     ZC.forEach((zc, i) => {
       const pl = new THREE.PointLight(ZONE_COL[i], 60, 44, 1.9);
-      pl.position.set(0, 6, i === FINAL ? zc : zc - 4);
+      pl.position.set(0, ZONE_Y[i] + 6, i === FINAL ? zc : zc - 4);
       scene.add(pl);
       zoneLights.push(pl);
     });
@@ -148,7 +168,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
     CORRS.forEach(cr => torchLightSpots.push([0, cr.z2 + 0.6]));
     for (const [lx, lz] of torchLightSpots) {
       const tl = new THREE.PointLight(0xffb070, 26, 15, 1.7);
-      tl.position.set(lx, 2.6, lz);
+      tl.position.set(lx, floorY(lx, lz) + 2.6, lz);
       scene.add(tl);
     }
 
@@ -534,13 +554,13 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
         const y0 = -box.min.y;
         for (const [x, z, ry] of spots) {
           const c = proto.clone(true);
-          c.position.set(x, y0, z);
+          c.position.set(x, y0 + floorY(x, z), z);
           c.rotation.y = ry;
           scene.add(c);
           if (glowTop) {
             const gs = new THREE.Sprite(track(new THREE.SpriteMaterial({ map: glowTexture(), color: 0xffb060, transparent: true, opacity: 0.95, depthWrite: false, blending: THREE.AdditiveBlending })));
             gs.scale.setScalar(0.7);
-            gs.position.set(x, y0 + box.max.y + 0.05, z);
+            gs.position.set(x, y0 + floorY(x, z) + box.max.y + 0.05, z);
             scene.add(gs);
             torchGlows.push(gs);
           }
@@ -566,7 +586,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       color: 0x6a6a72,
     });
     mirror.rotation.x = -Math.PI / 2;
-    mirror.position.set(0, 0.02, ZC[FINAL]);
+    mirror.position.set(0, ZONE_Y[FINAL] + 0.02, ZC[FINAL]);
     scene.add(mirror);
     // a translucent stone layer over it so the floor reads wet, not glassy
     const wet = new THREE.Mesh(
@@ -574,7 +594,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       track(new THREE.MeshLambertMaterial({ color: 0x8a8274, transparent: true, opacity: 0.6 }))
     );
     wet.rotation.x = -Math.PI / 2;
-    wet.position.set(0, 0.035, ZC[FINAL]);
+    wet.position.set(0, ZONE_Y[FINAL] + 0.035, ZC[FINAL]);
     scene.add(wet);
 
     // open sky — the halls are roofless ruins, not a sealed cave
@@ -637,14 +657,22 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
     ZC.forEach((zc, i) => {
       ROOM_TX.forEach((tx, xi) => {
         ROOM_TZ.forEach((tz, zj) => {
-          const spot: [number, number, number, number] = [tx, 0, zc + tz, 0];
+          const spot: [number, number, number, number] = [tx, ZONE_Y[i], zc + tz, 0];
           if (i !== FINAL && (xi + zj * 3) % 11 === 4) grateP.push(spot);
           else floorP.push(spot);
         });
       });
     });
-    CORRS.forEach(cr => {
-      for (let z = cr.z2 - TILE / 2; z > cr.z1; z -= TILE) floorP.push([0, 0, z, 0]);
+    CORRS.forEach((cr, i) => {
+      // step the corridor down (or up) between the two halls it links
+      let k = 0;
+      const steps = Math.round((cr.z2 - cr.z1) / TILE);
+      for (let z = cr.z2 - TILE / 2; z > cr.z1; z -= TILE) {
+        const t = (k + 0.5) / steps;
+        const y = ZONE_Y[i] + (ZONE_Y[i + 1] - ZONE_Y[i]) * t;
+        for (const tx of DOOR_TX) floorP.push([tx, y, z, 0]);
+        k++;
+      }
     });
     instanceTiles("/models/dg_floor_tile_large.glb", floorP);
     instanceTiles("/models/dg_floor_tile_big_grate.glb", grateP);
@@ -662,25 +690,30 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       for (const tx of ROOM_TX) {
         const isDoor = DOOR_TX.includes(tx);
         // entry side: leave the mouth genuinely empty, stone only overhead
-        if (i > 0 && isDoor) archP.push([tx, WALL_H, zc + ROOM_HD, 0]);
-        else pushWall(tx, 0, zc + ROOM_HD, 0);
-        if (i < FINAL && isDoor) archP.push([tx, WALL_H, zc - ROOM_HD, 0]);
-        else pushWall(tx, 0, zc - ROOM_HD, 0);
+        if (i > 0 && isDoor) archP.push([tx, ZONE_Y[i] + WALL_H, zc + ROOM_HD, 0]);
+        else pushWall(tx, ZONE_Y[i], zc + ROOM_HD, 0);
+        if (i < FINAL && isDoor) archP.push([tx, ZONE_Y[i] + WALL_H, zc - ROOM_HD, 0]);
+        else pushWall(tx, ZONE_Y[i], zc - ROOM_HD, 0);
       }
       for (const tz of ROOM_TZ) {
-        pushWall(-ROOM_HW, 0, zc + tz, Math.PI / 2);
-        pushWall(ROOM_HW, 0, zc + tz, Math.PI / 2);
+        pushWall(-ROOM_HW, ZONE_Y[i], zc + tz, Math.PI / 2);
+        pushWall(ROOM_HW, ZONE_Y[i], zc + tz, Math.PI / 2);
       }
     });
-    CORRS.forEach(cr => {
+    CORRS.forEach((cr, i) => {
+      let k = 0;
+      const steps = Math.round((cr.z2 - cr.z1) / TILE);
       for (let z = cr.z2 - TILE / 2; z > cr.z1; z -= TILE) {
-        pushWall(-CORR_HW, 0, z, Math.PI / 2);
-        pushWall(CORR_HW, 0, z, Math.PI / 2);
+        const t = (k + 0.5) / steps;
+        const y = ZONE_Y[i] + (ZONE_Y[i + 1] - ZONE_Y[i]) * t;
+        pushWall(-CORR_HW, y, z, Math.PI / 2);
+        pushWall(CORR_HW, y, z, Math.PI / 2);
+        k++;
       }
     });
     // second storey — solid stone above everything, archways included
     const upperP: [number, number, number, number][] = [...wallP, ...crackP]
-      .map(([x, , z, ry]) => [x, WALL_H, z, ry] as [number, number, number, number]);
+      .map(([x, y, z, ry]) => [x, y + WALL_H, z, ry] as [number, number, number, number]);
     // archP holds only the lintels bridging each open doorway
     instanceTiles("/models/dg_wall.glb", [...wallP, ...upperP, ...archP]);
     instanceTiles("/models/dg_wall_cracked.glb", crackP);
@@ -694,20 +727,20 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       const trimGeo = track(new THREE.BoxGeometry(ROOM_HW * 2, 0.11, 0.14));
       for (const sz of [zc - ROOM_HD + 0.45, zc + ROOM_HD - 0.45]) {
         const t = new THREE.Mesh(trimGeo, emat(col, { transparent: true, opacity: 0.85 }));
-        t.position.set(0, 2.9, sz);
+        t.position.set(0, ZONE_Y[i] + 2.9, sz);
         scene.add(t);
         zoneTrims[i].push(t);
       }
       const sideGeo = track(new THREE.BoxGeometry(0.14, 0.11, ROOM_HD * 2));
       for (const sx of [-ROOM_HW + 0.45, ROOM_HW - 0.45]) {
         const t = new THREE.Mesh(sideGeo, emat(col, { transparent: true, opacity: 0.85 }));
-        t.position.set(sx, 2.9, zc);
+        t.position.set(sx, ZONE_Y[i] + 2.9, zc);
         scene.add(t);
         zoneTrims[i].push(t);
       }
       const ring = new THREE.Mesh(track(new THREE.RingGeometry(8.4, 8.7, 64)), emat(col, { transparent: true, opacity: 0.4, side: THREE.DoubleSide }));
       ring.rotation.x = -Math.PI / 2;
-      ring.position.set(0, 0.12, i === FINAL ? zc : zc - 4);
+      ring.position.set(0, ZONE_Y[i] + 0.12, i === FINAL ? zc : zc - 4);
       scene.add(ring);
       arenaRings.push(ring);
       // a second ring that sweeps outward when the fight begins
@@ -730,7 +763,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       const lock = plateSprite("DEFEAT THE BOSS TO PASS", "#a63030", "rgba(252,252,254,0.94)", 0.34, 40);
       lock.position.y = 3.0;
       g.add(strip, lock);
-      g.position.set(0, 0, cr.z2);
+      g.position.set(0, ZONE_Y[i], cr.z2);
       scene.add(g);
       return { g, plane: strip.material as THREE.MeshBasicMaterial };
     });
@@ -777,7 +810,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
         const y0 = -box.min.y;
         for (const [x, z, ry] of barrelSpots) {
           const c = proto.clone(true);
-          c.position.set(x, y0, z);
+          c.position.set(x, y0 + floorY(x, z), z);
           c.rotation.y = ry;
           scene.add(c);
           barrels.push({ obj: c, x, z, alive: true });
@@ -1055,7 +1088,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       const label = plateSprite(a.name, "#233150", "rgba(252,252,254,0.94)", 0.34, 40);
       label.position.y = 2.1;
       g.add(base, core, halo, beam, label);
-      g.position.set(a.x, 0, ZC[a.zone] + a.z);
+      g.position.set(a.x, ZONE_Y[a.zone], ZC[a.zone] + a.z);
       scene.add(g);
       return { g, core, halo, taken: false };
     });
@@ -1071,7 +1104,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
     }
     // the canonical hash, mounted on the wall of the first hall
     const canonPlate = plateSprite("CANONICAL BUILD   ------", "#1a5276", "rgba(252,252,254,0.95)", 0.86, 46);
-    canonPlate.position.set(0, 4.6, ZC[0] - ROOM_HD + 0.9);
+    canonPlate.position.set(0, ZONE_Y[0] + 4.6, ZC[0] - ROOM_HD + 0.9);
     canonPlate.visible = false;
     scene.add(canonPlate);
     // the hash the boss is currently running under, floating over its head
@@ -1350,7 +1383,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       // far wall — the real one waits small at its base
       const statue = cloneSkeleton(gltf.scene) as THREE.Group;
       statue.scale.setScalar(11);
-      statue.position.set(0, 0, ZC[FINAL] - ROOM_HD + 5.5);
+      statue.position.set(0, ZONE_Y[FINAL], ZC[FINAL] - ROOM_HD + 5.5);
       statue.rotation.y = Math.PI;
       const stoneMat = track(new THREE.MeshLambertMaterial({ color: 0x8d8676, flatShading: false }));
       statue.traverse(o => {
@@ -1362,7 +1395,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
 
       // plinth
       const plinth = new THREE.Mesh(track(new THREE.CylinderGeometry(5.4, 6.4, 1.6, 12)), bmat(0x7c7568, { flatShading: true }));
-      plinth.position.set(0, 0.8, ZC[FINAL] - ROOM_HD + 5.5);
+      plinth.position.set(0, ZONE_Y[FINAL] + 0.8, ZC[FINAL] - ROOM_HD + 5.5);
       plinth.receiveShadow = true;
       plinth.castShadow = true;
       scene.add(plinth);
@@ -1373,7 +1406,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
           track(new THREE.CylinderGeometry(1.6, 3.4, 26, 12, 1, true)),
           emat(0xffe6b8, { transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false })
         );
-        shaft.position.set(off, 13, ZC[FINAL] - ROOM_HD + 8);
+        shaft.position.set(off, ZONE_Y[FINAL] + 13, ZC[FINAL] - ROOM_HD + 8);
         shaft.rotation.z = off > 0 ? -0.16 : 0.16;
         scene.add(shaft);
       }
@@ -1386,7 +1419,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       const vel = new Float32Array(n);
       for (let i = 0; i < n; i++) {
         pos[i * 3] = (Math.random() - 0.5) * ROOM_HW * 2;
-        pos[i * 3 + 1] = Math.random() * 14;
+        pos[i * 3 + 1] = ZONE_Y[zi] + Math.random() * 14;
         pos[i * 3 + 2] = zc + (Math.random() - 0.5) * ROOM_HD * 2;
         vel[i] = 0.4 + Math.random() * 1.1;
       }
@@ -1405,7 +1438,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       const pts = new THREE.Points(g, m);
       pts.frustumCulled = false;
       scene.add(pts);
-      return { pts, pos, vel, zc, up: look.up };
+      return { pts, pos, vel, zc, up: look.up, baseY: ZONE_Y[zi] };
     });
 
     // ── scorch decals: explosions and pulses leave the floor marked ────────
@@ -1436,7 +1469,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
     function scorch(x: number, z: number, size = 3.4, strength = 0.9) {
       const d = decals[decalIdx++ % decals.length];
       d.visible = true;
-      d.position.set(x, 0.13, z);
+      d.position.set(x, floorY(x, z) + 0.13, z);
       d.rotation.z = Math.random() * Math.PI;
       d.scale.setScalar(size * (0.85 + Math.random() * 0.3));
       (d.material as THREE.MeshBasicMaterial).opacity = strength;
@@ -1459,7 +1492,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       pendingFight: -1,
       ready: false, readyT: 0.4, stepT: 0, pagesTorn: 0,
       dmgAng: 0, dmgT: 0, interviewed: false, noPause: false,
-      arenaT: 0, arenaZone: -1,
+      arenaT: 0, arenaZone: -1, py: 0,
       artifacts: ARTIFACTS.map(() => false), nearArtifact: -1, dmgBuff: 1,
       shots: 0, hits: 0, deaths: 0, runT: 0,
       fightActive: false, fightZone: -1, introT: -1, vicT: -1, deadT: -1,
@@ -1750,7 +1783,8 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       // the form is a wide flat sheet, the knight a person — different volumes
       const r = st.fightZone === 1 ? 1.7 : 1.2;
       const top = st.fightZone === 1 ? 4.8 : 3.2;
-      if (Math.hypot(b.x - st.bossX, b.z - st.bossZ) < r && b.y > 0 && b.y < top) {
+      const bgy = floorY(st.bossX, st.bossZ);
+      if (Math.hypot(b.x - st.bossX, b.z - st.bossZ) < r && b.y > bgy && b.y < bgy + top) {
         // the determinism boss only really takes damage while its build hash
         // matches the canonical one posted on the wall
         const mult = st.fightZone === 0 && !st.hashMatch ? 0.2 : 1;
@@ -1792,7 +1826,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
         if (seen?.has(i)) continue;
         const s = st.summons[i];
         if (!s.active) continue;
-        if (Math.sqrt((b.x - s.x) ** 2 + (b.y - 1.1) ** 2 + (b.z - s.z) ** 2) < 0.75) {
+        if (Math.sqrt((b.x - s.x) ** 2 + (b.y - (floorY(s.x, s.z) + 1.1)) ** 2 + (b.z - s.z) ** 2) < 0.75) {
           seen?.add(i);
           s.hp -= b.dmg;
           burst(b.x, b.z, 2, REDC, 3, b.y);
@@ -1839,10 +1873,10 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       }
     }
     function barrelHit(x: number, y: number, z: number): boolean {
-      if (y > 1.5) return false;
       for (let i = 0; i < barrels.length; i++) {
         const b = barrels[i];
-        if (b.alive && Math.hypot(x - b.x, z - b.z) < 0.75) { explodeBarrel(i); return true; }
+        const by = floorY(b.x, b.z);
+        if (b.alive && y < by + 1.7 && Math.hypot(x - b.x, z - b.z) < 0.75) { explodeBarrel(i); return true; }
       }
       return false;
     }
@@ -1854,8 +1888,8 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       let bossDone = false;
       let s = 1.0;
       for (; s < 48; s += 0.6) {
-        const probe: PB = { x: st.px + dx * s, y: EYE - 0.1 + dy * s, z: st.pz + dz * s, vx: 0, vy: 0, vz: 0, dmg, pierce: 0, life: 0, dead: false };
-        if (probe.y <= 0.03 || probe.y > 12 || !insideWorld(probe.x, probe.z)) break;
+        const probe: PB = { x: st.px + dx * s, y: st.py + EYE - 0.1 + dy * s, z: st.pz + dz * s, vx: 0, vy: 0, vz: 0, dmg, pierce: 0, life: 0, dead: false };
+        if (probe.y <= floorY(probe.x, probe.z) + 0.03 || probe.y > st.py + 12 || !insideWorld(probe.x, probe.z)) break;
         let hit = false;
         if (barrelHit(probe.x, probe.y, probe.z)) hit = true;
         if (summonHit(probe, seen)) hit = true;
@@ -2054,7 +2088,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
           if (st.pb.length >= MAX_PB - 2) return;
           const ya = st.yaw + off;
           const dx = -Math.sin(ya) * cp, dy = sp2, dz = -Math.cos(ya) * cp;
-          st.pb.push({ x: st.px + dx * 0.6, y: EYE - 0.12 + dy * 0.6, z: st.pz + dz * 0.6, vx: dx * speed, vy: dy * speed, vz: dz * speed, dmg: dmg * st.dmgBuff, pierce, life, dead: false });
+          st.pb.push({ x: st.px + dx * 0.6, y: st.py + EYE - 0.12 + dy * 0.6, z: st.pz + dz * 0.6, vx: dx * speed, vy: dy * speed, vz: dz * speed, dmg: dmg * st.dmgBuff, pierce, life, dead: false });
         };
         const canFire = st.reloadT <= 0;
         if (st.fireCd <= 0 && canFire) {
@@ -2095,7 +2129,12 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
         if (b.life <= 0) { b.dead = true; burst(b.x, b.z, 2, 0xdff3ff, 1.5, Math.max(0.2, b.y)); continue; }
         b.x += b.vx * dt; b.y += b.vy * dt; b.z += b.vz * dt;
         const range2 = (b.x - st.px) ** 2 + (b.z - st.pz) ** 2;
-        if (b.y <= 0.02 || b.y > 12 || range2 > 6400 || !insideWorld(b.x, b.z)) { b.dead = true; burst(b.x, b.z, 2, 0xdff3ff, 1.5, Math.max(0.2, b.y)); continue; }
+        const gy = floorY(b.x, b.z);
+        if (b.y <= gy + 0.02 || b.y > gy + 12 || range2 > 6400 || !insideWorld(b.x, b.z)) {
+          b.dead = true;
+          burst(b.x, b.z, 2, 0xdff3ff, 1.5, Math.max(gy + 0.2, b.y));
+          continue;
+        }
         if (barrelHit(b.x, b.y, b.z)) { b.dead = true; continue; }
         if (summonHit(b)) {
           registerHit();
@@ -2271,7 +2310,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
         const v = hazVis[i];
         if (h) {
           v.g.visible = true;
-          v.g.position.set(h.x, 0, h.z);
+          v.g.position.set(h.x, floorY(h.x, h.z), h.z);
           v.g.scale.setScalar(h.r);
           if (h.warm > 0) {
             v.fill.opacity = 0.08;
@@ -2289,7 +2328,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
         const v = waveVis[i];
         if (w) {
           v.visible = true;
-          v.position.set(w.x, 0.05, w.z);
+          v.position.set(w.x, floorY(w.x, w.z) + 0.05, w.z);
           v.scale.setScalar(w.R);
           const wm = v.material as THREE.MeshBasicMaterial;
           wm.opacity = Math.max(0, 0.85 * (1 - w.R / w.max));
@@ -2325,14 +2364,14 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
         }
         if (s.rig) {
           s.rig.root.visible = true;
-          s.rig.root.position.set(s.x, 0, s.z);
+          s.rig.root.position.set(s.x, floorY(s.x, s.z), s.z);
           s.rig.root.rotation.y = Math.atan2(st.px - s.x, st.pz - s.z);
         } else {
           proto.visible = true;
-          proto.position.set(s.x, 1.0, s.z);
+          proto.position.set(s.x, floorY(s.x, s.z) + 1.0, s.z);
           proto.rotation.y = Math.atan2(st.px - s.x, st.pz - s.z);
         }
-        if (s.label) s.label.position.set(s.x, 2.5, s.z);
+        if (s.label) s.label.position.set(s.x, floorY(s.x, s.z) + 2.5, s.z);
       });
 
       // bosses — one character per arena, facing the player
@@ -2348,7 +2387,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
         const oz = ZC[zi];
         const bx = activeFight ? st.bossX : 0;
         const bz = activeFight ? st.bossZ : (zi === FINAL ? oz : oz - 4);
-        v.group.position.set(bx, 0, bz);
+        v.group.position.set(bx, floorY(bx, bz), bz);
         const pulse = 1 + (activeFight && st.bossPulse > 0 ? st.bossPulse * 0.5 : 0);
         v.group.scale.setScalar(pulse);
         if (activeFight && st.vicT >= 0) v.group.scale.setScalar(Math.max(0.01, st.vicT / 1.5));
@@ -2363,7 +2402,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
           rigPlay(bossRigs[0], activeFight && st.bossMoving ? "Walking_A" : "Idle");
           if (activeFight) {
             bossHashPlate.visible = true;
-            bossHashPlate.position.set(bx, 4.5, bz);
+            bossHashPlate.position.set(bx, floorY(bx, bz) + 4.5, bz);
             setPlate(
               bossHashPlate,
               `build ${st.bossHash}`,
@@ -2385,8 +2424,11 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
       const cosP = Math.cos(st.pitch), sinP = Math.sin(st.pitch);
       const dirX = -Math.sin(st.yaw) * cosP, dirY = sinP, dirZ = -Math.cos(st.yaw) * cosP;
       const bob = st.moving && st.deadT < 0 ? Math.sin(st.bobT) * 0.045 : 0;
-      camPos.set(st.px, EYE + bob, st.pz);
-      camLook.set(st.px + dirX, EYE + bob + dirY, st.pz + dirZ);
+      // the eye rides the floor, easing so steps do not jolt the camera
+      st.py += (floorY(st.px, st.pz) - st.py) * Math.min(1, 0.18);
+      const eyeY = st.py + EYE + bob;
+      camPos.set(st.px, eyeY, st.pz);
+      camLook.set(st.px + dirX, eyeY + dirY, st.pz + dirZ);
 
       if (st.introT > 0 && st.fightActive) {
         const k = 1 - Math.max(0, Math.min(1, st.introT / 2.2));
@@ -2405,7 +2447,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
         camLook.lerpVectors(camLook, tmpB, e);
       }
       if (st.deadT >= 0) {
-        camPos.y = EYE - Math.min(1, (1.4 - st.deadT) * 1.4) * 1.0;
+        camPos.y = st.py + EYE - Math.min(1, (1.4 - st.deadT) * 1.4) * 1.0;
       }
       if (st.shake > 0) {
         camPos.x += (Math.random() - 0.5) * st.shake * 0.22;
@@ -2429,7 +2471,7 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
         const zi2 = Math.min(st.cleared, FINAL);
         const bz2 = zi2 === FINAL ? ZC[FINAL] : ZC[zi2] - 4;
         beacon.visible = true;
-        beacon.position.set(0, 5.6 + Math.sin(st.t * 2.4) * 0.25, bz2);
+        beacon.position.set(0, floorY(0, bz2) + 5.6 + Math.sin(st.t * 2.4) * 0.25, bz2);
         beacon.rotation.y = st.t * 1.5;
         (beacon.material as THREE.MeshBasicMaterial).color.setHex(ZONE_COL[zi2]);
       } else beacon.visible = false;
@@ -2447,12 +2489,13 @@ export default function Engine3D({ initialCleared, paused, onEvent, cinematicCue
         const attr = w.pts.geometry.getAttribute("position") as THREE.BufferAttribute;
         for (let i = 0; i < w.vel.length; i++) {
           const y = i * 3 + 1;
+          const base = w.baseY;
           if (w.up) {
             w.pos[y] += w.vel[i] * 0.011;
-            if (w.pos[y] > 15) w.pos[y] = 0;
+            if (w.pos[y] > base + 15) w.pos[y] = base;
           } else {
             w.pos[y] -= w.vel[i] * 0.014;
-            if (w.pos[y] < 0) w.pos[y] = 15;
+            if (w.pos[y] < base) w.pos[y] = base + 15;
           }
           // a slow lateral sway so nothing falls in a straight line
           w.pos[i * 3] += Math.sin(st.t * 0.6 + i) * 0.004;
