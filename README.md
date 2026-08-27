@@ -134,3 +134,21 @@ This portfolio is MIT-licensed so you are free to use it as an inspiration or yo
 [env-api]: https://github.com/Evavic44/victoreke.com/blob/main/lib/env.api.ts
 [sanity-manage]: https://sanity.io/manage
 [sanity-guide]: https://www.freecodecamp.org/news/how-to-build-a-portfolio-site-with-sanity-and-nextjs
+
+## Career Mode trailer clip
+
+`app/components/pages/GameTrailer.tsx` looks for `public/career-mode.mp4`
+(optional poster: `public/career-mode-poster.jpg`). If the file is missing the
+component degrades to a static panel, so the case study never shows a broken
+player.
+
+To record one:
+
+1. Open the site, press `C`, and play through the opening of a hall.
+2. Capture ~20 seconds — the arena activation, the descent into hall II, and
+   the statue in the final chamber are the strongest moments.
+3. Encode small and silent, e.g.
+   `ffmpeg -i raw.mov -an -vf "scale=1280:-2,fps=30" -crf 30 -movflags +faststart public/career-mode.mp4`
+4. Optionally grab a still: `ffmpeg -i public/career-mode.mp4 -frames:v 1 public/career-mode-poster.jpg`
+
+Keep it under ~3 MB; it is lazy-loaded but it sits on a page recruiters read.

@@ -7,6 +7,7 @@ import EmptyState from "../shared/EmptyState";
 import { jobs } from "@/lib/data";
 import ScrambleIndex from "../global/ScrambleIndex";
 import TerminalLog from "./TerminalLog";
+import Receipts from "../global/Receipts";
 
 const HASHES = ["4a7f9e2", "c3b8d51", "7e2a3f8", "9d4c1b6", "f81e2a0"];
 
@@ -111,6 +112,8 @@ export default function Job() {
                         {job.description}
                       </p>
                     )}
+
+                    <Receipts id={job._id} />
                   </div>
                 </motion.div>
               );

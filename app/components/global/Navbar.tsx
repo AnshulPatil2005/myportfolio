@@ -6,7 +6,6 @@ import UnmountStudio from "./Unmount";
 import MobileMenu from "./MobileMenu";
 import { motion, useScroll } from "framer-motion";
 import { useEffect, useState } from "react";
-import { profile } from "@/lib/data";
 
 const navLinks = [
   { title: "Products", href: "/#featured-work" },
@@ -14,7 +13,7 @@ const navLinks = [
   { title: "Projects", href: "/#projects" },
   { title: "Open Source", href: "/#open-source" },
   { title: "Research", href: "/#research" },
-  { title: "Résumé", href: profile.resumeURL },
+  { title: "Résumé", href: "/resume" },
 ];
 
 export default function Navbar() {
@@ -57,7 +56,6 @@ export default function Navbar() {
                 >
                   <Link
                     href={link.href}
-                    {...(link.title === "Résumé" ? { download: true } : {})}
                     className="text-sm dark:text-zinc-400 text-zinc-600 dark:hover:text-white hover:text-zinc-900 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-zinc-400 focus-visible:ring-zinc-600 rounded-sm"
                   >
                     {link.title}

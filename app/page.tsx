@@ -40,7 +40,7 @@ function SectionHeading({ index, title }: { index: string; title: string }) {
 
 export default function Home() {
   return (
-    <main className="max-w-7xl mx-auto md:px-16 px-6 mt-4">
+    <main id="main" className="max-w-7xl mx-auto md:px-16 px-6 mt-4">
       <Hero />
 
       <p className="max-w-2xl text-base dark:text-zinc-400 text-zinc-600 leading-relaxed mb-16 md:mb-20">

@@ -68,6 +68,13 @@ export default function RootLayout({
             </filter>
           </defs>
         </svg>
+        {/* keyboard users should not tab through the whole nav to read */}
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[200] focus:px-4 focus:py-2.5 focus:font-mono focus:text-[12px] focus:uppercase focus:tracking-[0.18em] focus:text-ink focus:bg-accent"
+        >
+          Skip to content
+        </a>
         <Providers>
           <CareerMode />
           <Navbar />

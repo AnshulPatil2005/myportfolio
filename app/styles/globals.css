@@ -94,3 +94,23 @@ body {
     opacity: 1;
   }
 }
+
+/* ── Print: the /resume page is the PDF ─────────────────────────────────── */
+@media print {
+  /* the site chrome is not part of a résumé */
+  header, nav, footer, aside { display: none !important; }
+
+  html, body {
+    background: #fff !important;
+    color: #111 !important;
+    font-size: 11pt;
+  }
+
+  a { color: #111 !important; text-decoration: none !important; }
+
+  /* keep a heading attached to the block it introduces */
+  h1, h2, h3 { break-after: avoid-page; }
+  article, section { break-inside: avoid-page; }
+
+  @page { margin: 14mm; }
+}
