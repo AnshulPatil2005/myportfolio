@@ -9,7 +9,7 @@ import {
   ResearchProjectType,
 } from "@/types";
 
-export const availability = { open: false, label: "Open to internships" };
+export const availability = { open: true, label: "Open to internships" };
 
 export const profile: ProfileType = {
   _id: "anshul-patil",

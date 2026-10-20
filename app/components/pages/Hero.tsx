@@ -5,9 +5,10 @@ import Social from "../shared/Social";
 import EngravingImage from "../shared/EngravingImage";
 import ConwayCanvas from "../shared/ConwayCanvas";
 import { motion } from "framer-motion";
-import { profile, availability } from "@/lib/data";
+import { profile, availability, products } from "@/lib/data";
 
 const ENGRAVING_SRC = "/engraving-melencolia.jpg";
+const stratum = products.find((p) => p._id === "stratum");
 
 export default function Hero() {
   return (
@@ -27,6 +28,38 @@ export default function Hero() {
           </span>
         )}
       </motion.div>
+
+      {/* Stratum spotlight */}
+      {stratum && (
+        <motion.a
+          href={stratum.projectUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group relative flex flex-wrap sm:flex-nowrap items-center gap-x-4 gap-y-2 mb-12 px-4 py-3 border dark:border-amber-500/30 border-amber-600/30 dark:bg-amber-500/[0.04] bg-amber-500/[0.06] dark:hover:border-amber-500/70 hover:border-amber-600/70 transition-colors duration-200"
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.05, ease: "easeOut" }}
+        >
+          <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] dark:text-accent text-amber-600 shrink-0">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-accent opacity-75 animate-ping" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
+            </span>
+            Live now
+          </span>
+          <span className="text-sm dark:text-zinc-300 text-zinc-700 flex-1 min-w-0">
+            <span className="font-semibold dark:text-white text-zinc-900">{stratum.name}</span>
+            <span className="dark:text-zinc-600 text-zinc-400"> &mdash; </span>
+            PR review that traces production incidents back to the PR that caused them.
+          </span>
+          <span className="font-mono text-xs uppercase tracking-widest dark:text-zinc-300 text-zinc-700 shrink-0">
+            Try it{" "}
+            <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
+              &rarr;
+            </span>
+          </span>
+        </motion.a>
+      )}
 
       {/* Two-column grid: text left, engraving right */}
       <div className="grid lg:grid-cols-[1fr_420px] xl:grid-cols-[1fr_520px] gap-10 lg:gap-16 items-start">
@@ -60,6 +93,19 @@ export default function Hero() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.24, ease: "easeOut" }}
           >
+            {stratum && (
+              <>
+                <a
+                  href={stratum.projectUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="dark:text-zinc-300 text-zinc-700 border-b dark:border-amber-500/40 border-amber-600/40 dark:hover:text-accent hover:text-amber-600 transition-colors duration-150"
+                >
+                  Founder @ Stratum
+                </a>
+                &nbsp;&nbsp;&middot;&nbsp;&nbsp;
+              </>
+            )}
             GSoC @ BRL-CAD&nbsp;&nbsp;&middot;&nbsp;&nbsp;Amazon ML Summer School
           </motion.p>
 
