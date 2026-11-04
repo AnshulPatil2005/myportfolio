@@ -14,19 +14,19 @@ export const availability = { open: true, label: "Open to internships" };
 export const profile: ProfileType = {
   _id: "anshul-patil",
   fullName: "Anshul Patil",
-  headline: "Backend & Systems Developer | GSoC @ BRL-CAD",
+  headline: "Backend & Systems Developer | Founder @ Stratum",
   profileImage: {
     image: "",
     lqip: "",
     alt: "Anshul Patil",
   },
   shortBio:
-    "I build distributed systems and AI infrastructure: open-source geometry processing, document intelligence pipelines, and production-grade developer tools. Currently pursuing B.Tech at IIIT Surat and contributing to BRL-CAD via Google Summer of Code.",
+    "I build distributed systems and AI infrastructure: signed-token auth for Kubernetes-native AI agent sandboxes, in-cluster vulnerability scanning, reproducible geometry processing, and Stratum, the developer platform I founded. B.Tech at IIIT Surat; LFX mentee at CNCF OpenKruise and a Kubescape project member.",
   email: "anshulpatil1022@gmail.com",
   fullBio: [
-    "I'm a backend and systems developer currently pursuing B.Tech at the Indian Institute of Information Technology, Surat (2024–2028). My work spans distributed systems, AI tooling, and open-source infrastructure.",
-    "I'm a Google Summer of Code contributor at BRL-CAD, improving the Manifold C++ geometry processing library with CI reliability, cross-platform determinism checks, and benchmarking infrastructure. I'm also an active open-source contributor to Extralit, an AI document intelligence platform, where I've merged 10+ pull requests across ingestion pipelines, dataset workflows, and validation logic.",
-    "Previously interned at Techvisio Design, where I built analytics dashboards processing 10K+ daily events, integrated AWS S3 for 300K+ monthly records, and reduced API latency by 40% through query optimization and caching.",
+    "I'm a backend and systems developer pursuing a B.Tech at the Indian Institute of Information Technology, Surat (2024–2028), and the founder of Stratum, a multi-tenant developer platform that unifies PR review, deploy coordination, drift tracking, and incident investigation.",
+    "I'm an LFX Mentorship 2026 contributor at CNCF's OpenKruise, building an open-source signed-token authentication path in Go for OpenKruise Agents: an IdentityProvider that mints signed JWT access and ID tokens with key rotation, OIDC discovery, and JWKS. I'm also a Kubescape project member with 90+ merged Go PRs across kubevuln, the CLI, opa-utils, and docs.",
+    "Before that I was a Google Summer of Code 2026 contributor at BRL-CAD, landing 25+ PRs in the Manifold C++ geometry library across CI, numerics, bindings, and docs, and a software developer intern at Techvisio Design, where I cut backend API latency 40% through SQL tuning and caching.",
   ],
   location: "Mumbai, Maharashtra",
   resumeURL: "/AnshulPatil.pdf",
@@ -34,50 +34,51 @@ export const profile: ProfileType = {
 
 export const jobs: JobType[] = [
   {
+    _id: "lfx-openkruise",
+    name: "LFX Mentorship 2026, CNCF OpenKruise",
+    jobTitle: "Software Developer Intern, Selected Contributor",
+    url: "https://github.com/openkruise/agents",
+    description:
+      "Implementing an end-to-end open-source signed-token authentication path in Go for OpenKruise Agents, a Kubernetes-native platform for orchestrating AI agent sandboxes.",
+    bullets: [
+      "Selected for CNCF's OpenKruise Agents, a Kubernetes-native platform for orchestrating AI agent sandboxes; implementing an end-to-end open-source signed-token authentication path in Go.",
+      "Building an IdentityProvider that mints asymmetrically signed JWT access and ID tokens with key rotation, plus OIDC discovery and JWKS endpoints served by the sandbox-manager, removing the external identity-provider dependency for community deployments.",
+      "Integrating ID token issuance with the existing SecurityTokenRefreshReconciler for pre-expiry refresh, and implementing PropagateSecurityToken to deliver tokens into sandbox runtimes with refresh-on-update and lifecycle cleanup; Keycloak and Dex integration, Ginkgo end-to-end tests, and a design proposal.",
+    ],
+    startDate: "2026-09-01",
+    endDate: "2026-11-30",
+  },
+  {
+    _id: "kubescape",
+    name: "Kubescape (CNCF)",
+    jobTitle: "Member, Open Source Contributor",
+    url: "https://github.com/kubescape",
+    description:
+      "Kubescape project member with 90+ merged Go PRs across kubevuln, the CLI, opa-utils, and docs.",
+    bullets: [
+      "Kubescape project member with 90+ merged Go PRs across kubevuln (the in-cluster vulnerability scanner), the CLI, opa-utils, and docs.",
+      "Extended the SecurityException API with an affected status and action statements, package-scoped entries with subcomponents, and per-vulnerability expiry; added ECR credential resolution from the ambient AWS identity.",
+      "Fixed vulnerability-pipeline correctness bugs: VEX generated on only 2 of 5 CVE-scan paths, external VEX overriding the scanner's own statements, relevancy keyed on package name without version, and scan deduplication keyed on tag instead of image.",
+      "Hardened the scanner: closed an SSRF guard bypass via IPv4-in-IPv6 addresses, bounded registry Retry-After waits, fixed Syft goroutine races and nil-SBOM dereferences, and scoped CI permissions; wrote exception-precedence docs.",
+    ],
+    startDate: "2026-08-01",
+    endDate: "",
+  },
+  {
     _id: "gsoc-2026",
-    name: "Google Summer of Code, BRL-CAD",
-    jobTitle: "Selected Contributor, Manifold Subproject",
+    name: "Google Summer of Code 2026, BRL-CAD",
+    jobTitle: "Software Developer Intern, Selected Contributor",
     url: "https://summerofcode.withgoogle.com/",
     description:
-      "Improving BRL-CAD's Manifold C++ geometry processing library through CI reliability, benchmarking infrastructure, and cross-platform determinism checks.",
+      "Improved reliability and reproducibility in the Manifold C++ geometry library (upstream of BRL-CAD), with 25+ merged PRs across CI, numerics, bindings, and documentation.",
     bullets: [
-      "Selected to improve BRL-CAD's Manifold C++ geometry processing library through CI reliability and benchmarking infrastructure.",
-      "Designed cross-platform determinism checks using fixed mesh cases, canonical artifacts, SHA256 comparison, and clear mismatch reporting.",
-      "Planned Linux Clang ASan+UBSan testing and PR/weekly benchmark workflows with base-vs-head comparison, JSON history, and dashboard trend visualization.",
+      "Selected to improve reliability and reproducibility in the Manifold C++ geometry library (upstream of BRL-CAD); 25+ merged PRs across CI, numerics, bindings, and documentation.",
+      "Built cross-platform determinism checks using fixed mesh datasets, canonical artifacts, and SHA256 comparison, and landed bitwise-exact trigonometric and non-trigonometric math so results agree across compilers and platforms.",
+      "Added CI lanes now running on every PR: a non-blocking base-vs-head benchmark guard with structured JSON history, a memory-usage guard, weekly scheduled benchmarks, and a Linux Clang ASan/UBSan sanitizer lane.",
+      "Shipped a 3MF importer with tests, an integer divide-by-zero fix in RefineToTolerance, C bindings that no longer mutated temporary copies, cone support in Cylinder, and versioned gh-pages docs deploys.",
     ],
     startDate: "",
     endDate: "",
-  },
-  {
-    _id: "extralit",
-    name: "Extralit Open Source",
-    jobTitle: "Open Source Contributor, AI Systems",
-    url: "https://github.com/extralit/extralit",
-    description:
-      "Contributing to an AI document intelligence platform supporting OCR parsing, dataset workflows, structured extraction, and annotation pipelines.",
-    bullets: [
-      "Contributed to an AI document intelligence platform supporting OCR parsing, dataset workflows, structured extraction, and annotation pipelines.",
-      "Merged 10+ pull requests across ingestion pipelines, dataset configuration, frontend components, validation logic, and test coverage.",
-      "Fixed multi-step workflow persistence issues and added structured table-based dataset inputs with validation and UI integration.",
-    ],
-    startDate: "2025-12-01",
-    endDate: "",
-  },
-  {
-    _id: "bluestock",
-    name: "Bluestock™",
-    jobTitle: "Software Engineer Intern",
-    url: "https://bluestock.in/",
-    description:
-      "Worked on improving system reliability, performance, and user-facing financial features through clean code, debugging, testing, and collaborative development.",
-    bullets: [
-      "Improved system reliability and performance across user-facing financial features.",
-      "Wrote clean, well-tested code and performed debugging across the codebase.",
-      "Collaborated remotely with the team over a 3-month internship engagement.",
-    ],
-    startDate: "2025-12-01",
-    endDate: "2026-02-28",
-    logo: "",
   },
   {
     _id: "techvisio",
@@ -100,26 +101,26 @@ export const products: ProductType[] = [
     _id: "stratum",
     name: "Stratum",
     slug: "stratum",
-    tagline: "AI code intelligence, deployment risk, incident correlation",
+    tagline: "Multi-tenant platform for PR review, deploy coordination, drift, and incidents",
     projectUrl: "https://anshulpatil.is-a.dev/stratum",
     repository: "https://github.com/AnshulPatil2005/Stratum",
     status: "Working product",
     audience: "Engineering teams shipping frequent pull requests",
     description:
-      "Stratum is a living intelligence layer for software teams, built on top of the open-source AI Pull Request Reviewer. It extends PR review into deployment planning, architecture drift, and production incident investigation so teams can see where risk is entering the codebase and what changed before something broke.",
+      "Stratum is a full-stack, multi-tenant developer platform built on a persistent semantic model of the codebase. It unifies PR review, deploy coordination, architecture-drift tracking, and incident investigation so teams can see where risk is entering the codebase and what changed before something broke.",
     bullets: [
-      "Reviews GitHub pull requests with typed findings, risk scoring, per-file summaries, review modes, async jobs, reruns, comparisons, and exports.",
-      "Analyzes deployment batches to detect semantic conflicts between PRs before they are shipped together.",
-      "Builds a live architecture-drift view from accumulated review data, highlighting risky modules, boundary erosion, and refactor pressure.",
-      "Correlates Sentry, Render, and Railway production errors with recently reviewed PRs using file/module overlap, recency, severity, and cross-service co-incidence signals.",
+      "Reviews every pull request through a GitHub App with a multi-lens \"swarm\" LLM pipeline: parallel security, performance, and logic passes produce risk scores, typed findings, and exportable reports.",
+      "Detects semantic conflicts between PRs before they are deployed together.",
+      "Tracks architecture drift from the persistent semantic codebase model, highlighting risky modules, boundary erosion, and refactor pressure.",
+      "Investigates production incidents across 6 observability sources and traces them back to the PRs most likely to have caused them.",
     ],
     metrics: [
       { label: "Stages", value: "4" },
-      { label: "Tests", value: "115" },
-      { label: "Providers", value: "3" },
+      { label: "Tests", value: "230+" },
+      { label: "Observability sources", value: "6" },
     ],
     details: [
-      { label: "Stack", value: "FastAPI, React, TypeScript, SQLAlchemy, OpenRouter, Tailwind" },
+      { label: "Stack", value: "Python, FastAPI, React, TypeScript, PostgreSQL, LLM APIs" },
       { label: "Product type", value: "Developer intelligence / code review / incident analysis" },
       { label: "Core users", value: "Founders, CTOs, maintainers, and engineering teams" },
     ],
@@ -282,6 +283,33 @@ export const showcaseProjects: ProjectType[] = [
 
 export const openSourceContributions: OpenSourceContributionType[] = [
   {
+    _id: "kubescape",
+    name: "kubescape/kubevuln",
+    repository: "https://github.com/kubescape/kubevuln",
+    description:
+      "Kubescape's in-cluster vulnerability scanner. Project member with 90+ merged Go PRs across kubevuln, the CLI, opa-utils, and docs.",
+    focus: "VEX correctness, the SecurityException API, registry auth, SSRF hardening, and Syft race fixes.",
+    pullRequests: [
+      { number: 762, title: "Block IPv4 addresses carried inside an IPv6 one", url: "https://github.com/kubescape/kubevuln/pull/762", state: "merged" },
+      { number: 563, title: "Resolve ECR credentials from the ambient AWS identity", url: "https://github.com/kubescape/kubevuln/pull/563", state: "merged" },
+      { number: 559, title: "Generate VEX on every CVE-scan path, not two of five", url: "https://github.com/kubescape/kubevuln/pull/559", state: "merged" },
+      { number: 543, title: "Add affected status with actionStatement and typed response", url: "https://github.com/kubescape/kubevuln/pull/543", state: "merged" },
+    ],
+  },
+  {
+    _id: "openkruise-agents",
+    name: "openkruise/agents",
+    repository: "https://github.com/openkruise/agents",
+    description:
+      "Kubernetes-native platform for orchestrating AI agent sandboxes. LFX Mentorship 2026: open-source signed-token authentication in Go.",
+    focus: "JWT/OIDC token issuance, JWKS, key rotation, and agent identity CRDs.",
+    pullRequests: [
+      { number: 1056, title: "Mint agent tokens from the existing issuer", url: "https://github.com/openkruise/agents/pull/1056", state: "merged" },
+      { number: 1014, title: "Add AgentIdentity and AgentAuthenticationConfig CRDs", url: "https://github.com/openkruise/agents/pull/1014", state: "merged" },
+      { number: 772, title: "Add a signed JWT issuer for traffic access tokens", url: "https://github.com/openkruise/agents/pull/772", state: "merged" },
+    ],
+  },
+  {
     _id: "browser-use",
     name: "browser-use",
     repository: "https://github.com/AnshulPatil2005/browser-use",
@@ -341,10 +369,10 @@ export const openSourceContributions: OpenSourceContributionType[] = [
     description:
       "C++ geometry library focused on topological robustness, used for mesh operations and geometry processing.",
     focus:
-      "GSoC work on CI reliability, cross-platform determinism, sanitizer workflows, benchmarking, WASM/runtime fixes, examples, and docs.",
+      "GSoC 2026 work, 25+ merged PRs: CI reliability, cross-platform determinism, bitwise-exact math, sanitizer workflows, benchmarking, bindings, and docs.",
     pullRequests: [
-      { number: 1762, title: "Fix benchmark guard", url: "https://github.com/elalish/manifold/pull/1762", state: "open" },
-      { number: 1758, title: "Weekly benchmarks", url: "https://github.com/elalish/manifold/pull/1758", state: "open" },
+      { number: 1762, title: "Fix benchmark guard", url: "https://github.com/elalish/manifold/pull/1762", state: "merged" },
+      { number: 1758, title: "Weekly benchmarks", url: "https://github.com/elalish/manifold/pull/1758", state: "merged" },
       { number: 1728, title: "ASan+UBSan workflow lane Pt2", url: "https://github.com/elalish/manifold/pull/1728", state: "merged" },
       { number: 1680, title: "Non-blocking PR benchmark guard", url: "https://github.com/elalish/manifold/pull/1680", state: "merged" },
       { number: 1666, title: "Dedicated Linux Clang ASan+UBSan workflow lane", url: "https://github.com/elalish/manifold/pull/1666", state: "merged" },
@@ -363,16 +391,21 @@ export const heroes: HeroeType[] = [];
 export const researchProjects: ResearchProjectType[] = [
   {
     _id: "gujarati-legal-nlp",
-    title: "Gujarati Legal Document Corpus and NLP Pipeline for Court Case Understanding",
+    title: "Gujarati Legal Document Corpus for Bail Order Understanding",
     status: "Ongoing",
     shortDescription:
-      "Building a machine learning-ready Gujarati legal corpus from Gujarat eCourts data, with NLP pipelines for classification, named entity recognition, summarization, and retrieval-augmented QA over district court judgments.",
+      "Building a bail-order corpus from the eCourts Gujarat portal (CrPC 436–439, 33 districts): a Playwright scraper for modal-embedded, session-bound PDFs with resume-safe JSONL state, and a deterministic glyph-to-Unicode table reverse-engineered from the LMG2Shruti converter, with OCR fallback, for legacy-font Gujarati text.",
     fullDescription: [
       "This project constructs a low-resource Gujarati legal NLP pipeline using scraped Gujarat eCourt PDFs. The core challenge is that court documents use inconsistent encodings — valid Unicode, legacy fonts (LMG-Arun, TERAFONT-VARUN), and corrupted ToUnicode mappings — so the pipeline evaluates multiple text extraction strategies before any model training.",
       "Once text is extracted and normalized, each case is converted into a structured JSONL record with metadata (district, court, year, CNR number, section) and task-specific labels. Supervised fine-tuning targets include legal text classification, named entity recognition, and legal summarization.",
       "The retrieval layer uses multilingual sentence embeddings (LaBSE, BGE-M3, multilingual-e5) to enable semantic search and RAG over the corpus. The ML contribution is studying how OCR noise propagates into downstream NLP model performance on real district court data.",
     ],
-    tags: ["NLP", "OCR", "Transformers", "IndicBERT", "MuRIL", "Python", "Low-resource NLP", "RAG"],
+    tags: ["Python", "Playwright", "Tesseract", "Docker", "OCR", "Low-resource NLP", "Transformers", "RAG"],
+    metrics: [
+      { label: "Districts", value: "33" },
+      { label: "CrPC sections", value: "436–439" },
+      { label: "Papers surveyed", value: "10" },
+    ],
     sections: [
       {
         heading: "Document Extraction and Normalization",
@@ -436,16 +469,22 @@ export const researchProjects: ResearchProjectType[] = [
   },
   {
     _id: "cxr-generalization",
-    title: "Robust and Explainable CNN-Based Chest X-Ray Classification Across Unseen Clinical Datasets",
+    title: "Domain Generalization in Chest X-ray Classification",
     status: "Ongoing",
     shortDescription:
-      "A cross-dataset generalization study training CNN models on CheXpert and evaluating them zero-shot on MIMIC-CXR, NIH ChestX-ray14, PadChest, VinDr-CXR, and BRAX to measure architecture robustness and detect dataset-specific shortcuts.",
+      "Lead author on a controlled benchmark of 16 ImageNet-pretrained CNN backbones spanning 7 families on CheXpert, holding preprocessing, optimizer, and seed protocol fixed so the backbone is the only variable — then auditing the pipeline for defects that would have invalidated the results.",
     fullDescription: [
       "This project implements a strict external validation framework for multi-label chest X-ray classification. Models are trained solely on CheXpert (224,316 images, 14 labels, 65,240 patients) and then evaluated — without any fine-tuning — on five external datasets: MIMIC-CXR-JPG, ChestX-ray14, PadChest, VinDr-CXR, and BRAX. A label harmonization module maps all datasets to a shared disease space.",
-      "The backbone comparison spans 15+ CNN architectures. Each model is evaluated on per-class AUROC, macro-AUROC, macro-F1, sensitivity, and calibration metrics. The generalization gap (internal CheXpert performance minus external performance) is the primary measure of architectural robustness.",
+      "The backbone comparison spans 16 ImageNet-pretrained CNN architectures across 7 families, with preprocessing, optimizer, and seed protocol held fixed so the backbone is the only variable. Each model is evaluated on per-class AUROC, macro-AUROC, macro-F1, sensitivity, and calibration metrics. The generalization gap (internal CheXpert performance minus external performance) is the primary measure of architectural robustness.",
+      "The 13-pathology multi-label pipeline uses configurable uncertain-label policies, Hydra config composition, and MLflow tracking. Auditing it surfaced and fixed result-invalidating defects: an unwired seed that made three seeds train identically, NaN-poisoned macro-AUROC, pretrained weights silently falling back to random init, and a label table wrong in 18 of 42 cells.",
       "Secondary experiments ablate optimizer choice, loss functions, and uncertainty-label strategies. A dataset-source classifier detects shortcut features, and Grad-CAM heatmaps verify whether models attend to clinically meaningful lung regions or acquisition artifacts.",
     ],
-    tags: ["Medical Imaging", "CNN", "PyTorch", "XAI", "Grad-CAM", "Multi-label Classification", "CheXpert", "Generalization"],
+    tags: ["PyTorch", "Lightning", "timm", "Hydra", "MLflow", "Medical Imaging", "CheXpert", "Generalization"],
+    metrics: [
+      { label: "CNN backbones", value: "16" },
+      { label: "Families", value: "7" },
+      { label: "Pathologies", value: "13" },
+    ],
     sections: [
       {
         heading: "Cross-Dataset Setup and Label Harmonization",
@@ -457,7 +496,7 @@ export const researchProjects: ResearchProjectType[] = [
       },
       {
         heading: "CNN Architecture Comparison",
-        body: "15+ CNN architectures are trained under the same CheXpert data split and evaluation protocol:",
+        body: "16 CNN architectures across 7 families are trained under the same CheXpert data split and evaluation protocol:",
         bullets: [
           "Classic baselines: DenseNet-121, ResNet-18/50/101, DenseNet-161",
           "Modern CNNs: ConvNeXt-S, ConvNeXt V2-T, EfficientNetV2-S",

@@ -3,7 +3,7 @@ import { resume } from "@/lib/resume";
 
 export const metadata: Metadata = {
   title: "Résumé | Anshul Patil",
-  description: "Anshul Patil — backend and systems developer. GSoC @ BRL-CAD.",
+  description: "Anshul Patil — backend and systems developer. Founder @ Stratum, LFX @ CNCF OpenKruise, Kubescape member.",
 };
 
 // A print-first résumé rendered from the same data as the site, so the two can

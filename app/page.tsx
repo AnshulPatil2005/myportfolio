@@ -15,7 +15,7 @@ import ScrambleIndex from "./components/global/ScrambleIndex";
 import EngravingImage from "./components/shared/EngravingImage";
 
 const aboutSummary =
-  "I'm a B.Tech student at IIIT Surat who has interned at Techvisio Design building analytics dashboards that cut API latency by 40%, and I contribute to open-source projects like Extralit and BRL-CAD's Manifold library. My focus is distributed systems, AI infrastructure, and developer tooling.";
+  "I'm a B.Tech student at IIIT Surat and the founder of Stratum. Right now I'm an LFX mentee at CNCF OpenKruise building signed-token auth for AI agent sandboxes, and a Kubescape project member with 90+ merged Go PRs. Before that: GSoC 2026 on BRL-CAD's Manifold library, and an internship at Techvisio Design where I cut API latency 40%. My focus is distributed systems, AI infrastructure, and developer tooling.";
 
 const gsocJob = jobs.find((j) => j._id === "gsoc-2026");
 const manifold = openSourceContributions.find((r) => r._id === "manifold");
@@ -63,7 +63,7 @@ export default function Home() {
           <div className="grid lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_380px] gap-12 lg:gap-16 items-start">
             <div>
               <h3 className="text-3xl sm:text-4xl font-bold tracking-tight max-w-2xl mb-6">
-                Making geometry infrastructure more reliable.
+                Making open-source infrastructure more reliable.
               </h3>
               {gsocJob && (
                 <p className="dark:text-zinc-400 text-zinc-600 leading-relaxed max-w-2xl mb-4">
@@ -225,7 +225,7 @@ export default function Home() {
           Let&rsquo;s build something useful.
         </h3>
         <p className="dark:text-zinc-400 text-zinc-600 max-w-xl mb-10">
-          Available for backend and systems internships, Summer 2026. Open to remote and hybrid roles.
+          Available for backend, systems, and AI infrastructure internships. Open to remote and hybrid roles.
         </p>
         <div className="flex flex-wrap items-center gap-x-10 gap-y-4 font-mono text-sm">
           <a

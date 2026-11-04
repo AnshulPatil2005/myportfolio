@@ -3,34 +3,58 @@ import { Slide } from "../../animation/Slide";
 const skillGroups = [
   {
     category: "Languages",
-    items: ["Python", "C++", "Golang", "SQL", "Bash", "JavaScript"],
+    items: ["Python", "C++", "Go", "SQL", "Bash", "JavaScript / TypeScript"],
   },
   {
-    category: "Backend & Systems",
+    category: "Machine Learning",
+    items: [
+      "PyTorch",
+      "Lightning",
+      "TensorFlow",
+      "Transformers",
+      "NumPy",
+      "Pandas",
+      "LLM APIs",
+      "Evaluation & benchmarking",
+      "Reproducibility",
+    ],
+  },
+  {
+    category: "Backend & Data",
     items: [
       "FastAPI",
       "Django REST Framework",
       "REST APIs",
-      "Microservices",
-      "Distributed Systems",
-      "System Design",
-      "Data Structures & Algorithms",
-      "Operating Systems",
+      "PostgreSQL",
+      "Redis",
+      "Celery",
+      "Caching",
+      "Vector databases",
     ],
   },
   {
-    category: "AI & Machine Learning",
-    items: ["PyTorch", "TensorFlow", "Transformers", "OpenCV", "NumPy", "Pandas", "OCR", "LLM APIs"],
+    category: "Cloud & Infrastructure",
+    items: [
+      "Docker",
+      "Kubernetes",
+      "CRDs & operators",
+      "controller-runtime",
+      "AWS",
+      "GitHub Actions",
+      "CI/CD",
+      "Linux",
+      "MLflow",
+    ],
   },
   {
-    category: "Infrastructure & Databases",
-    items: ["PostgreSQL", "Redis", "Celery", "Vector Databases", "AWS EC2", "AWS S3", "Docker", "CI/CD", "Linux", "Git"],
+    category: "Security",
+    items: ["JWT", "OIDC", "JWKS", "Key rotation", "RSA / ECDSA", "X.509"],
   },
 ];
 
 export default function Usage() {
   return (
-    <section className="max-w-4xl mt-8">
+    <section className="max-w-5xl mt-8">
       <Slide delay={0.14}>
         <div className="mb-10">
           <h2 className="text-4xl mb-4 font-bold tracking-tight">Stack &amp; Tools</h2>
@@ -38,7 +62,7 @@ export default function Usage() {
             Technologies and tools I use across product development, deployment, and maintenance.
           </p>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-x-8 gap-y-8">
           {skillGroups.map(({ category, items }) => (
             <div key={category}>
               <p className="text-xs font-mono uppercase tracking-widest dark:text-zinc-500 text-zinc-400 mb-3">

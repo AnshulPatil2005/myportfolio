@@ -10,14 +10,18 @@ export interface Receipt {
 }
 
 export const RECEIPTS: Record<string, Receipt[]> = {
+  "lfx-openkruise": [
+    { label: "merged PRs", url: "https://github.com/openkruise/agents/pulls?q=is%3Apr+author%3AAnshulPatil2005+is%3Amerged" },
+    { label: "repo", url: "https://github.com/openkruise/agents" },
+  ],
+  kubescape: [
+    { label: "merged PRs", url: "https://github.com/search?q=org%3Akubescape+author%3AAnshulPatil2005+is%3Apr+is%3Amerged&type=pullrequests" },
+    { label: "kubevuln", url: "https://github.com/kubescape/kubevuln" },
+  ],
   "gsoc-2026": [
     { label: "GSoC project", url: "https://summerofcode.withgoogle.com/" },
-    { label: "BRL-CAD", url: "https://github.com/BRL-CAD/brlcad" },
+    { label: "merged PRs", url: "https://github.com/elalish/manifold/pulls?q=is%3Apr+author%3AAnshulPatil2005+is%3Amerged" },
     { label: "Manifold", url: "https://github.com/elalish/manifold" },
-  ],
-  extralit: [
-    { label: "merged PRs", url: "https://github.com/extralit/extralit/pulls?q=is%3Apr+author%3AAnshulPatil2005" },
-    { label: "repo", url: "https://github.com/extralit/extralit" },
   ],
   stratum: [
     { label: "source", url: "https://github.com/AnshulPatil2005/Stratum" },

@@ -4,15 +4,15 @@ import { profile, availability } from "@/lib/data";
 const STATS = [
   {
     label: "Currently building",
-    value: "GSoC @ BRL-CAD",
-    detail: "Manifold C++ geometry library",
-    href: "/#open-source",
+    value: "LFX @ CNCF OpenKruise",
+    detail: "Signed-token auth for AI agent sandboxes",
+    href: "/#jobs",
     linkLabel: "see the work",
   },
   {
     label: "Availability",
     value: availability.open ? "Available" : "Not available",
-    detail: "Summer 2026 · Backend / Systems / AI",
+    detail: "Internships · Backend / Systems / AI",
     href: `mailto:${profile.email}`,
     linkLabel: "reach out",
   },

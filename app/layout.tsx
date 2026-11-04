@@ -10,9 +10,9 @@ import GameHint from "./components/global/GameHint";
 import CareerMode from "./components/global/CareerMode";
 
 const options = {
-  title: "Anshul Patil | Full-Stack Developer",
+  title: "Anshul Patil | Backend & Systems Developer",
   description:
-    "Anshul Patil is a Full-Stack Developer who builds reliable, maintainable web applications with a strong focus on clean architecture, performance, and product quality.",
+    "Anshul Patil is a backend and systems developer and the founder of Stratum: LFX mentee at CNCF OpenKruise, Kubescape project member, and GSoC 2026 contributor at BRL-CAD.",
   url: "https://anshulpatil.dev",
 };
 

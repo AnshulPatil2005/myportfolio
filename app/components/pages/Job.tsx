@@ -37,7 +37,7 @@ export default function Job() {
 
           <div className="max-w-2xl space-y-8">
             {jobs.map((job, idx) => {
-              const isActive = !job.endDate;
+              const isActive = Boolean(job.startDate) && !job.endDate;
               const hash = HASHES[idx] ?? "0000000";
               return (
                 <motion.div

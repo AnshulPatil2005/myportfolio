@@ -5,33 +5,51 @@ import { motion } from "framer-motion";
 const credentials = [
   {
     index: "01",
-    category: "ACADEMIC",
-    year: "2024",
-    title: "Amazon ML Summer School",
-    org: "Amazon · Invited cohort",
+    category: "OPEN SOURCE",
+    year: "",
+    title: "Claude for Open Source Program",
+    org: "Anthropic · Selected",
     description:
-      "Invited to Amazon's elite ML program covering deep learning, NLP, computer vision, and reinforcement learning — attended by top undergrads across India.",
+      "Selected by Anthropic for the Claude for Open Source Program.",
   },
   {
     index: "02",
-    category: "OPEN SOURCE",
+    category: "MENTORSHIP",
     year: "2026",
-    title: "Google Summer of Code",
-    org: "BRL-CAD · Manifold subproject",
+    title: "LFX Mentorship",
+    org: "CNCF · OpenKruise Agents",
     description:
-      "Selected contributor improving C++ geometry processing CI reliability, benchmarking infrastructure, and cross-platform determinism checks.",
+      "Selected to build an open-source signed-token authentication path in Go for a Kubernetes-native AI agent sandbox platform.",
   },
   {
     index: "03",
-    category: "AWARD",
-    year: "2025",
-    title: "1st Place, Agentic AI Hackathon",
-    org: "Agentic AI Strategy Challenge",
+    category: "OPEN SOURCE",
+    year: "2026",
+    title: "Google Summer of Code",
+    org: "BRL-CAD · Manifold",
     description:
-      "First place for designing a multi-agent automation system with workflow orchestration and real-time decision pipelines.",
+      "Selected contributor improving reliability and reproducibility in the Manifold C++ geometry library, with 25+ merged PRs.",
   },
   {
     index: "04",
+    category: "ACADEMIC",
+    year: "2026",
+    title: "Amazon ML Summer School",
+    org: "Amazon · Selected",
+    description:
+      "Selected for a competitive applied ML program led by Amazon scientists.",
+  },
+  {
+    index: "05",
+    category: "COMPETITIVE",
+    year: "2026",
+    title: "Finalist, Flipkart GRiD",
+    org: "Flipkart · GRiD 2026",
+    description:
+      "Finalist in Flipkart GRiD 2026, Flipkart's engineering challenge for students.",
+  },
+  {
+    index: "06",
     category: "COMPETITIVE",
     year: "2024",
     title: "3rd Place, Speed Coding",

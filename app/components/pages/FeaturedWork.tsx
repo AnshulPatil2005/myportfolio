@@ -36,10 +36,12 @@ export default function FeaturedWork() {
             {stratum.name}
           </h3>
           <p className="dark:text-zinc-400 text-zinc-600 leading-relaxed text-sm mb-10 max-w-xl">
-            Stratum sits between your GitHub and your production stack. It reviews every PR with
-            risk scores and typed findings, flags semantic conflicts between PRs before you
-            batch-deploy them, tracks how your architecture drifts over weeks of commits, and when
-            something breaks in prod it pinpoints exactly which PR caused it.
+            Stratum sits between your GitHub and your production stack, on a persistent semantic
+            model of your codebase. Its GitHub App reviews every PR with parallel security,
+            performance, and logic passes into risk scores and typed findings, flags semantic
+            conflicts between PRs before you deploy them together, tracks how your architecture
+            drifts over weeks of commits, and when something breaks in prod it investigates across
+            6 observability sources to pinpoint the PR that caused it.
           </p>
 
           {/* Stage pills */}

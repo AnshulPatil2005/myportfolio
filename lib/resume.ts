@@ -55,7 +55,7 @@ function formatRange(start?: string, end?: string) {
   };
   const a = f(start);
   const b = f(end);
-  if (!a && !b) return "Present";
+  if (!a && !b) return "";
   return `${a || "—"} – ${b || "Present"}`;
 }
 
@@ -97,7 +97,7 @@ export function resumeText(): string {
   rule();
   for (const e of resume.experience) {
     L.push(`${e.title} — ${e.org}`);
-    L.push(`${e.dates}${e.url ? `  |  ${e.url}` : ""}`);
+    L.push([e.dates, e.url].filter(Boolean).join("  |  "));
     for (const b of e.bullets) wrap(`- ${b}`, "  ");
     L.push("");
   }

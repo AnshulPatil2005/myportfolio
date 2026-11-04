@@ -106,7 +106,7 @@ export default function Hero() {
                 &nbsp;&nbsp;&middot;&nbsp;&nbsp;
               </>
             )}
-            GSoC @ BRL-CAD&nbsp;&nbsp;&middot;&nbsp;&nbsp;Amazon ML Summer School
+            LFX @ CNCF OpenKruise&nbsp;&nbsp;&middot;&nbsp;&nbsp;Kubescape Member&nbsp;&nbsp;&middot;&nbsp;&nbsp;GSoC @ BRL-CAD
           </motion.p>
 
           {/* Divider */}
