@@ -11,7 +11,7 @@ const STATS = [
   },
   {
     label: "Availability",
-    value: availability.open ? "Open to internships" : "Not available",
+    value: availability.open ? "Available" : "Not available",
     detail: "Summer 2026 · Backend / Systems / AI",
     href: `mailto:${profile.email}`,
     linkLabel: "reach out",
