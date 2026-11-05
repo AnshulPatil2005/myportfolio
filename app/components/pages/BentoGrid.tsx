@@ -5,7 +5,7 @@ const STATS = [
   {
     label: "Currently building",
     value: "LFX @ CNCF OpenKruise",
-    detail: "Signed-token auth for AI agent sandboxes",
+    detail: "Sign-in for AI agents on Kubernetes",
     href: "/#jobs",
     linkLabel: "see the work",
   },

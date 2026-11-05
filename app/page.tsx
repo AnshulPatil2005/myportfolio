@@ -15,7 +15,7 @@ import ScrambleIndex from "./components/global/ScrambleIndex";
 import EngravingImage from "./components/shared/EngravingImage";
 
 const aboutSummary =
-  "I'm a B.Tech student at IIIT Surat and the founder of Stratum. Right now I'm an LFX mentee at CNCF OpenKruise building signed-token auth for AI agent sandboxes, and a Kubescape project member with 90+ merged Go PRs. Before that: GSoC 2026 on BRL-CAD's Manifold library, and an internship at Techvisio Design where I cut API latency 40%. My focus is distributed systems, AI infrastructure, and developer tooling.";
+  "Now: LFX mentee at CNCF OpenKruise and a Kubescape project member with 90+ merged PRs. Before: Google Summer of Code 2026 at BRL-CAD, and an internship at Techvisio Design where I cut API latency 40%. B.Tech at IIIT Surat, class of 2028.";
 
 const gsocJob = jobs.find((j) => j._id === "gsoc-2026");
 const manifold = openSourceContributions.find((r) => r._id === "manifold");

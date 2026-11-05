@@ -10,7 +10,7 @@ const credentials = [
     title: "Claude for Open Source Program",
     org: "Anthropic · Selected",
     description:
-      "Selected by Anthropic for the Claude for Open Source Program.",
+      "Selected by Anthropic.",
   },
   {
     index: "02",
@@ -19,7 +19,7 @@ const credentials = [
     title: "LFX Mentorship",
     org: "CNCF · OpenKruise Agents",
     description:
-      "Selected to build an open-source signed-token authentication path in Go for a Kubernetes-native AI agent sandbox platform.",
+      "Selected to build token-based sign-in in Go for a Kubernetes platform that runs AI agents.",
   },
   {
     index: "03",
@@ -28,7 +28,7 @@ const credentials = [
     title: "Google Summer of Code",
     org: "BRL-CAD · Manifold",
     description:
-      "Selected contributor improving reliability and reproducibility in the Manifold C++ geometry library, with 25+ merged PRs.",
+      "Selected contributor to the Manifold C++ geometry library, with 25+ merged PRs.",
   },
   {
     index: "04",
@@ -55,7 +55,7 @@ const credentials = [
     title: "3rd Place, Speed Coding",
     org: "IIIT Surat · 100+ participants",
     description:
-      "Placed third in a timed competitive programming event against the full student body.",
+      "Placed third of 100+ in a timed competitive programming event.",
   },
 ];
 

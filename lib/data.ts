@@ -14,19 +14,19 @@ export const availability = { open: true, label: "Open to internships" };
 export const profile: ProfileType = {
   _id: "anshul-patil",
   fullName: "Anshul Patil",
-  headline: "Backend & Systems Developer | Founder @ Stratum",
+  headline: "Backend & Systems Developer",
   profileImage: {
     image: "",
     lqip: "",
     alt: "Anshul Patil",
   },
   shortBio:
-    "I build distributed systems and AI infrastructure: signed-token auth for Kubernetes-native AI agent sandboxes, in-cluster vulnerability scanning, reproducible geometry processing, and Stratum, the developer platform I founded. B.Tech at IIIT Surat; LFX mentee at CNCF OpenKruise and a Kubescape project member.",
+    "I build the infrastructure other developers rely on: authentication for Kubernetes, vulnerability scanners, CI for C++ libraries, and Stratum, a developer platform I founded.",
   email: "anshulpatil1022@gmail.com",
   fullBio: [
-    "I'm a backend and systems developer pursuing a B.Tech at the Indian Institute of Information Technology, Surat (2024–2028), and the founder of Stratum, a multi-tenant developer platform that unifies PR review, deploy coordination, drift tracking, and incident investigation.",
-    "I'm an LFX Mentorship 2026 contributor at CNCF's OpenKruise, building an open-source signed-token authentication path in Go for OpenKruise Agents: an IdentityProvider that mints signed JWT access and ID tokens with key rotation, OIDC discovery, and JWKS. I'm also a Kubescape project member with 90+ merged Go PRs across kubevuln, the CLI, opa-utils, and docs.",
-    "Before that I was a Google Summer of Code 2026 contributor at BRL-CAD, landing 25+ PRs in the Manifold C++ geometry library across CI, numerics, bindings, and docs, and a software developer intern at Techvisio Design, where I cut backend API latency 40% through SQL tuning and caching.",
+    "I'm a backend and systems developer, a B.Tech student at IIIT Surat (2024–2028), and the founder of Stratum, a platform that reviews pull requests and traces production incidents back to the change that caused them.",
+    "Right now I'm an LFX Mentorship 2026 contributor at CNCF OpenKruise, building token-based sign-in for AI agents on Kubernetes in Go. I'm also a Kubescape project member, with 90+ merged PRs to its vulnerability scanner, CLI, and docs.",
+    "Before that, I spent Google Summer of Code 2026 at BRL-CAD, landing 25+ PRs in the Manifold C++ geometry library, and interned at Techvisio Design, where I cut backend API latency 40%.",
   ],
   location: "Mumbai, Maharashtra",
   resumeURL: "/AnshulPatil.pdf",
@@ -39,11 +39,11 @@ export const jobs: JobType[] = [
     jobTitle: "Software Developer Intern, Selected Contributor",
     url: "https://github.com/openkruise/agents",
     description:
-      "Implementing an end-to-end open-source signed-token authentication path in Go for OpenKruise Agents, a Kubernetes-native platform for orchestrating AI agent sandboxes.",
+      "Building token-based sign-in in Go for OpenKruise Agents, a Kubernetes platform that runs AI agents in sandboxes.",
     bullets: [
-      "Selected for CNCF's OpenKruise Agents, a Kubernetes-native platform for orchestrating AI agent sandboxes; implementing an end-to-end open-source signed-token authentication path in Go.",
-      "Building an IdentityProvider that mints asymmetrically signed JWT access and ID tokens with key rotation, plus OIDC discovery and JWKS endpoints served by the sandbox-manager, removing the external identity-provider dependency for community deployments.",
-      "Integrating ID token issuance with the existing SecurityTokenRefreshReconciler for pre-expiry refresh, and implementing PropagateSecurityToken to deliver tokens into sandbox runtimes with refresh-on-update and lifecycle cleanup; Keycloak and Dex integration, Ginkgo end-to-end tests, and a design proposal.",
+      "Building token-based sign-in for AI agents on Kubernetes: an open-source identity provider in Go that issues signed tokens (JWT, OIDC, JWKS) with key rotation.",
+      "Community deployments no longer need an external identity provider.",
+      "Tokens reach each running sandbox and refresh before they expire; tested end to end, with Keycloak and Dex support and a design proposal.",
     ],
     startDate: "2026-09-01",
     endDate: "2026-11-30",
@@ -54,12 +54,12 @@ export const jobs: JobType[] = [
     jobTitle: "Member, Open Source Contributor",
     url: "https://github.com/kubescape",
     description:
-      "Kubescape project member with 90+ merged Go PRs across kubevuln, the CLI, opa-utils, and docs.",
+      "Project member with 90+ merged Go PRs to Kubescape's vulnerability scanner, CLI, and docs.",
     bullets: [
-      "Kubescape project member with 90+ merged Go PRs across kubevuln (the in-cluster vulnerability scanner), the CLI, opa-utils, and docs.",
-      "Extended the SecurityException API with an affected status and action statements, package-scoped entries with subcomponents, and per-vulnerability expiry; added ECR credential resolution from the ambient AWS identity.",
-      "Fixed vulnerability-pipeline correctness bugs: VEX generated on only 2 of 5 CVE-scan paths, external VEX overriding the scanner's own statements, relevancy keyed on package name without version, and scan deduplication keyed on tag instead of image.",
-      "Hardened the scanner: closed an SSRF guard bypass via IPv4-in-IPv6 addresses, bounded registry Retry-After waits, fixed Syft goroutine races and nil-SBOM dereferences, and scoped CI permissions; wrote exception-precedence docs.",
+      "Project member with 90+ merged Go PRs to Kubescape's in-cluster vulnerability scanner (kubevuln), CLI, and docs.",
+      "Fixed bugs that made scan results wrong, such as vulnerability reports produced on only 2 of 5 scan paths and duplicate scans matched by tag instead of image.",
+      "Closed a security hole (an SSRF check bypassed with IPv4 addresses hidden inside IPv6) and fixed race conditions and crashes in the scanner.",
+      "Added richer vulnerability exceptions (status, package scope, expiry) and automatic AWS ECR sign-in.",
     ],
     startDate: "2026-08-01",
     endDate: "",
@@ -70,12 +70,12 @@ export const jobs: JobType[] = [
     jobTitle: "Software Developer Intern, Selected Contributor",
     url: "https://summerofcode.withgoogle.com/",
     description:
-      "Improved reliability and reproducibility in the Manifold C++ geometry library (upstream of BRL-CAD), with 25+ merged PRs across CI, numerics, bindings, and documentation.",
+      "Made Manifold, the C++ geometry library BRL-CAD builds on, more reliable and reproducible, with 25+ merged PRs across CI, numerics, bindings, and docs.",
     bullets: [
-      "Selected to improve reliability and reproducibility in the Manifold C++ geometry library (upstream of BRL-CAD); 25+ merged PRs across CI, numerics, bindings, and documentation.",
-      "Built cross-platform determinism checks using fixed mesh datasets, canonical artifacts, and SHA256 comparison, and landed bitwise-exact trigonometric and non-trigonometric math so results agree across compilers and platforms.",
-      "Added CI lanes now running on every PR: a non-blocking base-vs-head benchmark guard with structured JSON history, a memory-usage guard, weekly scheduled benchmarks, and a Linux Clang ASan/UBSan sanitizer lane.",
-      "Shipped a 3MF importer with tests, an integer divide-by-zero fix in RefineToTolerance, C bindings that no longer mutated temporary copies, cone support in Cylinder, and versioned gh-pages docs deploys.",
+      "25+ merged PRs to Manifold, the C++ geometry library BRL-CAD builds on.",
+      "Made results identical on every platform: determinism checks that compare SHA256 hashes of outputs, and bitwise-exact math across compilers.",
+      "Added CI that runs on every PR: benchmark and memory guards, weekly benchmarks, and sanitizer (ASan/UBSan) builds.",
+      "Shipped a 3MF file importer and fixed bugs in mesh refinement, the C bindings, and cone shapes.",
     ],
     startDate: "",
     endDate: "",
@@ -88,8 +88,9 @@ export const jobs: JobType[] = [
     description:
       "Built full-stack analytics dashboard using React, Django REST Framework, and SQL APIs processing 10K+ daily user events.",
     bullets: [
-      "Built a full-stack analytics dashboard using React, Django REST Framework, and SQL APIs to process 10K+ daily user events.",
-      "Integrated AWS S3 pipelines for 300K+ monthly records and reduced backend API latency by 40% through query optimization and caching.",
+      "Cut backend API latency 40% with SQL tuning and caching.",
+      "Built a full-stack analytics dashboard (React, Django REST Framework, SQL) handling 10K+ user events a day.",
+      "Built AWS S3 pipelines for 300K+ records a month.",
     ],
     startDate: "2025-05-01",
     endDate: "2025-08-31",
@@ -109,10 +110,10 @@ export const products: ProductType[] = [
     description:
       "Stratum is a full-stack, multi-tenant developer platform built on a persistent semantic model of the codebase. It unifies PR review, deploy coordination, architecture-drift tracking, and incident investigation so teams can see where risk is entering the codebase and what changed before something broke.",
     bullets: [
-      "Reviews every pull request through a GitHub App with a multi-lens \"swarm\" LLM pipeline: parallel security, performance, and logic passes produce risk scores, typed findings, and exportable reports.",
-      "Detects semantic conflicts between PRs before they are deployed together.",
-      "Tracks architecture drift from the persistent semantic codebase model, highlighting risky modules, boundary erosion, and refactor pressure.",
-      "Investigates production incidents across 6 observability sources and traces them back to the PRs most likely to have caused them.",
+      "Reviews every pull request through a GitHub App, with parallel AI checks for security, performance, and logic that produce a risk score and a report.",
+      "Warns when two PRs will conflict if they are deployed together.",
+      "Tracks how the architecture drifts over time and flags the riskiest modules.",
+      "When production breaks, checks 6 monitoring sources and points to the PRs most likely to have caused it.",
     ],
     metrics: [
       { label: "Stages", value: "4" },
@@ -229,7 +230,7 @@ export const showcaseProjects: ProjectType[] = [
     logo: "",
     coverImage: { image: "", alt: null, lqip: "" },
     description:
-      "Research-grade scraper for Gujarat eCourts disposed CRMA/JMFC cases, focused on CrPC sections 436, 437, 438, and 439. It automates the eCourts portal with Playwright, handles CAPTCHA/OCR support, stores structured metadata in JSON/JSONL/SQLite, and preserves source HTML/PDF orders for verification.",
+      "Research scraper that collects bail-related court orders (CrPC 436–439) from Gujarat's eCourts portal. It automates the eCourts portal with Playwright, handles CAPTCHA/OCR support, stores structured metadata in JSON/JSONL/SQLite, and preserves source HTML/PDF orders for verification.",
   },
   {
     _id: "faulty-node-detection",
@@ -241,7 +242,7 @@ export const showcaseProjects: ProjectType[] = [
     logo: "",
     coverImage: { image: "", alt: null, lqip: "" },
     description:
-      "Four-stage faulty-node detection pipeline for simulated networks. It builds a 12-node NS-3 topology, injects packet-loss/high-delay/low-bandwidth faults, extracts FlowMonitor features, detects anomalies with z-score/IQR/composite scoring, and explains results through an interactive HTML dashboard with an LLM diagnostic agent.",
+      "Finds faulty nodes in a simulated network and explains why. It builds a 12-node NS-3 topology, injects packet-loss/high-delay/low-bandwidth faults, extracts FlowMonitor features, detects anomalies with z-score/IQR/composite scoring, and explains results through an interactive HTML dashboard with an LLM diagnostic agent.",
   },
   {
     _id: "codeforces",
@@ -253,7 +254,7 @@ export const showcaseProjects: ProjectType[] = [
     logo: "",
     coverImage: { image: "", alt: null, lqip: "" },
     description:
-      "Modern full-stack Codeforces dashboard for contest profiles, rating visualizations, performance insights, and problem browsing. The backend uses FastAPI with rate limiting and caching around real Codeforces data; the frontend uses React, TypeScript, Tailwind, React Query, and Recharts.",
+      "Full-stack Codeforces dashboard for profiles, rating charts, performance insights, and problem browsing. The backend uses FastAPI with rate limiting and caching around real Codeforces data; the frontend uses React, TypeScript, Tailwind, React Query, and Recharts.",
   },
   {
     _id: "smartfolio",
@@ -265,7 +266,7 @@ export const showcaseProjects: ProjectType[] = [
     logo: "",
     coverImage: { image: "", alt: null, lqip: "" },
     description:
-      "Python project around smarter portfolio analysis and automation. It shows backend-oriented product thinking applied to financial/portfolio workflows where data processing and decision support matter.",
+      "Python tools for investment portfolio analysis and automation. They focus on the data processing and decision support behind financial portfolio workflows.",
   },
   {
     _id: "il-tur",
@@ -277,7 +278,7 @@ export const showcaseProjects: ProjectType[] = [
     logo: "",
     coverImage: { image: "", alt: null, lqip: "" },
     description:
-      "Notebook-based machine learning/NLP experimentation repository. It is useful recruiter evidence for data preparation, exploratory modeling, evaluation, and research-style iteration.",
+      "Notebooks for machine learning and NLP experiments. They cover data preparation, exploratory modeling, and evaluation.",
   },
 ];
 
@@ -287,8 +288,8 @@ export const openSourceContributions: OpenSourceContributionType[] = [
     name: "kubescape/kubevuln",
     repository: "https://github.com/kubescape/kubevuln",
     description:
-      "Kubescape's in-cluster vulnerability scanner. Project member with 90+ merged Go PRs across kubevuln, the CLI, opa-utils, and docs.",
-    focus: "VEX correctness, the SecurityException API, registry auth, SSRF hardening, and Syft race fixes.",
+      "Kubescape's in-cluster vulnerability scanner. 90+ merged Go PRs across it, the CLI, and docs, as a project member.",
+    focus: "Scan correctness, vulnerability exceptions, registry sign-in, and security hardening.",
     pullRequests: [
       { number: 762, title: "Block IPv4 addresses carried inside an IPv6 one", url: "https://github.com/kubescape/kubevuln/pull/762", state: "merged" },
       { number: 563, title: "Resolve ECR credentials from the ambient AWS identity", url: "https://github.com/kubescape/kubevuln/pull/563", state: "merged" },
@@ -301,8 +302,8 @@ export const openSourceContributions: OpenSourceContributionType[] = [
     name: "openkruise/agents",
     repository: "https://github.com/openkruise/agents",
     description:
-      "Kubernetes-native platform for orchestrating AI agent sandboxes. LFX Mentorship 2026: open-source signed-token authentication in Go.",
-    focus: "JWT/OIDC token issuance, JWKS, key rotation, and agent identity CRDs.",
+      "Kubernetes platform that runs AI agents in sandboxes. LFX Mentorship 2026: building its token-based sign-in in Go.",
+    focus: "Token issuance (JWT, OIDC, JWKS), key rotation, and agent identity.",
     pullRequests: [
       { number: 1056, title: "Mint agent tokens from the existing issuer", url: "https://github.com/openkruise/agents/pull/1056", state: "merged" },
       { number: 1014, title: "Add AgentIdentity and AgentAuthenticationConfig CRDs", url: "https://github.com/openkruise/agents/pull/1014", state: "merged" },
@@ -369,7 +370,7 @@ export const openSourceContributions: OpenSourceContributionType[] = [
     description:
       "C++ geometry library focused on topological robustness, used for mesh operations and geometry processing.",
     focus:
-      "GSoC 2026 work, 25+ merged PRs: CI reliability, cross-platform determinism, bitwise-exact math, sanitizer workflows, benchmarking, bindings, and docs.",
+      "Most of it is CI and correctness work: determinism checks, sanitizer builds, benchmark guards, and exact math, plus a 3MF importer and fixes to the C bindings.",
     pullRequests: [
       { number: 1762, title: "Fix benchmark guard", url: "https://github.com/elalish/manifold/pull/1762", state: "merged" },
       { number: 1758, title: "Weekly benchmarks", url: "https://github.com/elalish/manifold/pull/1758", state: "merged" },
@@ -394,7 +395,7 @@ export const researchProjects: ResearchProjectType[] = [
     title: "Gujarati Legal Document Corpus for Bail Order Understanding",
     status: "Ongoing",
     shortDescription:
-      "Building a bail-order corpus from the eCourts Gujarat portal (CrPC 436–439, 33 districts): a Playwright scraper for modal-embedded, session-bound PDFs with resume-safe JSONL state, and a deterministic glyph-to-Unicode table reverse-engineered from the LMG2Shruti converter, with OCR fallback, for legacy-font Gujarati text.",
+      "A machine-learning-ready dataset of Gujarati bail orders (CrPC 436–439) from court records across 33 districts. I built the eCourts scraper. I also decoded the legacy Gujarati fonts that normal PDF extraction turns into gibberish, by reverse-engineering a font converter (with OCR as a fallback).",
     fullDescription: [
       "This project constructs a low-resource Gujarati legal NLP pipeline using scraped Gujarat eCourt PDFs. The core challenge is that court documents use inconsistent encodings — valid Unicode, legacy fonts (LMG-Arun, TERAFONT-VARUN), and corrupted ToUnicode mappings — so the pipeline evaluates multiple text extraction strategies before any model training.",
       "Once text is extracted and normalized, each case is converted into a structured JSONL record with metadata (district, court, year, CNR number, section) and task-specific labels. Supervised fine-tuning targets include legal text classification, named entity recognition, and legal summarization.",
@@ -472,7 +473,7 @@ export const researchProjects: ResearchProjectType[] = [
     title: "Domain Generalization in Chest X-ray Classification",
     status: "Ongoing",
     shortDescription:
-      "Lead author on a controlled benchmark of 16 ImageNet-pretrained CNN backbones spanning 7 families on CheXpert, holding preprocessing, optimizer, and seed protocol fixed so the backbone is the only variable — then auditing the pipeline for defects that would have invalidated the results.",
+      "Which CNN architecture holds up best on chest X-rays? As lead author, I benchmark 16 pretrained backbones from 7 families on CheXpert, with everything except the backbone held fixed. Auditing the pipeline caught four bugs that would have silently invalidated the results.",
     fullDescription: [
       "This project implements a strict external validation framework for multi-label chest X-ray classification. Models are trained solely on CheXpert (224,316 images, 14 labels, 65,240 patients) and then evaluated — without any fine-tuning — on five external datasets: MIMIC-CXR-JPG, ChestX-ray14, PadChest, VinDr-CXR, and BRAX. A label harmonization module maps all datasets to a shared disease space.",
       "The backbone comparison spans 16 ImageNet-pretrained CNN architectures across 7 families, with preprocessing, optimizer, and seed protocol held fixed so the backbone is the only variable. Each model is evaluated on per-class AUROC, macro-AUROC, macro-F1, sensitivity, and calibration metrics. The generalization gap (internal CheXpert performance minus external performance) is the primary measure of architectural robustness.",

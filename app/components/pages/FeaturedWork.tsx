@@ -36,21 +36,20 @@ export default function FeaturedWork() {
             {stratum.name}
           </h3>
           <p className="dark:text-zinc-400 text-zinc-600 leading-relaxed text-sm mb-10 max-w-xl">
-            Stratum sits between your GitHub and your production stack, on a persistent semantic
-            model of your codebase. Its GitHub App reviews every PR with parallel security,
-            performance, and logic passes into risk scores and typed findings, flags semantic
-            conflicts between PRs before you deploy them together, tracks how your architecture
-            drifts over weeks of commits, and when something breaks in prod it investigates across
-            6 observability sources to pinpoint the PR that caused it.
+            Stratum connects your GitHub repo to your production stack. Every pull request gets an
+            AI review for security, performance, and logic risk, plus a warning if it conflicts with
+            another PR in the same deploy. It tracks how your architecture drifts over time. And
+            when production breaks, it checks 6 monitoring sources and points to the PR that caused
+            it.
           </p>
 
           {/* Stage pills */}
           <div className="flex flex-wrap gap-3 mb-10">
             {[
               { label: "Review", desc: "Risk-score every PR" },
-              { label: "Deploy", desc: "Catch semantic conflicts" },
+              { label: "Deploy", desc: "Catch conflicting PRs" },
               { label: "Drift", desc: "Track architecture health" },
-              { label: "Incident", desc: "Correlate prod errors to PRs" },
+              { label: "Incident", desc: "Trace prod errors to PRs" },
             ].map((stage) => (
               <div
                 key={stage.label}
