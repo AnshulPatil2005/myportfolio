@@ -1,9 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Metadata } from "next";
-import type { ProjectType } from "@/types";
 import EmptyState from "../components/shared/EmptyState";
-import { Slide } from "../animation/Slide";
 import PageHeading from "../components/shared/PageHeading";
 import { showcaseProjects } from "@/lib/data";
 
@@ -20,47 +18,49 @@ export const metadata: Metadata = {
 
 export default function Project() {
   return (
-    <main className="max-w-7xl mx-auto md:px-16 px-6">
+    <main className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
       <PageHeading
         title="Projects"
         description="Focused repositories across AI code review, legal data scraping, distributed-systems reliability, competitive programming, portfolio tooling, and notebook-based ML experimentation."
       />
 
-      <Slide delay={0.1}>
-        {showcaseProjects.length > 0 ? (
-          <section className="grid xl:grid-cols-3 md:grid-cols-2 grid-cols-1 gap-5 mb-12">
-            {showcaseProjects.map((project) => (
-              <Link
-                href={`/projects/${project.slug}`}
-                key={project._id}
-                className="flex items-center gap-x-4 border dark:border-zinc-800 border-zinc-300 dark:hover:border-zinc-600 hover:border-zinc-400 p-4 transition-colors duration-150"
-              >
+      {showcaseProjects.length > 0 ? (
+        <section className="border-t border-line mb-12">
+          {showcaseProjects.map((project) => (
+            <Link
+              href={`/projects/${project.slug}`}
+              key={project._id}
+              className="group folio items-baseline border-b border-line py-7"
+            >
+              <div className="lg:col-span-3 mb-3 lg:mb-0">
                 {project.logo ? (
                   <Image
                     src={project.logo}
-                    width={60}
-                    height={60}
+                    width={48}
+                    height={48}
                     alt={project.name}
-                    className="border dark:border-zinc-700 border-zinc-300 p-2"
+                    className="border border-line p-1.5"
                   />
                 ) : (
-                  <div className="border dark:border-zinc-700 border-zinc-300 w-[60px] h-[60px] shrink-0 grid place-items-center font-mono text-xs dark:text-zinc-500 text-zinc-400">
+                  <span className="font-mono text-meta text-muted">
                     {"{}"}
-                  </div>
+                  </span>
                 )}
-                <div>
-                  <h2 className="text-lg tracking-wide mb-1">{project.name}</h2>
-                  <div className="text-sm dark:text-zinc-400 text-zinc-600">
-                    {project.tagline}
-                  </div>
+              </div>
+              <div className="lg:col-span-9">
+                <h2 className="text-h3 text-fg underline decoration-transparent underline-offset-[0.15em] group-hover:decoration-line transition-colors">
+                  {project.name}
+                </h2>
+                <div className="mt-1.5 font-mono text-meta text-muted">
+                  {project.tagline}
                 </div>
-              </Link>
-            ))}
-          </section>
-        ) : (
-          <EmptyState value="Projects" />
-        )}
-      </Slide>
+              </div>
+            </Link>
+          ))}
+        </section>
+      ) : (
+        <EmptyState value="Projects" />
+      )}
     </main>
   );
 }
