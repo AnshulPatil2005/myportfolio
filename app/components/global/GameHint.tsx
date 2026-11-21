@@ -94,7 +94,7 @@ export default function GameHint() {
           ×
         </button>
       </div>
-      <style>{`@keyframes hint-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }`}</style>
+      <style>{`@keyframes hint-in { from { transform: translateY(calc(100% + 1.5rem)); } to { transform: none; } }`}</style>
     </aside>
   );
 }

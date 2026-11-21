@@ -30,12 +30,12 @@ export default function Hero() {
             <span aria-hidden="true" className="inline-block w-1.5 h-1.5 rounded-full bg-fg" />
             Live now
           </span>
-          <span className="block lg:col-span-7 text-body text-muted">
+          <span className="block lg:col-span-8 text-body text-muted">
             <span className="text-fg">{stratum.name}</span>
             <span> &mdash; </span>
             PR review that traces production incidents back to the PR that caused them.
           </span>
-          <span className="block lg:col-span-2 lg:text-right font-mono text-meta text-fg">
+          <span className="block lg:col-span-1 lg:text-right whitespace-nowrap font-mono text-meta text-fg">
             <span className="underline decoration-line underline-offset-[0.3em] group-hover:decoration-fg">
               Try it
             </span>{" "}
@@ -56,7 +56,7 @@ export default function Hero() {
           >
             {profile.fullName.split(" ").map((word, i, arr) =>
               i === arr.length - 1 ? (
-                <span key={i} className="italic block">
+                <span key={i} className="italic block [font-family:var(--font-serif-italic),'Newsreader_Italic_Fallback',Georgia,serif]">
                   {word}
                 </span>
               ) : (

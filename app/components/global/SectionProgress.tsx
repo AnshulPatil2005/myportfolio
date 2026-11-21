@@ -52,7 +52,7 @@ export default function SectionProgress() {
 
             <span
               className={`font-mono text-meta min-w-[1.5rem] text-right select-none transition-colors duration-200 ${
-                isActive ? "text-rubric" : "text-muted/60 hover:text-fg"
+                isActive ? "text-rubric" : "text-muted hover:text-fg"
               }`}
             >
               {ROMAN[i]}
