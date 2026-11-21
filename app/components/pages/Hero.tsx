@@ -1,81 +1,62 @@
-"use client";
-
 import Link from "next/link";
 import Social from "../shared/Social";
 import EngravingImage from "../shared/EngravingImage";
-import ConwayCanvas from "../shared/ConwayCanvas";
-import { motion } from "framer-motion";
+import CareerButton from "../shared/CareerButton";
 import { profile, availability, products } from "@/lib/data";
 
 const ENGRAVING_SRC = "/engraving-melencolia.jpg";
 const stratum = products.find((p) => p._id === "stratum");
 
+// A title page and its frontispiece: the name set large in the text block,
+// Dürer's Melencolia printed as the facing plate.
 export default function Hero() {
   return (
-    <section className="relative pt-4 pb-20 md:pb-28">
-      <ConwayCanvas />
+    <section className="pt-6 md:pt-10 pb-20 md:pb-28">
       {/* Meta row */}
-      <motion.div
-        className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 pb-5 mb-12 border-b dark:border-zinc-800 border-zinc-300 font-mono text-xs uppercase tracking-[0.2em] dark:text-zinc-500 text-zinc-400"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
-      >
+      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 pb-3 border-b border-line font-mono text-meta text-muted">
         <span>Portfolio &middot; {profile.location}</span>
-        {availability.open && (
-          <span className="dark:text-zinc-400 text-zinc-600 normal-case tracking-normal text-xs">
-            {availability.label}
-          </span>
-        )}
-      </motion.div>
+        {availability.open && <span className="text-fg">{availability.label}</span>}
+      </div>
 
       {/* Stratum spotlight */}
       {stratum && (
-        <motion.a
+        <a
           href={stratum.projectUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="group relative flex flex-wrap sm:flex-nowrap items-center gap-x-4 gap-y-2 mb-12 px-4 py-3 border dark:border-amber-500/30 border-amber-600/30 dark:bg-amber-500/[0.04] bg-amber-500/[0.06] dark:hover:border-amber-500/70 hover:border-amber-600/70 transition-colors duration-200"
-          initial={{ opacity: 0, y: -6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.05, ease: "easeOut" }}
+          className="group folio items-baseline gap-y-1.5 py-4 border-b border-line"
         >
-          <span className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em] dark:text-accent text-amber-600 shrink-0">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-accent opacity-75 animate-ping" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
-            </span>
+          <span className="lg:col-span-3 flex items-center gap-2.5 font-mono text-meta text-fg">
+            <span aria-hidden="true" className="inline-block w-1.5 h-1.5 rounded-full bg-fg" />
             Live now
           </span>
-          <span className="text-sm dark:text-zinc-300 text-zinc-700 flex-1 min-w-0">
-            <span className="font-semibold dark:text-white text-zinc-900">{stratum.name}</span>
-            <span className="dark:text-zinc-600 text-zinc-400"> &mdash; </span>
+          <span className="block lg:col-span-7 text-body text-muted">
+            <span className="text-fg">{stratum.name}</span>
+            <span> &mdash; </span>
             PR review that traces production incidents back to the PR that caused them.
           </span>
-          <span className="font-mono text-xs uppercase tracking-widest dark:text-zinc-300 text-zinc-700 shrink-0">
-            Try it{" "}
+          <span className="block lg:col-span-2 lg:text-right font-mono text-meta text-fg">
+            <span className="underline decoration-line underline-offset-[0.3em] group-hover:decoration-fg">
+              Try it
+            </span>{" "}
             <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
               &rarr;
             </span>
           </span>
-        </motion.a>
+        </a>
       )}
 
-      {/* Two-column grid: text left, engraving right */}
-      <div className="grid lg:grid-cols-[1fr_420px] xl:grid-cols-[1fr_520px] gap-10 lg:gap-16 items-start">
-        {/* Left — text */}
-        <div>
+      <div className="folio mt-12 md:mt-16 lg:items-start">
+        {/* Title block */}
+        <div className="lg:col-span-7 lg:pr-6">
           {/* Name */}
-          <motion.h1
-            className="font-display font-normal leading-none tracking-[-0.03em] mb-6"
-            style={{ fontSize: "clamp(3rem, 6.5vw, 6rem)" }}
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55, delay: 0.08, ease: [0.25, 1, 0.5, 1] }}
+          <h1
+            className="leading-[0.92] tracking-[-0.025em] mb-8"
+            style={{ fontSize: "clamp(4.25rem, 1.5rem + 7.4vw, 8.75rem)" }}
           >
             {profile.fullName.split(" ").map((word, i, arr) =>
               i === arr.length - 1 ? (
-                <span key={i} className="italic dark:text-zinc-300 text-zinc-600 block">
+                <span key={i} className="italic block">
                   {word}
                 </span>
               ) : (
@@ -84,129 +65,81 @@ export default function Hero() {
                 </span>
               )
             )}
-          </motion.h1>
+          </h1>
 
           {/* Credentials */}
-          <motion.p
-            className="font-mono text-xs dark:text-zinc-500 text-zinc-400 uppercase tracking-[0.2em] mb-12"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.24, ease: "easeOut" }}
-          >
+          <p className="font-mono text-meta text-muted mb-8 flex flex-wrap gap-x-2 gap-y-1">
             {stratum && (
               <>
                 <a
                   href={stratum.projectUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="dark:text-zinc-300 text-zinc-700 border-b dark:border-amber-500/40 border-amber-600/40 dark:hover:text-accent hover:text-amber-600 transition-colors duration-150"
+                  className="link whitespace-nowrap"
                 >
                   Founder @ Stratum
                 </a>
-                &nbsp;&nbsp;&middot;&nbsp;&nbsp;
+                <span aria-hidden="true">&middot;</span>
               </>
             )}
-            LFX @ CNCF OpenKruise&nbsp;&nbsp;&middot;&nbsp;&nbsp;Kubescape Member&nbsp;&nbsp;&middot;&nbsp;&nbsp;GSoC @ BRL-CAD
-          </motion.p>
+            <span className="whitespace-nowrap">LFX @ CNCF OpenKruise</span>
+            <span aria-hidden="true">&middot;</span>
+            <span className="whitespace-nowrap">Kubescape Member</span>
+            <span aria-hidden="true">&middot;</span>
+            <span className="whitespace-nowrap">GSoC @ BRL-CAD</span>
+          </p>
 
-          {/* Divider */}
-          <motion.div
-            className="border-t dark:border-zinc-800 border-zinc-300 mb-10"
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 0.75, delay: 0.18, ease: [0.25, 1, 0.5, 1] }}
-            style={{ transformOrigin: "left" }}
-          />
+          <div className="border-t border-line mb-8" />
 
           {/* Role + bio */}
-          <motion.div
-            className="mb-14 space-y-4"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.34, ease: "easeOut" }}
-          >
-            <p className="font-mono text-xs uppercase tracking-[0.18em] dark:text-zinc-500 text-zinc-500">
-              {profile.headline}
-            </p>
-            <p className="text-lg leading-relaxed dark:text-zinc-300 text-zinc-700 max-w-xl">
-              {profile.shortBio}
-            </p>
-          </motion.div>
+          <div className="mb-10 space-y-3">
+            <p className="font-mono text-meta text-muted">{profile.headline}</p>
+            <p className="text-lead text-fg max-w-[34rem]">{profile.shortBio}</p>
+          </div>
 
           {/* CTAs */}
-          <motion.div
-            className="flex flex-wrap items-center gap-x-10 gap-y-4 mb-10"
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.46, ease: "easeOut" }}
-          >
-            <Link
-              href="/#featured-work"
-              className="group inline-flex items-center gap-2 font-mono text-sm uppercase tracking-widest dark:text-white text-zinc-900 border-b-2 dark:border-accent border-accent pb-0.5 hover:opacity-70 transition-opacity duration-150"
-            >
-              View my work
-              <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
+          <div className="flex flex-wrap items-baseline gap-x-8 gap-y-3 mb-8 text-body">
+            <Link href="/#featured-work" className="group link">
+              View my work{" "}
+              <span className="inline-block no-underline transition-transform duration-200 group-hover:translate-x-1">
                 &rarr;
               </span>
             </Link>
-            <button
-              onClick={() =>
-                window.dispatchEvent(new CustomEvent("career-mode:open"))
-              }
-              className="hidden md:inline-flex items-center gap-2.5 font-mono text-sm uppercase tracking-widest dark:text-zinc-300 text-zinc-700 border dark:border-zinc-700 border-zinc-300 px-4 py-1.5 dark:hover:border-amber-500/60 hover:border-amber-500/60 dark:hover:text-accent hover:text-amber-600 transition-colors duration-150"
-            >
-              <span className="text-[10px] dark:text-accent text-amber-600">▶</span> Play Career Mode
-            </button>
-            <a
-              href={profile.resumeURL}
-              download
-              className="font-mono text-sm uppercase tracking-widest dark:text-zinc-500 text-zinc-500 border-b border-transparent pb-0.5 dark:hover:text-zinc-200 hover:text-zinc-800 dark:hover:border-zinc-600 hover:border-zinc-400 transition-colors duration-150"
-            >
+            <CareerButton className="hidden md:inline-flex items-baseline gap-2 link">
+              <span className="text-[0.7em]">▶</span> Play Career Mode
+            </CareerButton>
+            <a href={profile.resumeURL} download className="link-muted">
               R&eacute;sum&eacute;
             </a>
-            <Link
-              href="/#contact"
-              className="font-mono text-sm uppercase tracking-widest dark:text-zinc-500 text-zinc-500 border-b border-transparent pb-0.5 dark:hover:text-zinc-200 hover:text-zinc-800 dark:hover:border-zinc-600 hover:border-zinc-400 transition-colors duration-150"
-            >
+            <Link href="/#contact" className="link-muted">
               Contact
             </Link>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.56, ease: "easeOut" }}
-          >
-            <Social type="social" />
-          </motion.div>
+          <Social type="social" />
 
-          <motion.p
-            className="mt-6 font-mono text-[10px] uppercase tracking-[0.22em] dark:text-zinc-700 text-zinc-400 select-none hidden md:flex items-center gap-3"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 1.1, ease: "easeOut" }}
-          >
-            <span><kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5 text-[9px]">C</kbd> career mode</span>
-            <span className="dark:text-zinc-800 text-zinc-300">·</span>
-            <span><kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5 text-[9px]">⌘K</kbd> commands</span>
-          </motion.p>
+          <p className="mt-6 font-mono text-meta text-muted select-none hidden md:flex items-center gap-3">
+            <span>
+              <kbd className="border border-line px-1.5 py-0.5 mr-1.5">C</kbd> career mode
+            </span>
+            <span aria-hidden="true">·</span>
+            <span>
+              <kbd className="border border-line px-1.5 py-0.5 mr-1.5">⌘K</kbd> commands
+            </span>
+          </p>
         </div>
 
-        {/* Right — engraving */}
-        <motion.div
-          className="hidden lg:block"
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: [0.25, 1, 0.5, 1] }}
-        >
+        {/* Frontispiece */}
+        <div className="lg:col-span-5 mt-14 lg:mt-3">
           <EngravingImage
             src={ENGRAVING_SRC}
             alt=""
             priority
-            animate={false}
-            className="w-full aspect-[3/4]"
+            sizes="(max-width: 1024px) 92vw, 466px"
+            position="50% 30%"
+            className="w-full aspect-[4/5] lg:aspect-[3/4]"
           />
-        </motion.div>
+        </div>
       </div>
     </section>
   );

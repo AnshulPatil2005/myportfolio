@@ -31,7 +31,9 @@ export default function EngravingImage({
           src={src}
           alt={alt}
           fill
-          priority={priority}
+          // eager but not preloaded: on a phone the plate sits below the
+          // fold and should not compete with the text for bandwidth
+          loading={priority ? "eager" : "lazy"}
           sizes={sizes}
           className="object-cover plate-img"
           style={{ objectPosition: position }}
