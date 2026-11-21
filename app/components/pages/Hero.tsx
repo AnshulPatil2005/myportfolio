@@ -100,8 +100,8 @@ export default function Hero() {
           {/* CTAs */}
           <div className="flex flex-wrap items-baseline gap-x-8 gap-y-3 mb-8 text-body">
             <Link href="/#featured-work" className="group link">
-              View my work{" "}
-              <span className="inline-block no-underline transition-transform duration-200 group-hover:translate-x-1">
+              View my work
+              <span className="inline-block ml-1.5 no-underline transition-transform duration-200 group-hover:translate-x-1">
                 &rarr;
               </span>
             </Link>
