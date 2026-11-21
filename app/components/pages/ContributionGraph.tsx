@@ -30,7 +30,7 @@ export default function ContributionGraph() {
 
   return (
     <div>
-      <div className="border border-line p-5 sm:p-6 overflow-x-auto text-fg font-mono text-meta">
+      <div className="border border-line p-5 sm:p-6 overflow-x-auto text-fg font-mono text-meta" tabIndex={0}>
         <GitHubCalendar
           username={username}
           theme={github}

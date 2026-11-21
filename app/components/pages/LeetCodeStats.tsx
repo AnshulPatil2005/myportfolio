@@ -81,7 +81,8 @@ function Heatmap({ submissionCalendar }: { submissionCalendar: string }) {
   const labels = getMonthLabels(weeks);
 
   return (
-    <div className="overflow-x-auto">
+    // focusable so keyboard users can scroll it
+    <div className="overflow-x-auto" tabIndex={0}>
       <div className="inline-block min-w-max">
         <div className="flex gap-[3px] mb-[3px]">
           {labels.map((label, i) => (
