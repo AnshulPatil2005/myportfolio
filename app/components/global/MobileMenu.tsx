@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import { profile } from "@/lib/data";
 
 const data = [
   { title: "Products", href: "/#featured-work" },
@@ -32,22 +31,23 @@ export default function MobileMenu() {
       <button
         aria-label="Toggle Menu"
         onClick={onToggleNav}
-        className="md:hidden flex flex-col justify-center items-end gap-[5px] border dark:border-zinc-800 border-zinc-300 p-2.5 w-9 h-9"
+        className="md:hidden flex flex-col justify-center items-end gap-[5px] border border-line w-10 h-10 px-2.5"
       >
-        <span className="block w-4 h-px dark:bg-zinc-200 bg-zinc-800" />
-        <span className="block w-4 h-px dark:bg-zinc-200 bg-zinc-800" />
-        <span className="block w-2.5 h-px dark:bg-zinc-200 bg-zinc-800" />
+        <span className="block w-[18px] h-px bg-fg" />
+        <span className="block w-[18px] h-px bg-fg" />
+        <span className="block w-3 h-px bg-fg" />
       </button>
+      {/* off-screen panels stay out of the tab order until opened */}
       <div
-        className={`md:hidden fixed left-0 top-0 z-10 h-full w-full transform duration-[600ms] ease-[cubic-bezier(0.7,0,0,1)] dark:bg-ink bg-paper ${
-          navShow ? "translate-x-0" : "translate-x-full"
+        className={`md:hidden fixed left-0 top-0 z-10 h-full w-full bg-page transition-[transform,visibility] duration-[500ms] ease-[cubic-bezier(0.7,0,0,1)] ${
+          navShow ? "translate-x-0 visible" : "translate-x-full invisible"
         }`}
       >
-        <div className="flex items-center justify-between mt-6 px-8">
+        <div className="flex items-center justify-between h-16 px-6 border-b border-line">
           <Link
             href="/"
             onClick={onToggleNav}
-            className="font-incognito font-bold text-xl dark:text-white text-zinc-900"
+            className="text-[1.375rem] leading-none tracking-tight text-fg"
           >
             AP
           </Link>
@@ -55,20 +55,20 @@ export default function MobileMenu() {
           <button
             aria-label="Toggle Menu"
             onClick={onToggleNav}
-            className="md:hidden border dark:border-zinc-800 border-zinc-300 w-9 h-9 grid place-items-center font-mono text-lg dark:text-zinc-200 text-zinc-800"
+            className="border border-line w-10 h-10 grid place-items-center font-mono text-lg text-fg"
           >
             &times;
           </button>
         </div>
-        <nav className="flex flex-col mt-6">
+        <nav className="flex flex-col px-6 pt-4">
           {data.map((link, i) => (
             <Link
               key={link.title}
               href={link.href}
-              className="flex items-center gap-x-4 font-semibold text-lg border-b dark:border-zinc-800 border-zinc-200 p-6 group"
+              className="flex items-baseline gap-x-5 border-b border-line py-4 text-[1.75rem] leading-tight text-fg"
               onClick={onToggleNav}
             >
-              <span className="font-mono text-xs dark:text-zinc-600 text-zinc-400">
+              <span className="w-6 shrink-0 font-mono text-meta text-muted">
                 {String(i + 1).padStart(2, "0")}
               </span>
               {link.title}

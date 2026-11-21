@@ -4,7 +4,6 @@ import Link from "next/link";
 import Theme from "./Theme";
 import UnmountStudio from "./Unmount";
 import MobileMenu from "./MobileMenu";
-import { motion, useScroll } from "framer-motion";
 import { useEffect, useState } from "react";
 
 const navLinks = [
@@ -16,14 +15,16 @@ const navLinks = [
   { title: "Résumé", href: "/resume" },
 ];
 
+// The running head: a single ruled line across the top of every page.
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
-  const { scrollY } = useScroll();
 
   useEffect(() => {
-    return scrollY.on("change", (y) => setScrolled(y > 40));
-  }, [scrollY]);
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
     <UnmountStudio>
@@ -31,56 +32,39 @@ export default function Navbar() {
       <div aria-hidden="true" className="h-16" />
 
       <header
-        className={`fixed top-0 inset-x-0 z-50 h-16 transition-[background-color,border-color] duration-300 ease-in-out ${
-          scrolled
-            ? "dark:bg-ink/80 bg-paper/90 backdrop-blur-sm border-b dark:border-zinc-800/80 border-zinc-300"
-            : "bg-transparent border-b border-transparent"
+        className={`fixed top-0 inset-x-0 z-50 h-16 bg-page transition-[border-color] duration-200 border-b ${
+          scrolled ? "border-line" : "border-transparent"
         }`}
       >
-        <div className="h-full max-w-7xl mx-auto md:px-16 px-6 flex items-center justify-between gap-x-6">
-          <Link
-            href="/"
-            className="font-semibold text-lg dark:text-white text-zinc-900 tracking-tight"
-          >
+        <div className="h-full max-w-7xl mx-auto px-6 md:px-12 lg:px-16 flex items-center justify-between gap-x-6">
+          <Link href="/" className="text-[1.375rem] leading-none tracking-tight text-fg no-underline">
             AP
           </Link>
 
           <nav className="md:block hidden">
-            <ul className="flex items-center gap-x-8">
+            <ul className="flex items-center gap-x-7">
               {navLinks.map((link) => (
-                <li
-                  key={link.title}
-                  className="relative py-1"
-                  onMouseEnter={() => setHoveredLink(link.title)}
-                  onMouseLeave={() => setHoveredLink(null)}
-                >
+                <li key={link.title}>
                   <Link
                     href={link.href}
-                    className="text-sm dark:text-zinc-400 text-zinc-600 dark:hover:text-white hover:text-zinc-900 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 dark:focus-visible:ring-zinc-400 focus-visible:ring-zinc-600 rounded-sm"
+                    className="text-[1.0625rem] text-muted underline decoration-transparent underline-offset-[0.3em] hover:text-fg hover:decoration-line transition-colors duration-150"
                   >
                     {link.title}
                   </Link>
-                  {hoveredLink === link.title && (
-                    <motion.span
-                      layoutId="nav-underline"
-                      className="absolute left-0 right-0 -bottom-0.5 h-px dark:bg-zinc-300 bg-zinc-700"
-                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    />
-                  )}
                 </li>
               ))}
             </ul>
           </nav>
 
-          <div className="flex items-center gap-x-3">
+          <div className="flex items-center gap-x-2">
             <button
               onClick={() =>
                 window.dispatchEvent(new CustomEvent("career-mode:open"))
               }
-              className="hidden md:flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider dark:text-zinc-400 text-zinc-600 border dark:border-zinc-700 border-zinc-300 px-2.5 py-1 dark:hover:border-amber-500/60 hover:border-amber-500/60 dark:hover:text-accent hover:text-amber-600 transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded-sm"
+              className="hidden md:flex items-center gap-1.5 font-mono text-meta text-muted hover:text-fg px-2 py-1.5 transition-colors duration-150 cursor-pointer"
               aria-label="Play Career Mode game"
             >
-              <span className="text-[9px] dark:text-accent text-amber-600">▶</span> Play as a game
+              <span className="text-[0.625rem]">▶</span> Play as a game
             </button>
             <button
               onClick={() =>
@@ -88,7 +72,7 @@ export default function Navbar() {
                   new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true })
                 )
               }
-              className="hidden md:flex items-center gap-1 text-xs font-mono dark:text-zinc-500 text-zinc-400 border dark:border-zinc-700 border-zinc-300 px-2 py-1 dark:hover:border-zinc-500 hover:border-zinc-400 transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 dark:focus-visible:ring-zinc-400 focus-visible:ring-zinc-600 rounded-sm"
+              className="hidden md:flex items-center font-mono text-meta text-muted hover:text-fg border border-line hover:border-muted px-2 py-1 transition-colors duration-150 cursor-pointer"
               aria-label="Open command palette"
             >
               <kbd>⌘K</kbd>

@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react";
 import { Command } from "cmdk";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
 import { showcaseProjects, researchProjects, profile } from "@/lib/data";
 import { socialLinks } from "@/app/data/social";
 
@@ -65,69 +64,52 @@ export function CommandPalette({ autoOpen = false }: { autoOpen?: boolean }) {
 
   return (
     <>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            key="palette-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm"
+      {open && (
+        <>
+          <div
+            className="fixed inset-0 z-[100] bg-fg/40 motion-safe:animate-[palette-fade_150ms_ease-out]"
             onClick={close}
           />
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            key="palette-panel"
-            initial={{ opacity: 0, scale: 0.96, y: -8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: -8 }}
-            transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
-            className="fixed top-[20%] left-1/2 -translate-x-1/2 z-[101] w-full max-w-xl px-4"
-          >
+          <div className="fixed top-[20%] left-1/2 -translate-x-1/2 z-[101] w-full max-w-xl px-4 motion-safe:animate-[palette-fade_150ms_ease-out]">
             <Command
               label="Command Palette"
-              className="border dark:border-zinc-700 border-zinc-300 dark:bg-ink bg-paper shadow-2xl overflow-hidden"
+              className="border border-fg bg-page overflow-hidden"
               onKeyDown={(e) => {
                 if (e.key === "Escape") close();
               }}
             >
               {/* Search input */}
-              <div className="flex items-center gap-3 px-4 border-b dark:border-zinc-800 border-zinc-200">
-                <span className="font-mono dark:text-zinc-500 text-zinc-400 text-sm shrink-0">/</span>
+              <div className="flex items-center gap-3 px-4 border-b border-line">
+                <span className="font-mono text-muted text-meta shrink-0">/</span>
                 <Command.Input
                   value={search}
                   onValueChange={handleSearch}
                   placeholder="Search or type a command..."
                   autoFocus
-                  className="flex-1 bg-transparent py-4 text-sm dark:text-white text-zinc-900 placeholder:dark:text-zinc-500 placeholder:text-zinc-400 outline-none"
+                  className="flex-1 bg-transparent py-4 text-body text-fg placeholder:text-muted outline-none"
                 />
-                <kbd className="hidden sm:inline-flex text-[10px] font-mono dark:text-zinc-500 text-zinc-400 border dark:border-zinc-700 border-zinc-300 px-1.5 py-0.5">
+                <kbd className="hidden sm:inline-flex text-meta font-mono text-muted border border-line px-1.5 py-0.5">
                   ESC
                 </kbd>
               </div>
 
               {/* Easter egg response */}
               {easterEgg && (
-                <div className="px-4 py-3 text-sm dark:text-zinc-100 text-zinc-900 font-mono border-b dark:border-zinc-800 border-zinc-200">
+                <div className="px-4 py-3 text-meta text-fg font-mono border-b border-line">
                   $ {easterEgg}
                 </div>
               )}
 
               {/* Results list */}
               <Command.List className="max-h-80 overflow-y-auto py-2 [&::-webkit-scrollbar]:hidden">
-                <Command.Empty className="py-8 text-center text-sm dark:text-zinc-500 text-zinc-400">
+                <Command.Empty className="py-8 text-center text-small text-muted">
                   No results for &ldquo;{search}&rdquo;
                 </Command.Empty>
 
                 {/* Navigate */}
                 <Command.Group
                   heading="Navigate"
-                  className="[&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:dark:text-zinc-500 [&_[cmdk-group-heading]]:text-zinc-400"
+                  className="[&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-meta [&_[cmdk-group-heading]]:text-muted"
                 >
                   {[
                     { label: "Go to Products", href: "/#featured-work" },
@@ -141,9 +123,9 @@ export function CommandPalette({ autoOpen = false }: { autoOpen?: boolean }) {
                       key={item.label}
                       value={item.label}
                       onSelect={() => navigate(item.href)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 mx-1"
+                      className="flex items-center gap-3 px-4 py-2 text-body cursor-pointer text-fg aria-selected:bg-wash mx-1"
                     >
-                      <span className="font-mono dark:text-zinc-500 text-zinc-400 shrink-0">&rarr;</span>
+                      <span className="font-mono text-meta text-muted shrink-0">&rarr;</span>
                       {item.label}
                     </Command.Item>
                   ))}
@@ -152,16 +134,16 @@ export function CommandPalette({ autoOpen = false }: { autoOpen?: boolean }) {
                 {/* Projects */}
                 <Command.Group
                   heading="Projects"
-                  className="[&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:dark:text-zinc-500 [&_[cmdk-group-heading]]:text-zinc-400"
+                  className="[&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-meta [&_[cmdk-group-heading]]:text-muted"
                 >
                   {showcaseProjects.map((p) => (
                     <Command.Item
                       key={p._id}
                       value={`${p.name} ${p.tagline}`}
                       onSelect={() => navigate(`/projects/${p.slug}`)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 mx-1"
+                      className="flex items-center gap-3 px-4 py-2 text-body cursor-pointer text-fg aria-selected:bg-wash mx-1"
                     >
-                      <span className="font-mono text-xs dark:text-zinc-500 text-zinc-400 shrink-0">
+                      <span className="font-mono text-meta text-muted shrink-0">
                         {"{}"}
                       </span>
                       {p.name}
@@ -172,16 +154,16 @@ export function CommandPalette({ autoOpen = false }: { autoOpen?: boolean }) {
                 {/* Research */}
                 <Command.Group
                   heading="Research"
-                  className="[&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:dark:text-zinc-500 [&_[cmdk-group-heading]]:text-zinc-400"
+                  className="[&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-meta [&_[cmdk-group-heading]]:text-muted"
                 >
                   {researchProjects.map((r) => (
                     <Command.Item
                       key={r._id}
                       value={`${r.title} ${r.tags.join(" ")}`}
                       onSelect={() => navigate(`/research/${r._id}`)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 mx-1"
+                      className="flex items-center gap-3 px-4 py-2 text-body cursor-pointer text-fg aria-selected:bg-wash mx-1"
                     >
-                      <span className="font-mono text-xs dark:text-zinc-500 text-zinc-400 shrink-0">
+                      <span className="font-mono text-meta text-muted shrink-0">
                         ¶
                       </span>
                       <span className="truncate">{r.title.split(" ").slice(0, 6).join(" ")}…</span>
@@ -192,7 +174,7 @@ export function CommandPalette({ autoOpen = false }: { autoOpen?: boolean }) {
                 {/* Links */}
                 <Command.Group
                   heading="Links"
-                  className="[&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:dark:text-zinc-500 [&_[cmdk-group-heading]]:text-zinc-400"
+                  className="[&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-meta [&_[cmdk-group-heading]]:text-muted"
                 >
                   {socialLinks
                     .filter((l) => l.name !== "Email")
@@ -205,9 +187,9 @@ export function CommandPalette({ autoOpen = false }: { autoOpen?: boolean }) {
                         window.open(item.href, "_blank", "noopener,noreferrer");
                         close();
                       }}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 mx-1"
+                      className="flex items-center gap-3 px-4 py-2 text-body cursor-pointer text-fg aria-selected:bg-wash mx-1"
                     >
-                      <span className="font-mono dark:text-zinc-500 text-zinc-400 shrink-0">&rarr;</span>
+                      <span className="font-mono text-meta text-muted shrink-0">&rarr;</span>
                       {item.label}
                     </Command.Item>
                   ))}
@@ -216,7 +198,7 @@ export function CommandPalette({ autoOpen = false }: { autoOpen?: boolean }) {
                 {/* Actions */}
                 <Command.Group
                   heading="Actions"
-                  className="[&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:dark:text-zinc-500 [&_[cmdk-group-heading]]:text-zinc-400"
+                  className="[&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-meta [&_[cmdk-group-heading]]:text-muted"
                 >
                   <Command.Item
                     value="Toggle Theme dark light mode"
@@ -224,9 +206,9 @@ export function CommandPalette({ autoOpen = false }: { autoOpen?: boolean }) {
                       setTheme(currentTheme === "dark" ? "light" : "dark");
                       close();
                     }}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 mx-1"
+                    className="flex items-center gap-3 px-4 py-2 text-body cursor-pointer text-fg aria-selected:bg-wash mx-1"
                   >
-                    <span className="font-mono text-xs dark:text-zinc-500 text-zinc-400 shrink-0">
+                    <span className="font-mono text-meta text-muted shrink-0">
                       {currentTheme === "dark" ? "Light" : "Dark"}
                     </span>
                     Toggle Theme
@@ -234,9 +216,9 @@ export function CommandPalette({ autoOpen = false }: { autoOpen?: boolean }) {
                   <Command.Item
                     value="Download Resume CV"
                     onSelect={downloadResume}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 mx-1"
+                    className="flex items-center gap-3 px-4 py-2 text-body cursor-pointer text-fg aria-selected:bg-wash mx-1"
                   >
-                    <span className="font-mono dark:text-zinc-500 text-zinc-400 shrink-0">&darr;</span>
+                    <span className="font-mono text-meta text-muted shrink-0">&darr;</span>
                     Download Résumé
                   </Command.Item>
                   <Command.Item
@@ -245,33 +227,34 @@ export function CommandPalette({ autoOpen = false }: { autoOpen?: boolean }) {
                       close();
                       window.dispatchEvent(new CustomEvent("career-mode:open"));
                     }}
-                    className="flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer aria-selected:dark:bg-zinc-800 aria-selected:bg-zinc-50 dark:text-zinc-300 text-zinc-700 mx-1"
+                    className="flex items-center gap-3 px-4 py-2 text-body cursor-pointer text-fg aria-selected:bg-wash mx-1"
                   >
-                    <span className="font-mono dark:text-zinc-500 text-zinc-400 shrink-0 text-[11px]">C</span>
+                    <span className="font-mono text-meta text-muted shrink-0">C</span>
                     Play Career Mode
                   </Command.Item>
                 </Command.Group>
               </Command.List>
 
               {/* Footer hint */}
-              <div className="px-4 py-2.5 border-t dark:border-zinc-800 border-zinc-200 flex items-center gap-4 text-xs dark:text-zinc-500 text-zinc-400 font-mono">
+              <div className="px-4 py-2.5 border-t border-line flex items-center gap-4 text-meta text-muted font-mono">
                 <span>
-                  <kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5">↑↓</kbd>
+                  <kbd className="border border-line px-1 py-0.5">↑↓</kbd>
                   {" "}navigate
                 </span>
                 <span>
-                  <kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5">↵</kbd>
+                  <kbd className="border border-line px-1 py-0.5">↵</kbd>
                   {" "}select
                 </span>
                 <span>
-                  <kbd className="border dark:border-zinc-700 border-zinc-300 px-1 py-0.5">esc</kbd>
+                  <kbd className="border border-line px-1 py-0.5">esc</kbd>
                   {" "}close
                 </span>
               </div>
             </Command>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+          <style>{`@keyframes palette-fade { from { opacity: 0; } to { opacity: 1; } }`}</style>
+        </>
+      )}
     </>
   );
 }

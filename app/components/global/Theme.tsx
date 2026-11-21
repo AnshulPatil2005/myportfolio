@@ -12,15 +12,14 @@ export default function Theme() {
   }
   useEffect(() => setHasMounted(true), []);
 
+  // reserve the button's footprint so the header does not shift on hydration
   if (!hasMounted)
-    return (
-      <span className="min-w-[52px] min-h-[28px] px-2.5 py-1 dark:bg-zinc-800 bg-zinc-100 border dark:border-zinc-700 border-zinc-300" />
-    );
+    return <span className="inline-block min-w-[3.75rem] h-[1.875rem] border border-line" />;
 
   return (
     <button
       onClick={toggleTheme}
-      className="font-mono text-xs uppercase tracking-wide dark:text-zinc-300 text-zinc-600 border dark:border-zinc-700 border-zinc-300 px-2.5 py-1 dark:hover:border-zinc-500 hover:border-zinc-400 transition-colors duration-150"
+      className="min-w-[3.75rem] font-mono text-meta text-muted hover:text-fg border border-line hover:border-muted px-2 py-1 transition-colors duration-150"
       aria-label="Toggle Theme"
     >
       {currentTheme === "light" ? "Dark" : "Light"}
