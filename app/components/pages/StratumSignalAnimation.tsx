@@ -1,7 +1,3 @@
-"use client";
-
-import { motion } from "framer-motion";
-
 const modules = [
   { name: "auth",   risk: 0.92 },
   { name: "api",    risk: 0.64 },
@@ -20,149 +16,94 @@ const timeline = [
   { label: "root cause", detail: "auth.py:L214",  hot: true  },
 ];
 
-// a real heat ramp reads as risk far better than one colour at four opacities
-function riskColor(risk: number) {
-  if (risk > 0.8) return "bg-red-500/70";
-  if (risk > 0.6) return "bg-orange-500/55";
-  if (risk > 0.4) return "bg-amber-500/35";
-  return "bg-zinc-500/20";
+// Risk reads as ink density: the riskier the module, the darker its bar.
+function riskFill(risk: number) {
+  if (risk > 0.8) return "bg-fg/80";
+  if (risk > 0.6) return "bg-fg/60";
+  if (risk > 0.4) return "bg-fg/40";
+  return "bg-fg/20";
+}
+
+function Figure({ kicker, title, aside, children }: { kicker: string; title: string; aside: string; children: React.ReactNode }) {
+  return (
+    <figure className="border border-line p-5 text-left">
+      <div className="flex items-baseline justify-between gap-3 mb-5">
+        <div>
+          <p className="font-mono text-meta text-muted">{kicker}</p>
+          <h4 className="mt-1 text-lead leading-tight text-fg">{title}</h4>
+        </div>
+        <span className="font-mono text-meta text-muted">{aside}</span>
+      </div>
+      {children}
+    </figure>
+  );
 }
 
 function DriftHeatmap() {
   return (
-    <div className="border dark:border-zinc-800 border-zinc-300 p-4 text-left">
-      <div className="flex items-start justify-between gap-3 mb-5">
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] dark:text-zinc-500 text-zinc-400">
-            architecture drift
-          </p>
-          <h4 className="mt-1 text-sm font-semibold dark:text-zinc-200 text-zinc-800">
-            Risk by module
-          </h4>
-        </div>
-        <motion.span
-          className="font-mono text-[10px] uppercase tracking-[0.16em] text-accent"
-          animate={{ opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        >
-          live
-        </motion.span>
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        {modules.map((item, i) => (
-          <div
-            key={item.name}
-            className="relative min-h-[68px] border dark:border-zinc-800 border-zinc-300 dark:bg-zinc-950/30 bg-white/60 p-2 overflow-hidden"
-          >
-            {/* Animated risk bar — only height moves, card itself is static */}
-            <motion.div
+    <Figure kicker="architecture drift" title="Risk by module" aside="live">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-line border border-line">
+        {modules.map((item) => (
+          <div key={item.name} className="relative min-h-[76px] bg-page p-2.5 overflow-hidden">
+            <div
               aria-hidden="true"
-              className={`absolute bottom-0 left-0 right-0 ${riskColor(item.risk)}`}
-              animate={{
-                height: [
-                  `${item.risk * 55}%`,
-                  `${item.risk * 75}%`,
-                  `${item.risk * 55}%`,
-                ],
-              }}
-              transition={{
-                duration: 5,
-                delay: i * 0.3,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
+              className={`absolute bottom-0 left-0 right-0 ${riskFill(item.risk)}`}
+              style={{ height: `${Math.round(item.risk * 62)}%` }}
             />
-            <div className="relative z-10">
-              <p className="font-mono text-[10px] uppercase tracking-[0.12em] dark:text-zinc-300 text-zinc-700">
-                {item.name}
+            <div className="relative z-10 font-mono text-meta">
+              {/* labels sit on a paper chip so they stay legible over dark bars */}
+              <p>
+                <span className="bg-page text-fg px-0.5">{item.name}</span>
               </p>
-              <p className="mt-1 font-mono text-[10px] dark:text-zinc-600 text-zinc-500">
-                {Math.round(item.risk * 100)}
+              <p className="mt-0.5">
+                <span className="bg-page text-muted px-0.5">{Math.round(item.risk * 100)}</span>
               </p>
             </div>
           </div>
         ))}
       </div>
 
-      <p className="mt-4 font-mono text-[10px] dark:text-zinc-600 text-zinc-500 text-right">
+      <p className="mt-4 font-mono text-meta text-muted text-right">
         hotspots before refactor debt compounds
       </p>
-    </div>
+    </Figure>
   );
 }
 
 function IncidentTimeline() {
   return (
-    <div className="border dark:border-zinc-800 border-zinc-300 p-4 text-left">
-      <div className="flex items-start justify-between gap-3 mb-6">
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] dark:text-zinc-500 text-zinc-400">
-            incident correlation
-          </p>
-          <h4 className="mt-1 text-sm font-semibold dark:text-zinc-200 text-zinc-800">
-            Errors traced to commits
-          </h4>
-        </div>
-        <span className="font-mono text-[10px] dark:text-zinc-600 text-zinc-400">
-          score 86
-        </span>
-      </div>
-
-      {/* Timeline */}
-      <div className="relative">
-        {/* Track */}
-        <div className="absolute left-[18px] right-[18px] top-[22px] h-px dark:bg-zinc-800 bg-zinc-300" />
-        {/* Traveling dot */}
-        <motion.div
-          className="absolute top-[19px] h-1.5 w-1.5 rounded-full bg-accent"
-          animate={{ left: ["4%", "94%"] }}
-          transition={{ duration: 3.5, repeat: Infinity, repeatType: "reverse", ease: "easeInOut" }}
-        />
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {timeline.map((event) => (
-            <div key={event.label} className="relative pt-11">
-              <div
-                className={`absolute top-[15px] left-1/2 -translate-x-1/2 h-3.5 w-3.5 rounded-full border ${
-                  event.hot
-                    ? "bg-red-500/70 dark:border-red-500/50 border-red-400/50"
-                    : "dark:bg-zinc-950 bg-white dark:border-zinc-700 border-zinc-300"
-                }`}
-              />
-              <div className="border dark:border-zinc-800 border-zinc-300 dark:bg-zinc-950/30 bg-white/60 p-2.5">
-                <p className="font-mono text-[10px] uppercase tracking-[0.12em] dark:text-zinc-300 text-zinc-700">
-                  {event.label}
-                </p>
-                <p className="mt-1.5 text-[11px] dark:text-zinc-500 text-zinc-500 leading-snug">
-                  {event.detail}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+    <Figure kicker="incident correlation" title="Errors traced to commits" aside="score 86">
+      <ol className="relative grid grid-cols-2 sm:grid-cols-4 gap-x-3 gap-y-5">
+        {/* track */}
+        <span aria-hidden="true" className="hidden sm:block absolute left-0 right-0 top-[7px] h-px bg-line" />
+        {timeline.map((event) => (
+          <li key={event.label} className="relative pt-6">
+            <span
+              aria-hidden="true"
+              className={`absolute top-0 left-0 h-[15px] w-[15px] rounded-full border ${
+                event.hot ? "bg-fg border-fg" : "bg-page border-muted"
+              }`}
+            />
+            <p className="font-mono text-meta text-fg">{event.label}</p>
+            <p className="mt-0.5 text-small text-muted">{event.detail}</p>
+          </li>
+        ))}
+      </ol>
 
       {/* Root cause callout */}
-      <motion.div
-        className="mt-5 border-l-2 dark:border-zinc-700 border-zinc-300 pl-3"
-        animate={{ opacity: [0.6, 1, 0.6] }}
-        transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-accent">
-          candidate root cause
-        </p>
-        <p className="mt-1 text-[11px] dark:text-zinc-400 text-zinc-600 leading-relaxed">
+      <div className="mt-6 border-l-2 border-fg pl-3">
+        <p className="font-mono text-meta text-fg">candidate root cause</p>
+        <p className="mt-0.5 text-small text-muted">
           Stack trace + PR risk + module drift all point to the auth refactor.
         </p>
-      </motion.div>
-    </div>
+      </div>
+    </Figure>
   );
 }
 
 export default function StratumSignalAnimation() {
   return (
-    <div className="mt-10 mb-10 grid lg:grid-cols-2 gap-4 text-left">
+    <div className="mb-10 grid gap-5 text-left">
       <DriftHeatmap />
       <IncidentTimeline />
     </div>

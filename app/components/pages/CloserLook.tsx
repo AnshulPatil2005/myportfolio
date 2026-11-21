@@ -3,9 +3,9 @@
 import { useRef } from "react";
 import Link from "next/link";
 import { showcaseProjects } from "@/lib/data";
-import { Slide } from "../../animation/Slide";
 import ProjectGraphic, { GraphicVariant } from "./ProjectGraphic";
 import ScrambleIndex from "../global/ScrambleIndex";
+import SectionHead from "../shared/SectionHead";
 
 const GRAPHICS: Record<string, GraphicVariant> = {
   "sect-scrape": "manuscript",
@@ -38,44 +38,40 @@ export default function CloserLook() {
     }
   };
 
+  const controls = (
+    <div className="hidden sm:flex items-center gap-2 shrink-0 pt-2">
+      <button
+        type="button"
+        aria-label="Scroll to previous project"
+        onClick={() => scrollByPanel(-1)}
+        className="w-11 h-11 grid place-items-center border border-line text-muted hover:border-fg hover:text-fg transition-colors duration-150"
+      >
+        &larr;
+      </button>
+      <button
+        type="button"
+        aria-label="Scroll to next project"
+        onClick={() => scrollByPanel(1)}
+        className="w-11 h-11 grid place-items-center border border-line text-muted hover:border-fg hover:text-fg transition-colors duration-150"
+      >
+        &rarr;
+      </button>
+    </div>
+  );
+
   return (
-    <section id="projects" className="scroll-mt-20 mt-32 md:mt-40">
-      <Slide delay={0.1}>
-        <div className="flex items-end justify-between gap-4 mb-6 md:px-16 px-6">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-[0.22em] dark:text-zinc-500 text-zinc-500 mb-3">
-              #<ScrambleIndex target="02" />
-            </p>
-            <h2 className="font-display font-normal text-5xl sm:text-7xl tracking-[-0.02em] leading-none">Take a closer look</h2>
-          </div>
-          <div className="hidden sm:flex items-center gap-2">
-            <button
-              type="button"
-              aria-label="Scroll to previous project"
-              onClick={() => scrollByPanel(-1)}
-              className="w-11 h-11 grid place-items-center border dark:border-zinc-700 border-zinc-300 dark:text-zinc-400 text-zinc-500 dark:hover:border-zinc-500 hover:border-zinc-500 dark:hover:text-white hover:text-zinc-900 transition-colors duration-150"
-            >
-              &larr;
-            </button>
-            <button
-              type="button"
-              aria-label="Scroll to next project"
-              onClick={() => scrollByPanel(1)}
-              className="w-11 h-11 grid place-items-center border dark:border-zinc-700 border-zinc-300 dark:text-zinc-400 text-zinc-500 dark:hover:border-zinc-500 hover:border-zinc-500 dark:hover:text-white hover:text-zinc-900 transition-colors duration-150"
-            >
-              &rarr;
-            </button>
-          </div>
-        </div>
-        <p className="dark:text-zinc-400 text-zinc-600 max-w-xl mb-10 md:px-16 px-6">
-          A broader set of repositories spanning scraping, systems, dashboards, and research experimentation.
-        </p>
-      </Slide>
+    <section id="projects" className="scroll-mt-20 mt-28 md:mt-40">
+      <SectionHead
+        index={<>#<ScrambleIndex target="02" /></>}
+        title="Take a closer look"
+        aside={controls}
+        lead="A broader set of repositories spanning scraping, systems, dashboards, and research experimentation."
+      />
 
       <div
         ref={trackRef}
         onKeyDown={onKeyDown}
-        className="flex gap-6 overflow-x-auto snap-x snap-mandatory pb-6 px-6 md:px-16 [&::-webkit-scrollbar]:hidden"
+        className="flex overflow-x-auto snap-x snap-mandatory pb-4 -mr-6 md:-mr-12 lg:-mr-16 xl:mr-[calc((80rem-100vw)/2-4rem)] [&::-webkit-scrollbar]:hidden"
         style={{ scrollbarWidth: "none" }}
       >
         {items.map((project) => (
@@ -83,25 +79,25 @@ export default function CloserLook() {
             key={project._id}
             data-panel
             tabIndex={0}
-            className="snap-start shrink-0 w-[85vw] sm:w-[480px] border dark:border-zinc-800 border-zinc-300 p-8 flex flex-col focus:outline-none focus-visible:ring-2 dark:focus-visible:ring-zinc-500 focus-visible:ring-zinc-400"
+            className="snap-start shrink-0 w-[82vw] sm:w-[25rem] flex flex-col pr-6 mr-6 border-r border-line last:border-r-0"
           >
-            <div className="aspect-[4/3] w-full mb-8">
+            <div className="aspect-[4/3] w-full mb-6 border border-line text-muted">
               <ProjectGraphic
                 variant={GRAPHICS[project._id] ?? "network"}
                 className="w-full h-full"
               />
             </div>
-            <h3 className="text-2xl font-bold tracking-tight mb-2">{project.name}</h3>
-            <p className="text-sm dark:text-zinc-400 text-zinc-600 leading-relaxed mb-6">
+            <h3 className="text-h3 mb-2">{project.name}</h3>
+            <p className="text-body text-muted mb-6">
               {project.description.split(". ")[0] + "."}
             </p>
-            <div className="mt-auto flex items-center gap-5 font-mono text-xs">
+            <div className="mt-auto flex items-baseline gap-5 font-mono text-meta">
               {project.projectUrl && (
                 <a
                   href={project.projectUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="dark:text-white text-zinc-900 hover:underline"
+                  className="link"
                 >
                   Live &rarr;
                 </a>
@@ -111,15 +107,12 @@ export default function CloserLook() {
                   href={project.repository}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="dark:text-zinc-400 text-zinc-500 dark:hover:text-white hover:text-zinc-900 transition-colors duration-150"
+                  className="link-muted"
                 >
                   GitHub
                 </a>
               )}
-              <Link
-                href={`/projects/${project.slug}`}
-                className="ml-auto dark:text-zinc-400 text-zinc-500 dark:hover:text-white hover:text-zinc-900 transition-colors duration-150"
-              >
+              <Link href={`/projects/${project.slug}`} className="ml-auto link">
                 Details &rarr;
               </Link>
             </div>

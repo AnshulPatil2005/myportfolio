@@ -1,8 +1,8 @@
 import { products } from "@/lib/data";
-import ProjectGraphic from "./ProjectGraphic";
 import ScrambleIndex from "../global/ScrambleIndex";
 import StratumSignalAnimation from "./StratumSignalAnimation";
 import EngravingImage from "../shared/EngravingImage";
+import SectionHead from "../shared/SectionHead";
 
 const stratum = products.find((p) => p._id === "stratum");
 
@@ -13,29 +13,23 @@ export default function FeaturedWork() {
     stratum.details?.find((d) => d.label === "Stack")?.value.split(",").map((s) => s.trim()) ?? [];
 
   return (
-    <section id="featured-work" className="scroll-mt-20 mt-32 md:mt-40">
-      <div className="mb-10">
-        <p className="font-mono text-xs uppercase tracking-[0.22em] dark:text-zinc-500 text-zinc-500 mb-3">
-          #<ScrambleIndex target="01" />
-        </p>
-        <h2 className="font-display font-normal text-5xl sm:text-7xl tracking-[-0.02em] leading-none mb-5">
-          Flagship Product
-        </h2>
-        <p className="text-sm dark:text-zinc-500 text-zinc-500 max-w-xl">
-          One product built end-to-end, from a blank repo to a deployed multi-tenant SaaS.
-        </p>
-      </div>
+    <section id="featured-work" className="scroll-mt-20 mt-28 md:mt-40">
+      <SectionHead
+        index={<>#<ScrambleIndex target="01" /></>}
+        title="Flagship Product"
+        lead="One product built end-to-end, from a blank repo to a deployed multi-tenant SaaS."
+      />
 
-      <div className="grid lg:grid-cols-[1fr_360px] xl:grid-cols-[1fr_420px] gap-12 lg:gap-16 items-start">
-        {/* Left — product info */}
-        <div>
-          <p className="text-xs uppercase tracking-widest font-mono dark:text-zinc-500 text-zinc-400 mb-3">
+      <div className="folio lg:items-start">
+        {/* Product */}
+        <div className="lg:col-start-4 lg:col-span-6">
+          <p className="font-mono text-meta text-muted mb-3">
             Flagship MVP · Live on Vercel
           </p>
-          <h3 className="font-sans font-bold text-3xl sm:text-4xl tracking-tight mb-5">
+          <h3 className="text-[2.5rem] leading-none tracking-[-0.015em] mb-6">
             {stratum.name}
           </h3>
-          <p className="dark:text-zinc-400 text-zinc-600 leading-relaxed text-sm mb-10 max-w-xl">
+          <p className="text-body text-fg mb-10">
             Stratum connects your GitHub repo to your production stack. Every pull request gets an
             AI review for security, performance, and logic risk, plus a warning if it conflicts with
             another PR in the same deploy. It tracks how your architecture drifts over time. And
@@ -43,56 +37,51 @@ export default function FeaturedWork() {
             it.
           </p>
 
-          {/* Stage pills */}
-          <div className="flex flex-wrap gap-3 mb-10">
+          {/* Stages, set as a ruled definition list */}
+          <dl className="grid grid-cols-2 sm:grid-cols-4 border-t border-line mb-12">
             {[
               { label: "Review", desc: "Risk-score every PR" },
               { label: "Deploy", desc: "Catch conflicting PRs" },
               { label: "Drift", desc: "Track architecture health" },
               { label: "Incident", desc: "Trace prod errors to PRs" },
             ].map((stage) => (
-              <div
-                key={stage.label}
-                className="border dark:border-zinc-700 border-zinc-300 px-4 py-2.5"
-              >
-                <p className="font-mono text-xs uppercase tracking-widest dark:text-zinc-400 text-zinc-600">
-                  {stage.label}
-                </p>
-                <p className="text-xs dark:text-zinc-500 text-zinc-500 mt-0.5">{stage.desc}</p>
+              <div key={stage.label} className="pt-3 pb-4 pr-4 border-b border-line">
+                <dt className="font-mono text-meta text-fg">{stage.label}</dt>
+                <dd className="text-small text-muted mt-0.5">{stage.desc}</dd>
               </div>
             ))}
-          </div>
+          </dl>
 
           <StratumSignalAnimation />
 
           {/* Stack */}
-          <div className="flex flex-wrap gap-x-3 gap-y-1.5 mb-8 font-mono text-xs dark:text-zinc-500 text-zinc-500">
+          <p className="flex flex-wrap gap-x-3 gap-y-1 mb-8 font-mono text-meta text-muted">
             {stack.map((tech, i) => (
               <span key={tech}>
                 {tech}
-                {i < stack.length - 1 && (
-                  <span className="ml-3 dark:text-zinc-700 text-zinc-300">/</span>
-                )}
+                {i < stack.length - 1 && <span className="ml-3" aria-hidden="true">/</span>}
               </span>
             ))}
-          </div>
+          </p>
 
           {/* CTA */}
           <a
             href={stratum.projectUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 font-semibold dark:text-white text-zinc-900 border-b-2 dark:border-accent border-accent pb-0.5 hover:opacity-70 transition-opacity duration-150"
+            className="group link text-lead"
           >
-            Check it out &rarr;
+            Check it out{" "}
+            <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">&rarr;</span>
           </a>
         </div>
 
-        {/* Right — engraving */}
-        <div className="hidden lg:block">
+        {/* Plate: stays beside the text while it is read */}
+        <div className="hidden lg:block lg:col-start-10 lg:col-span-3 lg:sticky lg:top-24">
           <EngravingImage
             src="/engraving-ruins.jpg"
             alt=""
+            sizes="270px"
             className="w-full aspect-[2/3]"
           />
         </div>
