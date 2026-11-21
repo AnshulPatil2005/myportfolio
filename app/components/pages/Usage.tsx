@@ -1,4 +1,4 @@
-import { Slide } from "../../animation/Slide";
+import SectionHead from "../shared/SectionHead";
 
 const skillGroups = [
   {
@@ -52,25 +52,28 @@ const skillGroups = [
   },
 ];
 
-export default function Usage() {
+// `nested` when it sits inside the homepage's About section, so its title
+// ranks below that section's heading.
+export default function Usage({ nested = false }: { nested?: boolean }) {
   return (
-    <section className="max-w-5xl mt-8">
-      <Slide delay={0.14}>
-        <div className="mb-10">
-          <h2 className="text-4xl mb-4 font-bold tracking-tight">Stack &amp; Tools</h2>
-          <p className="dark:text-zinc-400 text-zinc-600 max-w-xl">
-            Technologies and tools I use across product development, deployment, and maintenance.
-          </p>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-x-8 gap-y-8">
+    <section className="mt-4">
+      <SectionHead
+        as={nested ? "h3" : "h2"}
+        size={nested ? "sub" : "section"}
+        title={<>Stack &amp; Tools</>}
+        lead="Technologies and tools I use across product development, deployment, and maintenance."
+        rule={!nested}
+      />
+      <div className="folio">
+        <div className="lg:col-start-4 lg:col-span-9 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-x-8 gap-y-10">
           {skillGroups.map(({ category, items }) => (
             <div key={category}>
-              <p className="text-xs font-mono uppercase tracking-widest dark:text-zinc-500 text-zinc-400 mb-3">
+              <p className="font-mono text-meta text-muted pb-2 mb-3 border-b border-line">
                 {category}
               </p>
-              <ul className="space-y-1.5">
+              <ul className="space-y-1">
                 {items.map((item) => (
-                  <li key={item} className="text-sm dark:text-zinc-300 text-zinc-700">
+                  <li key={item} className="text-body leading-snug text-fg">
                     {item}
                   </li>
                 ))}
@@ -78,7 +81,7 @@ export default function Usage() {
             </div>
           ))}
         </div>
-      </Slide>
+      </div>
     </section>
   );
 }
