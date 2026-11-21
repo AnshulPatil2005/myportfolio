@@ -17,8 +17,8 @@ const EASTER_EGGS: EasterEgg[] = [
   { query: "hello world", response: "Hello, visitor! Nice to meet you 👋" },
 ];
 
-export function CommandPalette() {
-  const [open, setOpen] = useState(false);
+export function CommandPalette({ autoOpen = false }: { autoOpen?: boolean }) {
+  const [open, setOpen] = useState(autoOpen);
   const [easterEgg, setEasterEgg] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const { theme, setTheme, systemTheme } = useTheme();

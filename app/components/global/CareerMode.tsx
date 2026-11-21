@@ -28,7 +28,7 @@ const fade = {
   transition: { duration: 0.25 },
 };
 
-export default function CareerMode() {
+export default function CareerMode({ autoOpen = false }: { autoOpen?: boolean }) {
   const [open, setOpen] = useState(false);
   const [phase, setPhase] = useState<Phase>("map");
   const [saved, setSaved] = useState(0);
@@ -72,10 +72,13 @@ export default function CareerMode() {
     };
     window.addEventListener("keydown", onKey);
     window.addEventListener("career-mode:open", openGame);
+    // mounted on demand by the request that should open it
+    if (autoOpen) openGame();
     return () => {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("career-mode:open", openGame);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const enterWorld = useCallback((startCleared: number) => {

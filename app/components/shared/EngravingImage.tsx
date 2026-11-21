@@ -6,28 +6,37 @@ interface Props {
   className?: string;
   priority?: boolean;
   animate?: boolean;
+  /** CSS object-position for the crop */
+  position?: string;
+  sizes?: string;
 }
 
+// An engraving printed as a plate: the image in the page's ink, inset inside
+// a hairline plate mark on a slightly darker paper.
 export default function EngravingImage({
   src,
   alt,
   className = "",
   priority,
+  position = "center",
+  sizes = "(max-width: 1024px) 100vw, 460px",
 }: Props) {
   return (
     <div
-      className={`relative overflow-hidden select-none ${className}`}
+      className={`select-none border border-line bg-wash p-2 sm:p-3 ${className}`}
       aria-hidden="true"
     >
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        priority={priority}
-        sizes="(max-width: 1024px) 100vw, 520px"
-        className="object-cover object-center"
-        style={{ filter: "url(#amber-duotone)" }}
-      />
+      <div className="relative w-full h-full overflow-hidden">
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          priority={priority}
+          sizes={sizes}
+          className="object-cover plate-img"
+          style={{ objectPosition: position }}
+        />
+      </div>
     </div>
   );
 }

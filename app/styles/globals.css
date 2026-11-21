@@ -2,32 +2,129 @@
 @tailwind components;
 @tailwind utilities;
 
-html {
-  scroll-behavior: smooth;
-}
-
 @import "prism.css";
 
-/* Warm amber scrollbar */
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: #100d0b; }
-::-webkit-scrollbar-thumb { background: #2a231e; border-radius: 6px; }
-::-webkit-scrollbar-thumb:hover { background: #3a3128; }
-
-/* Instrument Serif for display headings */
-h1, h2 {
-  font-family: var(--font-display), serif;
+/* ── Tokens ─────────────────────────────────────────────────────────────────
+   Paper and ink. One accent, vermilion, used only as rubrication: section
+   numbers and the first letter of each section title. All text pairs pass
+   WCAG AA in both themes (fg ≥ 14.9:1, muted ≥ 6.2:1, rubric ≥ 5.3:1). */
+:root {
+  --page: 244 239 230;   /* #F4EFE6 */
+  --fg: 28 25 21;        /* #1C1915 */
+  --muted: 95 87 75;     /* #5F574B */
+  --line: 216 207 191;   /* #D8CFBF */
+  --rubric: 176 48 26;   /* #B0301A */
+  --wash: 236 229 217;   /* #ECE5D9 */
+  color-scheme: light;
 }
 
-h3, h4 {
-  font-family: var(--font-sans), sans-serif;
+.dark {
+  --page: 20 18 15;      /* #14120F */
+  --fg: 236 229 216;     /* #ECE5D8 */
+  --muted: 166 156 139;  /* #A69C8B */
+  --line: 51 46 39;      /* #332E27 */
+  --rubric: 226 96 63;   /* #E2603F */
+  --wash: 27 24 20;      /* #1B1814 */
+  color-scheme: dark;
 }
 
-/* Warm text selection */
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+  /* anchored sections land below the fixed running head */
+  scroll-padding-top: 5rem;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+}
+
+body {
+  background: rgb(var(--page));
+  color: rgb(var(--fg));
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  font-optical-sizing: auto;
+  font-kerning: normal;
+  font-variant-numeric: oldstyle-nums proportional-nums;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 400;
+  font-variant-numeric: lining-nums;
+}
+
+.font-mono, code, kbd, pre {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+a {
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+}
+
+:focus-visible {
+  outline: 2px solid rgb(var(--fg));
+  outline-offset: 3px;
+}
+
 ::selection {
-  background: #ffb000;
-  color: #100d0b;
+  background: rgb(var(--fg));
+  color: rgb(var(--page));
 }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: rgb(var(--page)); }
+::-webkit-scrollbar-thumb { background: rgb(var(--line)); }
+::-webkit-scrollbar-thumb:hover { background: rgb(var(--muted)); }
+
+/* ── Components ───────────────────────────────────────────────────────────── */
+@layer components {
+  /* the running link style: ink text, a hairline underline that darkens */
+  .link {
+    color: rgb(var(--fg));
+    text-decoration-line: underline;
+    text-decoration-color: rgb(var(--line));
+    transition: text-decoration-color 150ms ease;
+  }
+  .link:hover {
+    text-decoration-color: rgb(var(--fg));
+  }
+
+  /* quiet link for secondary actions */
+  .link-muted {
+    color: rgb(var(--muted));
+    text-decoration-line: underline;
+    text-decoration-color: transparent;
+    transition: color 150ms ease, text-decoration-color 150ms ease;
+  }
+  .link-muted:hover {
+    color: rgb(var(--fg));
+    text-decoration-color: rgb(var(--line));
+  }
+
+  .section-title {
+    font-size: clamp(2.25rem, 1.55rem + 2.8vw, 3.4375rem);
+    line-height: 1.04;
+    letter-spacing: -0.012em;
+  }
+
+  /* rubrication: the first letter of a section title, in vermilion */
+  .rubricate::first-letter {
+    color: rgb(var(--rubric));
+  }
+
+  /* the 12-column page: margin in 1–3, text in 4–9, plates to 12 */
+  .folio {
+    @apply lg:grid lg:grid-cols-12 lg:gap-x-6;
+  }
+}
+
+/* engravings are printed in the page's own ink and paper */
+.plate-img { filter: url(#plate-light); }
+.dark .plate-img { filter: url(#plate-dark); }
 
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -38,20 +135,10 @@ h3, h4 {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+  html { scroll-behavior: auto; }
 }
 
 /* ── Mobile ─────────────────────────────────────────────────────────────── */
-
-/* iOS momentum scrolling without the rubber-band jank, and no sideways drift */
-html {
-  -webkit-text-size-adjust: 100%;
-  overscroll-behavior-y: none;
-}
-
-body {
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
 
 /* respect the notch / home indicator */
 @supports (padding: max(0px)) {
@@ -70,17 +157,11 @@ body {
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* comfortable line length and rhythm on a narrow column */
-  p {
-    line-height: 1.65;
-  }
-
   /* long identifiers (URLs, package names) must wrap, not overflow */
-  h1, h2, h3, h4, p, li, span {
-    overflow-wrap: anywhere;
+  h1, h2, h3, h4, p, li, dd {
+    overflow-wrap: break-word;
   }
 
-  /* the desktop scrollbar styling makes mobile overlays feel heavy */
   ::-webkit-scrollbar {
     width: 0;
     height: 0;

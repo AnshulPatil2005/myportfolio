@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+const token = (name) => `rgb(var(--${name}) / <alpha-value>)`;
+
 module.exports = {
   darkMode: "class",
   content: [
@@ -9,14 +11,32 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        incognito: ["var(--font-sans)", "sans-serif"],
-        sans: ["var(--font-sans)", "sans-serif"],
-        serif: ["var(--font-display)", "serif"],
-        display: ["var(--font-display)", "serif"],
-        mono: ["var(--font-mono)", "monospace"],
+        // the whole site is set in one serif; mono is reserved for data
+        sans: ["var(--font-serif)", "Georgia", "serif"],
+        serif: ["var(--font-serif)", "Georgia", "serif"],
+        display: ["var(--font-serif)", "Georgia", "serif"],
+        incognito: ["var(--font-serif)", "Georgia", "serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+      },
+      fontSize: {
+        // 1.25 scale from an 18px body
+        meta: ["0.8125rem", { lineHeight: "1.5" }],
+        small: ["0.9375rem", { lineHeight: "1.55" }],
+        body: ["1.125rem", { lineHeight: "1.6" }],
+        lead: ["1.40625rem", { lineHeight: "1.45" }],
+        h3: ["1.75rem", { lineHeight: "1.2" }],
+        h2: ["2.75rem", { lineHeight: "1.08" }],
       },
       colors: {
-        // Warm dark amber palette — replaces cold zinc across the entire site
+        // monograph tokens, switched per theme in globals.css
+        page: token("page"),
+        fg: token("fg"),
+        muted: token("muted"),
+        line: token("line"),
+        rubric: token("rubric"),
+        wash: token("wash"),
+
+        // legacy palette, still used by the Career Mode overlay
         zinc: {
           50:  "#faf8f5",
           100: "#f2ece3",
@@ -37,12 +57,8 @@ module.exports = {
         accent:  "#ffb000",
         "accent-2": "#ff5c47",
       },
-      boxShadow: {
-        "line-light": "rgba(17, 17, 26, 0.1) 0px 1px 0px",
-        "line-dark":  "rgb(34, 28, 23) 0px 1px 0px",
-      },
-      gridTemplateColumns: {
-        custom: "1.2fr 1fr",
+      maxWidth: {
+        measure: "36rem",
       },
       gridTemplateRows: {
         fit:  "min-content 0fr",

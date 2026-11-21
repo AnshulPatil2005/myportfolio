@@ -1,13 +1,12 @@
 import "@/app/styles/globals.css";
 import type { Metadata, Viewport } from "next";
-import { sans, mono, display } from "./assets/font/font";
+import { serif, mono } from "./assets/font/font";
 import Navbar from "./components/global/Navbar";
 import Footer from "./components/global/Footer";
 import { Providers } from "./providers";
-import { CommandPalette } from "./components/global/CommandPalette";
 import SectionProgress from "./components/global/SectionProgress";
 import GameHint from "./components/global/GameHint";
-import CareerMode from "./components/global/CareerMode";
+import OnDemand from "./components/global/OnDemand";
 
 const options = {
   title: "Anshul Patil | Backend & Systems Developer",
@@ -40,10 +39,37 @@ export const viewport: Viewport = {
   maximumScale: 5,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#100d0b" },
-    { media: "(prefers-color-scheme: light)", color: "#faf9f7" },
+    { media: "(prefers-color-scheme: dark)", color: "#14120F" },
+    { media: "(prefers-color-scheme: light)", color: "#F4EFE6" },
   ],
 };
+
+// Engravings are printed in the page's own ink on its own paper: luminance
+// maps from ink (black lines) to paper (white ground) in each theme.
+function PlateFilters() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ position: "absolute", width: 0, height: 0 }}>
+      <defs>
+        <filter id="plate-light" colorInterpolationFilters="sRGB">
+          <feColorMatrix type="saturate" values="0" />
+          <feComponentTransfer>
+            <feFuncR type="linear" slope="0.847" intercept="0.110" />
+            <feFuncG type="linear" slope="0.839" intercept="0.098" />
+            <feFuncB type="linear" slope="0.820" intercept="0.082" />
+          </feComponentTransfer>
+        </filter>
+        <filter id="plate-dark" colorInterpolationFilters="sRGB">
+          <feColorMatrix type="saturate" values="0" />
+          <feComponentTransfer>
+            <feFuncR type="linear" slope="0.773" intercept="0.078" />
+            <feFuncG type="linear" slope="0.749" intercept="0.071" />
+            <feFuncB type="linear" slope="0.706" intercept="0.059" />
+          </feComponentTransfer>
+        </filter>
+      </defs>
+    </svg>
+  );
+}
 
 export default function RootLayout({
   children,
@@ -51,34 +77,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className="scroll-smooth">
-      <body
-        className={`${sans.variable} ${mono.variable} ${display.variable} font-sans dark:bg-ink bg-paper dark:text-zinc-200 text-zinc-800 overflow-x-hidden`}
-      >
-        {/* Hidden SVG: duotone filter — warm stone, deliberately low-chroma */}
-        <svg xmlns="http://www.w3.org/2000/svg" style={{ position: "absolute", width: 0, height: 0 }}>
-          <defs>
-            <filter id="amber-duotone" colorInterpolationFilters="sRGB">
-              <feColorMatrix type="saturate" values="0" />
-              <feComponentTransfer>
-                <feFuncR type="linear" slope="0.734" intercept="0.078" />
-                <feFuncG type="linear" slope="0.702" intercept="0.067" />
-                <feFuncB type="linear" slope="0.651" intercept="0.055" />
-              </feComponentTransfer>
-            </filter>
-          </defs>
-        </svg>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${serif.variable} ${mono.variable} bg-page text-fg overflow-x-hidden`}>
+        <PlateFilters />
         {/* keyboard users should not tab through the whole nav to read */}
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[200] focus:px-4 focus:py-2.5 focus:font-mono focus:text-[12px] focus:uppercase focus:tracking-[0.18em] focus:text-ink focus:bg-accent"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[200] focus:px-4 focus:py-2.5 focus:font-mono focus:text-meta focus:text-page focus:bg-fg"
         >
           Skip to content
         </a>
         <Providers>
-          <CareerMode />
+          <OnDemand />
           <Navbar />
-          <CommandPalette />
           <SectionProgress />
           <GameHint />
           {children}

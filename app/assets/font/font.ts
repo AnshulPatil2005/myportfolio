@@ -1,23 +1,19 @@
-import { Hanken_Grotesk, JetBrains_Mono, Instrument_Serif } from "next/font/google";
+import { Newsreader, JetBrains_Mono } from "next/font/google";
 
-export const sans = Hanken_Grotesk({
+// One serif family for every size: Newsreader's optical-size axis gives the
+// headings a display cut and the body a text cut, the way a book face would.
+export const serif = Newsreader({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-sans",
+  style: ["normal", "italic"],
+  axes: ["opsz"],
+  variable: "--font-serif",
   display: "swap",
 });
 
+// Mono only where the content is code or data: dates, hashes, PR numbers.
 export const mono = JetBrains_Mono({
   subsets: ["latin"],
   weight: ["400", "500"],
   variable: "--font-mono",
-  display: "swap",
-});
-
-export const display = Instrument_Serif({
-  subsets: ["latin"],
-  weight: ["400"],
-  style: ["normal", "italic"],
-  variable: "--font-display",
   display: "swap",
 });
