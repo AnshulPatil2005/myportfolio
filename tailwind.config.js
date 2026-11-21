@@ -12,11 +12,11 @@ module.exports = {
     extend: {
       fontFamily: {
         // the whole site is set in one serif; mono is reserved for data
-        sans: ["var(--font-serif)", "Georgia", "serif"],
-        serif: ["var(--font-serif)", "Georgia", "serif"],
-        display: ["var(--font-serif)", "Georgia", "serif"],
-        incognito: ["var(--font-serif)", "Georgia", "serif"],
-        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+        sans: ["var(--font-serif)", '"Newsreader Fallback"', "Georgia", "serif"],
+        serif: ["var(--font-serif)", '"Newsreader Fallback"', "Georgia", "serif"],
+        display: ["var(--font-serif)", '"Newsreader Fallback"', "Georgia", "serif"],
+        incognito: ["var(--font-serif)", '"Newsreader Fallback"', "Georgia", "serif"],
+        mono: ["var(--font-mono)", '"JetBrains Mono Fallback"', "ui-monospace", "monospace"],
       },
       fontSize: {
         // 1.25 scale from an 18px body

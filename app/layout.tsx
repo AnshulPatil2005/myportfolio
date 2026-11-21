@@ -1,6 +1,6 @@
 import "@/app/styles/globals.css";
 import type { Metadata, Viewport } from "next";
-import { serif, mono } from "./assets/font/font";
+import { serif, serifItalic, mono } from "./assets/font/font";
 import Navbar from "./components/global/Navbar";
 import Footer from "./components/global/Footer";
 import { Providers } from "./providers";
@@ -78,7 +78,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${serif.variable} ${mono.variable} bg-page text-fg overflow-x-hidden`}>
+      <body className={`${serif.variable} ${serifItalic.variable} ${mono.variable} bg-page text-fg overflow-x-hidden`}>
         <PlateFilters />
         {/* keyboard users should not tab through the whole nav to read */}
         <a

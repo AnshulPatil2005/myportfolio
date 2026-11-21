@@ -4,6 +4,37 @@
 
 @import "prism.css";
 
+/* Georgia, resized to occupy the same space as Newsreader, so text set while
+   the web font loads does not reflow when it arrives. Values computed from
+   both fonts' advance widths and vertical metrics. */
+@font-face {
+  font-family: "Newsreader Fallback";
+  src: local("Georgia"), local("Georgia-Regular");
+  size-adjust: 95.89%;
+  ascent-override: 76.65%;
+  descent-override: 27.64%;
+  line-gap-override: 0%;
+}
+/* JetBrains Mono falls back to another monospace with the same 0.6em
+   advance, so data lines wrap identically before and after the swap. */
+@font-face {
+  font-family: "JetBrains Mono Fallback";
+  src: local("Courier New"), local("CourierNewPSMT");
+  size-adjust: 100%;
+  ascent-override: 102.02%;
+  descent-override: 30%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Newsreader Italic Fallback";
+  src: local("Georgia Italic"), local("Georgia-Italic");
+  font-style: italic;
+  size-adjust: 88.15%;
+  ascent-override: 83.38%;
+  descent-override: 30.06%;
+  line-gap-override: 0%;
+}
+
 /* ── Tokens ─────────────────────────────────────────────────────────────────
    Paper and ink. One accent, vermilion, used only as rubrication: section
    numbers and the first letter of each section title. All text pairs pass
@@ -40,7 +71,7 @@ html {
 body {
   background: rgb(var(--page));
   color: rgb(var(--fg));
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), "Newsreader Fallback", Georgia, serif;
   font-size: 1.125rem;
   line-height: 1.6;
   font-optical-sizing: auto;
@@ -51,7 +82,7 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-serif), Georgia, serif;
+  font-family: var(--font-serif), "Newsreader Fallback", Georgia, serif;
   font-weight: 400;
   font-variant-numeric: lining-nums;
 }
