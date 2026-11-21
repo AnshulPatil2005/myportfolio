@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Slide } from "@/app/animation/Slide";
+import SectionHead from "../shared/SectionHead";
+import WhenVisible from "../shared/WhenVisible";
 
 const BASE = "https://alfa-leetcode-api.onrender.com";
 const CACHE_TTL = 2 * 60 * 60 * 1000; // 2 hours
@@ -63,12 +64,13 @@ function getMonthLabels(weeks: { date: string; count: number }[][]): (string | n
   });
 }
 
+// ink density, as in the GitHub calendar
 function cellClass(count: number): string {
-  if (count < 0)  return "dark:bg-zinc-900 bg-zinc-50";
-  if (count === 0) return "dark:bg-zinc-800 bg-zinc-200";
-  if (count <= 2)  return "bg-orange-700";
-  if (count <= 5)  return "bg-orange-500";
-  return "bg-orange-300";
+  if (count < 0)  return "bg-transparent";
+  if (count === 0) return "bg-line";
+  if (count <= 2)  return "bg-fg/40";
+  if (count <= 5)  return "bg-fg/70";
+  return "bg-fg";
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -83,7 +85,7 @@ function Heatmap({ submissionCalendar }: { submissionCalendar: string }) {
       <div className="inline-block min-w-max">
         <div className="flex gap-[3px] mb-[3px]">
           {labels.map((label, i) => (
-            <div key={i} className="w-[13px] text-[9px] dark:text-zinc-400 text-zinc-500 overflow-visible whitespace-nowrap">
+            <div key={i} className="w-[13px] font-mono text-meta leading-tight text-muted overflow-visible whitespace-nowrap">
               {label ?? ""}
             </div>
           ))}
@@ -95,7 +97,7 @@ function Heatmap({ submissionCalendar }: { submissionCalendar: string }) {
                 <div
                   key={di}
                   title={day.count >= 0 ? `${day.date}: ${day.count} submission${day.count !== 1 ? "s" : ""}` : ""}
-                  className={`w-[13px] h-[13px] rounded-[2px] ${cellClass(day.count)}`}
+                  className={`w-[13px] h-[13px] ${cellClass(day.count)}`}
                 />
               ))}
             </div>
@@ -114,16 +116,16 @@ function StatPill({
   value: string | number;
 }) {
   return (
-    <div className="text-center px-4 py-2 border dark:border-zinc-800 border-zinc-300 min-w-[72px]">
-      <p className="text-lg font-bold font-incognito leading-tight">{value}</p>
-      <p className="text-xs dark:text-zinc-400 text-zinc-500 mt-0.5">{label}</p>
+    <div className="pt-4 pb-5 pr-6 border-b border-line min-w-[6rem]">
+      <p className="text-h3 lining-nums leading-tight">{value}</p>
+      <p className="font-mono text-meta text-muted mt-1">{label}</p>
     </div>
   );
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-export default function LeetCodeStats() {
+function LeetCodeCard() {
   const [stats, setStats] = useState<LeetCodeData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -193,91 +195,99 @@ export default function LeetCodeStats() {
     };
   }, []);
 
+  return (
+    <div>
+      <div className="border border-line p-5 sm:p-6 max-w-fit max-w-full">
+        {loading ? (
+          <div className="flex gap-[3px] overflow-hidden">
+            {Array.from({ length: 52 }).map((_, wi) => (
+              <div key={wi} className="flex flex-col gap-[3px]">
+                {Array.from({ length: 7 }).map((_, di) => (
+                  <div
+                    key={di}
+                    className="w-[13px] h-[13px] bg-line animate-pulse"
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        ) : stats ? (
+          <Heatmap submissionCalendar={stats.submissionCalendar} />
+        ) : (
+          <p className="text-small text-muted py-10 px-4">
+            Could not load submission data.
+          </p>
+        )}
+
+        <div className="flex flex-wrap items-center justify-between mt-4 gap-x-8 gap-y-2">
+          <p className="font-mono text-meta text-muted">
+            {stats
+              ? `${stats.totalActiveDays} active day${stats.totalActiveDays !== 1 ? "s" : ""} · ${stats.streak} day streak`
+              : loading
+              ? "Loading..."
+              : ""}
+          </p>
+          <div className="flex items-center gap-[3px] shrink-0 whitespace-nowrap">
+            <span className="font-mono text-meta text-muted mr-1.5">Less</span>
+            {[0, 1, 3, 6].map((n) => (
+              <div key={n} className={`w-[13px] h-[13px] ${cellClass(n)}`} />
+            ))}
+            <span className="font-mono text-meta text-muted ml-1.5">More</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-x-2 mt-6 border-t border-line">
+        {stats ? (
+          <>
+            <StatPill label="Solved" value={stats.total} />
+            <StatPill label="Easy"   value={stats.easy} />
+            <StatPill label="Medium" value={stats.medium} />
+            <StatPill label="Hard"   value={stats.hard} />
+            {stats.ranking > 0 && (
+              <StatPill label="Rank" value={`#${stats.ranking.toLocaleString()}`} />
+            )}
+          </>
+        ) : loading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div
+              key={i}
+              className="mt-4 mr-6 w-20 h-[3.25rem] bg-line animate-pulse"
+            />
+          ))
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+export default function LeetCodeStats() {
   const username = process.env.NEXT_PUBLIC_LEETCODE_USERNAME || "Anshulpatil2011";
   const profileUrl = `https://leetcode.com/u/${username}`;
 
   return (
-    <section className="mt-32 md:mt-40">
-      <Slide delay={0.16}>
-        {/* Heading row */}
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="font-incognito text-4xl font-bold tracking-tight">
-            LeetCode
-          </h2>
+    <section className="mt-28 md:mt-40">
+      <SectionHead
+        title="LeetCode"
+        aside={
           <a
             href={profileUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm dark:text-zinc-400 text-zinc-600 hover:underline"
+            className="shrink-0 pt-3 font-mono text-meta link-muted"
           >
             View Profile
           </a>
+        }
+      />
+      <div className="folio">
+        <div className="lg:col-start-4 lg:col-span-9">
+          {/* the stats come from a slow third-party API; ask only when needed */}
+          <WhenVisible minHeight="19rem">
+            <LeetCodeCard />
+          </WhenVisible>
         </div>
-
-        {/* Card + stat pills */}
-        <div className="flex xl:flex-row flex-col gap-4">
-          <div className="border dark:border-zinc-800 border-zinc-300 p-8 max-w-fit max-h-fit">
-            {loading ? (
-              <div className="flex gap-[3px]">
-                {Array.from({ length: 52 }).map((_, wi) => (
-                  <div key={wi} className="flex flex-col gap-[3px]">
-                    {Array.from({ length: 7 }).map((_, di) => (
-                      <div
-                        key={di}
-                        className="w-[13px] h-[13px] rounded-[2px] dark:bg-zinc-800 bg-zinc-200 animate-pulse"
-                      />
-                    ))}
-                  </div>
-                ))}
-              </div>
-            ) : stats ? (
-              <Heatmap submissionCalendar={stats.submissionCalendar} />
-            ) : (
-              <p className="text-sm dark:text-zinc-500 text-zinc-400 py-10 px-4">
-                Could not load submission data.
-              </p>
-            )}
-
-            <div className="flex items-center justify-between mt-3 gap-8">
-              <p className="text-sm dark:text-zinc-400 text-zinc-500">
-                {stats
-                  ? `${stats.totalActiveDays} active day${stats.totalActiveDays !== 1 ? "s" : ""} · ${stats.streak} day streak`
-                  : loading
-                  ? "Loading..."
-                  : ""}
-              </p>
-              <div className="flex items-center gap-[3px]">
-                <span className="text-xs dark:text-zinc-500 text-zinc-400 mr-1">Less</span>
-                {[0, 1, 3, 6].map((n) => (
-                  <div key={n} className={`w-[13px] h-[13px] rounded-[2px] ${cellClass(n)}`} />
-                ))}
-                <span className="text-xs dark:text-zinc-500 text-zinc-400 ml-1">More</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-start xl:flex-col flex-row flex-wrap gap-2">
-            {stats ? (
-              <>
-                <StatPill label="Solved" value={stats.total} />
-                <StatPill label="Easy"   value={stats.easy} />
-                <StatPill label="Medium" value={stats.medium} />
-                <StatPill label="Hard"   value={stats.hard} />
-                {stats.ranking > 0 && (
-                  <StatPill label="Rank" value={`#${stats.ranking.toLocaleString()}`} />
-                )}
-              </>
-            ) : loading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="px-4 py-2 border dark:border-zinc-800 border-zinc-300 dark:bg-zinc-800 bg-zinc-200 min-w-[72px] h-[54px] animate-pulse"
-                />
-              ))
-            ) : null}
-          </div>
-        </div>
-      </Slide>
+      </div>
     </section>
   );
 }

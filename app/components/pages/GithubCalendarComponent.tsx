@@ -1,22 +1,26 @@
 "use client";
 
-import ContributionGraph from "./ContributionGraph";
-import GitHubStats from "./GitHubStats";
-import { Slide } from "@/app/animation/Slide";
+import dynamic from "next/dynamic";
+import SectionHead from "../shared/SectionHead";
+import WhenVisible from "../shared/WhenVisible";
+
+// The calendar and the stats fetch from GitHub and bring their own charting
+// code, so both load only when the section comes near the viewport.
+const ContributionGraph = dynamic(() => import("./ContributionGraph"), { ssr: false });
+const GitHubStats = dynamic(() => import("./GitHubStats"), { ssr: false });
 
 export default function GithubCalendarComponent() {
   return (
-    <section className="mt-32 md:mt-40">
-      <Slide delay={0.16} className="mb-8">
-        <h2 className="font-incognito text-4xl font-bold tracking-tight">
-          GitHub Activity
-        </h2>
-      </Slide>
-
-      <Slide delay={0.18}>
-        <ContributionGraph />
-        <GitHubStats />
-      </Slide>
+    <section className="mt-28 md:mt-40">
+      <SectionHead title="GitHub Activity" />
+      <div className="folio">
+        <div className="lg:col-start-4 lg:col-span-9">
+          <WhenVisible minHeight="21rem">
+            <ContributionGraph />
+            <GitHubStats />
+          </WhenVisible>
+        </div>
+      </div>
     </section>
   );
 }

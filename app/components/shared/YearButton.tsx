@@ -9,13 +9,15 @@ export default function YearButton({
   currentYear: number | undefined;
   onClick?: MouseEventHandler<HTMLButtonElement>;
 }) {
+  const current = year === currentYear;
   return (
     <button
       onClick={onClick}
-      className={`text-center px-4 py-2 border duration-100 text-sm font-medium ${
-        year === currentYear
-          ? "dark:bg-zinc-100 bg-zinc-900 dark:border-zinc-100 border-zinc-900 dark:text-zinc-900 text-white"
-          : "border-transparent dark:text-white text-zinc-800 dark:hover:border-zinc-700 hover:border-zinc-300"
+      aria-pressed={current}
+      className={`font-mono text-meta px-3 py-1.5 border transition-colors duration-150 ${
+        current
+          ? "bg-fg border-fg text-page"
+          : "border-line text-muted hover:border-fg hover:text-fg"
       }`}
       title={`View Graph for the year ${year}`}
     >

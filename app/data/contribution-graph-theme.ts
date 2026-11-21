@@ -3,7 +3,8 @@ export const espionage: any = {
   dark: ["#383838", "#4D455D", "#7DB9B6", "#F5E9CF", "#E96479"],
 };
 
+// Ink on paper: more contributions, more ink.
 export const github: any = {
-  light: ["#ebedf0", "#9be9a8", "#40c463", "#30a14e", "#216e39"],
-  dark: ["#161b22", "#0e4429", "#006d32", "#26a641", "#39d353"],
+  light: ["#E6DECF", "#C9BCA6", "#9C8E78", "#5F574B", "#1C1915"],
+  dark: ["#24201B", "#4A4238", "#7A6F60", "#B3A893", "#ECE5D8"],
 };

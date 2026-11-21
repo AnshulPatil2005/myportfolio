@@ -29,17 +29,19 @@ export default function ContributionGraph() {
   const years = getGitHubYears(joinYear);
 
   return (
-    <div className="flex xl:flex-row flex-col gap-4">
-      <div className="border dark:border-zinc-800 border-zinc-300 p-8 max-w-fit max-h-fit">
+    <div>
+      <div className="border border-line p-5 sm:p-6 overflow-x-auto text-fg font-mono text-meta">
         <GitHubCalendar
           username={username}
           theme={github}
           colorScheme={serverTheme}
-          blockSize={13}
+          blockSize={12}
+          blockMargin={3}
+          fontSize={13}
           year={calendarYear}
         />
       </div>
-      <div className="flex justify-start xl:flex-col flex-row flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 mt-3">
         {/* Display only the last five years */}
         {years.slice(0, 5).map((year) => (
           <YearButton
