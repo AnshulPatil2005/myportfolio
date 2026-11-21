@@ -38,13 +38,15 @@ export default function Photos() {
       />
       <figure className="folio">
         <Slide className="lg:col-start-4 lg:col-span-9 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {images.map((image) => (
+          {images.map((image, i) => (
             <Image
               key={image.id}
               src={image.src}
               alt="playing guitar"
               width={350}
               height={800}
+              priority={i === 0}
+              sizes="(max-width: 640px) 92vw, 300px"
               className="w-full h-auto aspect-[3/4] object-cover bg-wash border border-line p-2"
             />
           ))}

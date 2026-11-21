@@ -17,7 +17,6 @@ export default function EngravingImage({
   src,
   alt,
   className = "",
-  priority,
   position = "center",
   sizes = "(max-width: 1024px) 100vw, 460px",
 }: Props) {
@@ -31,9 +30,12 @@ export default function EngravingImage({
           src={src}
           alt={alt}
           fill
-          // eager but not preloaded: on a phone the plate sits below the
-          // fold and should not compete with the text for bandwidth
-          loading={priority ? "eager" : "lazy"}
+          // lazy even for the frontispiece: on a phone it sits below the fold
+          // and must not compete with the text; on a desktop it is on screen
+          // and the browser fetches it as soon as layout says so
+          loading="lazy"
+          // engraved line work survives heavier compression than photographs
+          quality={60}
           sizes={sizes}
           className="object-cover plate-img"
           style={{ objectPosition: position }}
