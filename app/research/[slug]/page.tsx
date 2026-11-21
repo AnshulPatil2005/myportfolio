@@ -2,7 +2,6 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { researchProjects } from "@/lib/data";
-import { Slide } from "@/app/animation/Slide";
 import { ResearchProjectType } from "@/types";
 
 type Props = { params: { slug: string } };
@@ -22,11 +21,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 function StatusBadge({ status }: { status: ResearchProjectType["status"] }) {
   return (
-    <span className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider px-2.5 py-1 border dark:border-zinc-700 border-zinc-300 dark:text-zinc-400 text-zinc-600">
+    <span className="inline-flex items-center gap-2.5 font-mono text-meta text-fg">
       <span
-        className={`w-1.5 h-1.5 shrink-0 ${
-          status === "Ongoing" ? "dark:bg-zinc-100 bg-zinc-900" : "dark:bg-zinc-600 bg-zinc-400"
-        }`}
+        className={`w-1.5 h-1.5 shrink-0 ${status === "Ongoing" ? "bg-fg" : "bg-muted"}`}
       />
       {status}
     </span>
@@ -38,107 +35,103 @@ export default function ResearchDetail({ params }: Props) {
   if (!project) notFound();
 
   return (
-    <main className="max-w-6xl mx-auto lg:px-16 px-8 mb-20">
-      <Slide>
-        {/* Back link */}
-        <Link
-          href="/#research"
-          className="inline-flex items-center gap-1.5 text-sm dark:text-zinc-400 text-zinc-500 hover:dark:text-zinc-200 hover:text-zinc-800 mb-8 transition-colors duration-150"
-        >
-          ← Research
-        </Link>
+    <main className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 mb-20">
+      {/* Back link */}
+      <Link href="/#research" className="inline-block mt-8 font-mono text-meta link-muted">
+        ← Research
+      </Link>
 
-        <div className="max-w-3xl">
-          {/* Title + status */}
-          <div className="flex items-start justify-between gap-4 mb-4 flex-wrap">
-            <h1 className="font-incognito font-black tracking-tight sm:text-4xl text-2xl leading-tight max-w-2xl">
-              {project.title}
-            </h1>
-            <StatusBadge status={project.status} />
-          </div>
+      <h1
+        className="mt-8 md:mt-12 mb-10 md:mb-14 leading-[1.02] tracking-[-0.02em] max-w-[24ch]"
+        style={{ fontSize: "clamp(2.5rem, 1.35rem + 3.4vw, 4.5rem)" }}
+      >
+        {project.title}
+      </h1>
 
-          {/* Short description */}
-          <p className="text-base dark:text-zinc-400 text-zinc-600 leading-relaxed mb-6 max-w-2xl">
-            {project.shortDescription}
-          </p>
+      <div className="folio lg:grid-rows-[auto_1fr] border-t border-line pt-6 mb-16">
+        <div className="lg:col-span-3 lg:row-start-1 mb-5 lg:mb-0">
+          <StatusBadge status={project.status} />
+        </div>
 
-          {/* Tags */}
-          <div className="flex flex-wrap gap-x-4 gap-y-1.5 mb-10 font-mono text-xs dark:text-zinc-500 text-zinc-500">
-            {project.tags.map((tag, i) => (
-              <span key={tag}>
-                {i > 0 && <span className="mr-4 dark:text-zinc-700 text-zinc-300">/</span>}
-                {tag}
-              </span>
+        {/* Short description */}
+        <p className="lg:col-start-4 lg:col-span-6 lg:row-start-1 text-lead text-fg mb-6">
+          {project.shortDescription}
+        </p>
+
+        {/* Tags */}
+        <p className="lg:col-start-4 lg:col-span-6 lg:row-start-2 flex flex-wrap gap-x-3 gap-y-1 font-mono text-meta text-muted">
+          {project.tags.map((tag, i) => (
+            <span key={tag}>
+              {i > 0 && <span className="mr-3" aria-hidden="true">/</span>}
+              {tag}
+            </span>
+          ))}
+        </p>
+      </div>
+
+      {/* Overview paragraphs */}
+      <section className="folio border-t border-line pt-6 mb-16">
+        <h2 className="lg:col-span-3 font-mono text-meta text-muted mb-5 lg:mb-0 lg:pt-1.5">
+          Overview
+        </h2>
+        <div className="lg:col-start-4 lg:col-span-6 text-body text-fg space-y-5">
+          {project.fullDescription.map((para, i) => (
+            <p key={i}>{para}</p>
+          ))}
+        </div>
+      </section>
+
+      {/* Detailed sections */}
+      {project.sections && project.sections.length > 0 && (
+        <div className="folio mb-16">
+          <div className="lg:col-start-4 lg:col-span-6 space-y-12">
+            {project.sections.map((section, i) => (
+              <section key={i}>
+                <h2 className="text-h3 mb-3">
+                  {section.heading}
+                </h2>
+                <p className="text-body text-fg mb-4">
+                  {section.body}
+                </p>
+                {section.bullets && section.bullets.length > 0 && (
+                  <ul className="space-y-2 border-l border-line pl-5">
+                    {section.bullets.map((b, bi) => (
+                      <li key={bi} className="text-body text-muted">
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
             ))}
           </div>
-
-          <hr className="dark:border-zinc-800 border-zinc-300 mb-10" />
-
-          {/* Overview paragraphs */}
-          <section className="mb-12">
-            <h2 className="font-incognito text-sm font-semibold uppercase tracking-widest dark:text-zinc-500 text-zinc-400 mb-4">
-              Overview
-            </h2>
-            <div className="dark:text-zinc-400 text-zinc-600 leading-relaxed space-y-4">
-              {project.fullDescription.map((para, i) => (
-                <p key={i}>{para}</p>
-              ))}
-            </div>
-          </section>
-
-          {/* Detailed sections */}
-          {project.sections && project.sections.length > 0 && (
-            <div className="space-y-10 mb-12">
-              {project.sections.map((section, i) => (
-                <section key={i}>
-                  <h2 className="font-incognito text-xl font-semibold tracking-tight mb-3 dark:text-zinc-100 text-zinc-900">
-                    {section.heading}
-                  </h2>
-                  <p className="dark:text-zinc-400 text-zinc-600 leading-relaxed mb-3">
-                    {section.body}
-                  </p>
-                  {section.bullets && section.bullets.length > 0 && (
-                    <ul className="space-y-1.5 ml-1">
-                      {section.bullets.map((b, bi) => (
-                        <li
-                          key={bi}
-                          className="flex items-start gap-2.5 text-sm dark:text-zinc-400 text-zinc-600"
-                        >
-                          <span className="mt-2 w-1.5 h-1.5 dark:bg-zinc-500 bg-zinc-400 shrink-0" />
-                          {b}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </section>
-              ))}
-            </div>
-          )}
-
-          {/* Pipeline */}
-          {project.pipeline && project.pipeline.length > 0 && (
-            <section>
-              <h2 className="font-incognito text-xl font-semibold tracking-tight mb-4 dark:text-zinc-100 text-zinc-900">
-                {project._id === "cxr-generalization"
-                  ? "Implementation Pipeline"
-                  : "ML Workflow"}
-              </h2>
-              <ol className="space-y-3">
-                {project.pipeline.map((step, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <span className="shrink-0 w-6 h-6 border dark:border-zinc-700 border-zinc-300 dark:text-zinc-400 text-zinc-500 font-mono text-xs flex items-center justify-center mt-0.5">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <p className="text-sm dark:text-zinc-400 text-zinc-600 leading-relaxed pt-0.5">
-                      {step}
-                    </p>
-                  </li>
-                ))}
-              </ol>
-            </section>
-          )}
         </div>
-      </Slide>
+      )}
+
+      {/* Pipeline */}
+      {project.pipeline && project.pipeline.length > 0 && (
+        <section className="border-t border-line pt-6">
+          <div className="folio mb-6">
+            <h2 className="lg:col-start-4 lg:col-span-6 text-h3">
+              {project._id === "cxr-generalization"
+                ? "Implementation Pipeline"
+                : "ML Workflow"}
+            </h2>
+          </div>
+          <ol>
+            {project.pipeline.map((step, i) => (
+              <li key={i} className="folio flex gap-4 items-baseline py-3 border-b border-line">
+                <span className="lg:col-span-3 lg:text-right lg:pr-6 font-mono text-meta text-muted">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <p className="lg:col-start-4 lg:col-span-6 text-body text-fg">
+                  {step}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
     </main>
   );
 }
