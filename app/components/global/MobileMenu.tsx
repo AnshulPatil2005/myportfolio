@@ -31,7 +31,7 @@ export default function MobileMenu() {
       <button
         aria-label="Toggle Menu"
         onClick={onToggleNav}
-        className="md:hidden flex flex-col justify-center items-end gap-[5px] border border-line w-10 h-10 px-2.5"
+        className="lg:hidden flex flex-col justify-center items-end gap-[5px] border border-line w-10 h-10 px-2.5"
       >
         <span className="block w-[18px] h-px bg-fg" />
         <span className="block w-[18px] h-px bg-fg" />
@@ -39,7 +39,7 @@ export default function MobileMenu() {
       </button>
       {/* off-screen panels stay out of the tab order until opened */}
       <div
-        className={`md:hidden fixed left-0 top-0 z-10 h-full w-full bg-page transition-[transform,visibility] duration-[500ms] ease-[cubic-bezier(0.7,0,0,1)] ${
+        className={`lg:hidden fixed left-0 top-0 z-10 h-full w-full bg-page transition-[transform,visibility] duration-[500ms] ease-[cubic-bezier(0.7,0,0,1)] ${
           navShow ? "translate-x-0 visible" : "translate-x-full invisible"
         }`}
       >

@@ -41,13 +41,13 @@ export default function Navbar() {
             AP
           </Link>
 
-          <nav className="md:block hidden">
-            <ul className="flex items-center gap-x-7">
+          <nav className="lg:block hidden">
+            <ul className="flex items-center gap-x-5 xl:gap-x-7">
               {navLinks.map((link) => (
                 <li key={link.title}>
                   <Link
                     href={link.href}
-                    className="text-[1.0625rem] text-muted underline decoration-transparent underline-offset-[0.3em] hover:text-fg hover:decoration-line transition-colors duration-150"
+                    className="whitespace-nowrap text-[1.0625rem] text-muted underline decoration-transparent underline-offset-[0.3em] hover:text-fg hover:decoration-line transition-colors duration-150"
                   >
                     {link.title}
                   </Link>
@@ -61,7 +61,7 @@ export default function Navbar() {
               onClick={() =>
                 window.dispatchEvent(new CustomEvent("career-mode:open"))
               }
-              className="hidden md:flex items-center gap-1.5 font-mono text-meta text-muted hover:text-fg px-2 py-1.5 transition-colors duration-150 cursor-pointer"
+              className="hidden lg:flex items-center gap-1.5 whitespace-nowrap font-mono text-meta text-muted hover:text-fg px-2 py-1.5 transition-colors duration-150 cursor-pointer"
               aria-label="Play Career Mode game"
             >
               <span className="text-[0.625rem]">▶</span> Play as a game
@@ -72,7 +72,7 @@ export default function Navbar() {
                   new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true })
                 )
               }
-              className="hidden md:flex items-center font-mono text-meta text-muted hover:text-fg border border-line hover:border-muted px-2 py-1 transition-colors duration-150 cursor-pointer"
+              className="hidden lg:flex items-center font-mono text-meta text-muted hover:text-fg border border-line hover:border-muted px-2 py-1 transition-colors duration-150 cursor-pointer"
               aria-label="Open command palette"
             >
               <kbd>⌘K</kbd>

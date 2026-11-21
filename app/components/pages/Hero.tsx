@@ -130,7 +130,7 @@ export default function Hero() {
         </div>
 
         {/* Frontispiece */}
-        <div className="lg:col-span-5 mt-14 lg:mt-3">
+        <div className="lg:col-span-5 mt-14 lg:mt-3 max-w-[28rem] lg:max-w-none">
           <EngravingImage
             src={ENGRAVING_SRC}
             alt=""
