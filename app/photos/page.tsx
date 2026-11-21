@@ -31,13 +31,13 @@ export const metadata: Metadata = {
 
 export default function Photos() {
   return (
-    <main className="max-w-7xl mx-auto md:px-16 px-6 lg:mt-32 mt-20">
+    <main className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
       <PageHeading
         title="Photos"
         description="This page is still under construction..."
       />
-      <figure className="my-6">
-        <Slide delay={0.12} className="flex flex-wrap gap-2">
+      <figure className="folio">
+        <Slide className="lg:col-start-4 lg:col-span-9 grid grid-cols-1 sm:grid-cols-3 gap-4">
           {images.map((image) => (
             <Image
               key={image.id}
@@ -45,7 +45,7 @@ export default function Photos() {
               alt="playing guitar"
               width={350}
               height={800}
-              className="dark:bg-zinc-800 bg-zinc-200"
+              className="w-full h-auto aspect-[3/4] object-cover bg-wash border border-line p-2"
             />
           ))}
         </Slide>

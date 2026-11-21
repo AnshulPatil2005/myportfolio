@@ -22,8 +22,8 @@ export default function EasterEgg({ isMet }: { isMet: boolean }) {
     <>
       <button onClick={toggleImage} aria-hidden="true">
         <span
-          className={`inline-block w-5 h-5 border dark:border-zinc-600 border-zinc-400 ${
-            isMet === true ? "dark:bg-zinc-100 bg-zinc-900" : ""
+          className={`inline-block w-5 h-5 border border-muted ${
+            isMet === true ? "bg-fg" : ""
           }`}
         />
       </button>

@@ -57,15 +57,15 @@ export default function Post({ params }: Props) {
   return (
     <main className="max-w-7xl mx-auto md:px-16 px-6">
       <header>
-        <Slide className="relative flex items-center gap-x-2 border-b dark:border-zinc-800 border-zinc-200 pb-8">
+        <Slide className="relative flex items-center gap-x-2 border-b border-line pb-8">
           <Link
             href="/blog"
-            className="whitespace-nowrap dark:text-zinc-400 text-zinc-400 hover:dark:text-white hover:text-zinc-700 text-sm border-b dark:border-zinc-700 border-zinc-200"
+            className="whitespace-nowrap font-mono text-meta link-muted"
           >
             cd ..
           </Link>
-          <span className="font-mono text-zinc-400">/</span>
-          <p className="text-zinc-400 text-sm truncate">{post.title}</p>
+          <span className="font-mono text-meta text-muted">/</span>
+          <p className="text-muted text-small truncate">{post.title}</p>
         </Slide>
       </header>
 
@@ -74,8 +74,8 @@ export default function Post({ params }: Props) {
           className="grid lg:grid-cols-[75%,25%] grid-cols-1 relative"
           delay={0.1}
         >
-          <div className="min-h-full lg:border-r border-r-0 dark:border-zinc-800 border-zinc-200 pt-10 pb-4 lg:pr-6 px-0">
-            <div className="flex items-center flex-wrap gap-4 text-md mb-8 dark:text-zinc-400 text-zinc-600">
+          <div className="min-h-full lg:border-r border-r-0 border-line pt-10 pb-4 lg:pr-6 px-0">
+            <div className="flex items-center flex-wrap gap-4 text-md mb-8 text-muted">
               <div className="flex items-center gap-x-2">
                 <time dateTime={post.date ? post.date : post._createdAt}>
                   {post.date ? formatDate(post.date) : formatDate(post._createdAt)}
@@ -83,7 +83,7 @@ export default function Post({ params }: Props) {
               </div>
               <Link
                 href="#comments"
-                className="flex items-center gap-x-2 dark:text-zinc-100 text-zinc-900 underline underline-offset-2"
+                className="flex items-center gap-x-2 text-fg underline underline-offset-2"
               >
                 <span>Comments</span>
               </Link>
@@ -96,7 +96,7 @@ export default function Post({ params }: Props) {
 
             <div className="relative w-full h-40 pt-[52.5%]">
               <Image
-                className="border dark:border-zinc-800 border-zinc-300 object-cover"
+                className="border border-line object-cover"
                 layout="fill"
                 src={post.coverImage?.image || fallbackImage}
                 alt={post.coverImage?.alt || post.title}
@@ -104,14 +104,14 @@ export default function Post({ params }: Props) {
               />
             </div>
 
-            <div className="mt-8 dark:text-zinc-400 text-zinc-600 leading-relaxed tracking-tight text-lg whitespace-pre-wrap">
+            <div className="mt-8 text-muted leading-relaxed tracking-tight text-lg whitespace-pre-wrap">
               {post.body}
             </div>
           </div>
 
           <aside className="flex flex-col lg:max-h-full h-max gap-y-8 sticky top-2 bottom-auto right-0 py-10 lg:px-6 px-0">
-            <section className="border-b dark:border-zinc-800 border-zinc-200 pb-10">
-              <p className="dark:text-zinc-400 text-zinc-500 text-sm">Written By</p>
+            <section className="border-b border-line pb-10">
+              <p className="text-muted text-sm">Written By</p>
               <address className="flex items-center gap-x-3 mt-4 not-italic">
                 <div>
                   <h3 className="font-semibold text-lg tracking-tight">{post.author.name}</h3>
@@ -119,13 +119,13 @@ export default function Post({ params }: Props) {
               </address>
             </section>
 
-            <section className="border-b dark:border-zinc-800 border-zinc-200 pb-10">
+            <section className="border-b border-line pb-10">
               <h3 className="text-xl font-semibold tracking-tight mb-4">Tags</h3>
               <ul className="flex flex-wrap items-center gap-2 tracking-tight">
                 {post.tags.map((tag, id) => (
                   <li
                     key={id}
-                    className="border dark:border-zinc-800 border-zinc-300 px-2 py-1 text-sm"
+                    className="border border-line px-2 py-1 text-sm"
                   >
                     {tag}
                   </li>
@@ -139,7 +139,7 @@ export default function Post({ params }: Props) {
               description={post.description}
             />
 
-            <section className="border-b dark:border-zinc-800 border-zinc-200 pb-10">
+            <section className="border-b border-line pb-10">
               <h3 className="text-xl font-semibold tracking-tight mb-4">Featured</h3>
               <FeaturedPosts params={params.post} />
             </section>
@@ -149,7 +149,7 @@ export default function Post({ params }: Props) {
 
       <section
         id="comments"
-        className="max-w-3xl mt-10 lg:border-t dark:border-zinc-800 border-zinc-200 lg:py-10 pt-0"
+        className="max-w-3xl mt-10 lg:border-t border-line lg:py-10 pt-0"
       >
         <h3 className="lg:text-4xl text-3xl font-semibold tracking-tight mb-8">Comments</h3>
         <Comments />

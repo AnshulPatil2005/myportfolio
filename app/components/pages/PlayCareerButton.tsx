@@ -5,7 +5,7 @@ export default function PlayCareerButton({ label = "▶ Launch Career Mode" }: {
   return (
     <button
       onClick={() => window.dispatchEvent(new CustomEvent("career-mode:open"))}
-      className="hidden md:inline-flex items-center font-mono text-[12px] uppercase tracking-[0.18em] text-ink bg-accent px-6 py-3 hover:opacity-85 transition-opacity"
+      className="hidden md:inline-flex items-center font-mono text-meta text-page bg-fg px-6 py-3 hover:opacity-85 transition-opacity"
     >
       {label}
     </button>

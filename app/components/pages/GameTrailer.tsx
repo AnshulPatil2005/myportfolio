@@ -17,7 +17,7 @@ export default function GameTrailer() {
 
   if (failed) {
     return (
-      <div className="relative border dark:border-zinc-800 border-zinc-200 dark:bg-zinc-950/40 bg-zinc-50 aspect-video flex flex-col items-center justify-center gap-4 text-center px-6">
+      <div className="relative border border-line bg-wash aspect-video flex flex-col items-center justify-center gap-4 text-center px-6">
         <div
           className="absolute inset-0 opacity-30 pointer-events-none"
           style={{
@@ -26,10 +26,10 @@ export default function GameTrailer() {
             backgroundSize: "44px 44px",
           }}
         />
-        <p className="relative font-mono text-[10px] uppercase tracking-[0.3em] dark:text-zinc-500 text-zinc-500">
+        <p className="relative font-mono text-meta text-muted">
           Career Mode
         </p>
-        <p className="relative text-[14px] max-w-sm leading-relaxed dark:text-zinc-400 text-zinc-600">
+        <p className="relative text-[14px] max-w-sm leading-relaxed text-muted">
           A first-person walk through two chapters of my career, running in this
           browser tab.
         </p>
@@ -52,9 +52,9 @@ export default function GameTrailer() {
         preload="metadata"
         onError={() => setFailed(true)}
         aria-label="Silent gameplay clip of Career Mode"
-        className="w-full aspect-video object-cover border dark:border-zinc-800 border-zinc-200 bg-black"
+        className="w-full aspect-video object-cover border border-line bg-black"
       />
-      <figcaption className="mt-2 font-mono text-[10px] uppercase tracking-[0.2em] dark:text-zinc-600 text-zinc-400">
+      <figcaption className="mt-2 font-mono text-meta text-muted">
         gameplay · no audio
       </figcaption>
     </figure>

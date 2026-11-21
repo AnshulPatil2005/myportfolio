@@ -7,15 +7,20 @@ type props = {
 
 export default function NotFoundComponent({ title, description }: props) {
   return (
-    <main className="min-h-[60vh] max-w-7xl mx-auto md:px-16 px-6">
-      <header className="max-w-4xl">
-        <span className="block w-2.5 h-2.5 dark:bg-zinc-600 bg-zinc-400 mb-6" aria-hidden="true" />
-        <h1 className="font-incognito font-black tracking-tight sm:text-6xl text-3xl lg:leading-[3.7rem] leading-tight mb-3">
+    <main className="min-h-[60vh] max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
+      <header className="pt-10 md:pt-16">
+        <span className="block w-2 h-2 bg-fg mb-8" aria-hidden="true" />
+        <h1
+          className="leading-[0.95] tracking-[-0.025em] mb-8"
+          style={{ fontSize: "clamp(3.25rem, 1.6rem + 5vw, 6.5rem)" }}
+        >
           {title}
         </h1>
-        <p className="max-w-2xl text-base dark:text-zinc-400 text-zinc-600 leading-relaxed">
-          {description}
-        </p>
+        <div className="folio">
+          <p className="lg:col-start-4 lg:col-span-6 text-lead text-muted">
+            {description}
+          </p>
+        </div>
       </header>
 
       <div className="max-w-4xl grid lg:grid-cols-2 grid-cols-1 gap-4 mt-12">

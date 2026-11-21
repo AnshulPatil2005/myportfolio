@@ -18,7 +18,7 @@ export default function Posts() {
               <article key={post._id}>
                 <Link
                   href={`/blog/${post.slug}`}
-                  className="flex lg:flex-row flex-col lg:items-center items-start gap-8 p-6 border dark:border-zinc-800 border-zinc-300 group"
+                  className="flex lg:flex-row flex-col lg:items-center items-start gap-8 p-6 border border-line group"
                 >
                   <div className="relative lg:w-[450px] lg:h-52 w-full h-56 overflow-clip">
                     <Image
@@ -34,7 +34,7 @@ export default function Posts() {
                     <h2 className="max-w-sm text-2xl font-semibold tracking-tight mb-4">
                       {post.title}
                     </h2>
-                    <p className="dark:text-zinc-400 text-zinc-600 text-[0.95rem]">
+                    <p className="text-muted text-[0.95rem]">
                       {post.description}
                     </p>
                     <div className="flex items-center gap-x-4 mt-3 text-sm">
