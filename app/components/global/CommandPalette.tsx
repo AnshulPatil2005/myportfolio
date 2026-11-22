@@ -117,7 +117,7 @@ export function CommandPalette({ autoOpen = false }: { autoOpen?: boolean }) {
                     { label: "Go to Projects", href: "/#projects" },
                     { label: "Go to Open Source", href: "/#open-source" },
                     { label: "Go to Research", href: "/#research" },
-                    { label: "Go to Blog", href: "/#blog" },
+                    { label: "Go to Blog", href: "/blog" },
                   ].map((item) => (
                     <Command.Item
                       key={item.label}

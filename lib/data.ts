@@ -163,7 +163,7 @@ export const projects: ProjectType[] = [
     slug: "ai-pr-reviewer",
     tagline: "Python, FastAPI, GitHub API, LLM APIs, REST APIs",
     projectUrl: "https://ai-pr-reviewer-theta.vercel.app/",
-    repository: "https://github.com/AnshulPatil2005",
+    repository: "https://github.com/AnshulPatil2005/AI-PR-Reviewer",
     logo: "",
     coverImage: {
       image: "",
@@ -178,8 +178,8 @@ export const projects: ProjectType[] = [
     name: "Intelligent Document Processing Platform",
     slug: "intelligent-doc-processing",
     tagline: "FastAPI, Celery, Redis, Vector DB, OCR",
-    projectUrl: "https://doc-rag-eight.vercel.app/",
-    repository: "https://github.com/AnshulPatil2005",
+    projectUrl: "",
+    repository: "https://github.com/AnshulPatil2005/docRAG_v2",
     logo: "",
     coverImage: {
       image: "",
@@ -226,7 +226,7 @@ export const showcaseProjects: ProjectType[] = [
     slug: "sect-scrape",
     tagline: "Python, Playwright, BeautifulSoup, SQLite, OCR",
     projectUrl: "",
-    repository: "https://github.com/AnshulPatil2005/sect_scrape",
+    repository: "",
     logo: "",
     coverImage: { image: "", alt: null, lqip: "" },
     description:

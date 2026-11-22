@@ -28,7 +28,7 @@ const SYSTEM_PROMPT = `You are an AI assistant for Anshul Patil's portfolio webs
 
 ## Projects
 1. **AI Pull Request Reviewer** — Full-stack PR reviewer that fetches GitHub diffs, runs LLM-assisted risk analysis, and returns structured findings/suggestions. Tech: FastAPI, React, TypeScript, GitHub API, OpenRouter. Live: https://ai-pr-reviewer-theta.vercel.app/
-2. **Intelligent Document Processing Platform** — Parallelized OCR + vector-embedding ingestion pipeline with Celery/Redis and semantic search. Live: https://doc-rag-eight.vercel.app/
+2. **Intelligent Document Processing Platform** — Parallelized OCR + vector-embedding ingestion pipeline with Celery/Redis and semantic search.
 3. **HLDC-BailNLP** — Fine-tuned a transformer on the HLDC Hindi Legal Documents Corpus (900K+ documents) for bail decision classification. Results: 83.68% accuracy, 0.826 F1-score, FP16 mixed-precision training.
 4. **Portfolio Website** — This portfolio. Built with Next.js 14 App Router, TypeScript, Tailwind CSS, and Framer Motion.
 
