@@ -5,9 +5,6 @@ import EmptyState from "../shared/EmptyState";
 import { formatDate } from "../../utils/date";
 import { posts } from "@/lib/data";
 
-const fallbackImage: string =
-  "https://res.cloudinary.com/victoreke/image/upload/v1692608339/victoreke/blog.png";
-
 export default function Posts() {
   return (
     <section>
@@ -20,16 +17,18 @@ export default function Posts() {
                   href={`/blog/${post.slug}`}
                   className="flex lg:flex-row flex-col lg:items-center items-start gap-8 p-6 border border-line group"
                 >
-                  <div className="relative lg:w-[450px] lg:h-52 w-full h-56 overflow-clip">
-                    <Image
-                      src={post.coverImage?.image || fallbackImage}
-                      className="object-cover group-hover:scale-125 duration-300"
-                      alt={post.coverImage?.alt || post.title}
-                      layout="fill"
-                      placeholder={post.coverImage ? "blur" : "empty"}
-                      blurDataURL={post.coverImage?.lqip || ""}
-                    />
-                  </div>
+                  {post.coverImage?.image && (
+                    <div className="relative lg:w-[450px] lg:h-52 w-full h-56 overflow-clip">
+                      <Image
+                        src={post.coverImage.image}
+                        className="object-cover group-hover:scale-125 duration-300"
+                        alt={post.coverImage.alt || post.title}
+                        layout="fill"
+                        placeholder={post.coverImage.lqip ? "blur" : "empty"}
+                        blurDataURL={post.coverImage.lqip || ""}
+                      />
+                    </div>
+                  )}
                   <div className="max-w-lg">
                     <h2 className="max-w-sm text-2xl font-semibold tracking-tight mb-4">
                       {post.title}

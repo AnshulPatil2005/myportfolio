@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { Metadata } from "next";
-import Heroes from "../components/pages/Heroes";
 import Usage from "../components/pages/Usage";
 import Achievements from "../components/pages/Achievements";
 import { profile } from "@/lib/data";
@@ -26,8 +25,8 @@ export default function About() {
           className="lg:col-span-10 lg:row-start-1 leading-[1.02] tracking-[-0.02em] mb-12 max-w-[22ch]"
           style={{ fontSize: "clamp(2.75rem, 1.4rem + 3.8vw, 5rem)" }}
         >
-          I&apos;m {profile.fullName}. I live in{" "}
-          {profile.location}, where I build the future.
+          I&apos;m {profile.fullName}, a backend and systems developer living
+          in {profile.location}.
         </h1>
 
         <div className="lg:col-start-4 lg:col-span-6 lg:row-start-2 text-lead text-fg space-y-6">
@@ -61,7 +60,6 @@ export default function About() {
 
       <Usage />
       <Achievements />
-      <Heroes />
     </main>
   );
 }

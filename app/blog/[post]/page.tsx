@@ -17,9 +17,6 @@ type Props = {
   };
 };
 
-const fallbackImage: string =
-  "https://res.cloudinary.com/victoreke/image/upload/v1692636087/victoreke/blog.png";
-
 export function generateStaticParams() {
   return posts.map((post) => ({ post: post.slug }));
 }
@@ -37,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       canonical: post.canonicalLink || `https://anshulpatil.dev/blog/${post.slug}`,
     },
     openGraph: {
-      images: post.coverImage?.image || fallbackImage,
+      images: post.coverImage?.image || undefined,
       url: `https://anshulpatil.dev/blog/${post.slug}`,
       title: post.title,
       description: post.description,
@@ -94,15 +91,17 @@ export default function Post({ params }: Props) {
 
             <PageHeading title={post.title} description={post.description} />
 
-            <div className="relative w-full h-40 pt-[52.5%]">
-              <Image
-                className="border border-line object-cover"
-                layout="fill"
-                src={post.coverImage?.image || fallbackImage}
-                alt={post.coverImage?.alt || post.title}
-                quality={100}
-              />
-            </div>
+            {post.coverImage?.image && (
+              <div className="relative w-full h-40 pt-[52.5%]">
+                <Image
+                  className="border border-line object-cover"
+                  layout="fill"
+                  src={post.coverImage.image}
+                  alt={post.coverImage.alt || post.title}
+                  quality={100}
+                />
+              </div>
+            )}
 
             <div className="mt-8 text-muted leading-relaxed tracking-tight text-lg whitespace-pre-wrap">
               {post.body}

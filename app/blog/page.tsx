@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 import Posts from "../components/pages/Posts";
-import Social from "../components/shared/Social";
 import { Slide } from "../animation/Slide";
 import PageHeading from "@/app/components/shared/PageHeading";
 
@@ -20,10 +19,8 @@ export default async function Blog() {
     <main id="main" className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
       <PageHeading
         title="Blog"
-        description="Welcome to my blog domain where I share personal stories about things I've learned, projects I'm hacking on and just general findings. I also write for other publications."
-      >
-        <Social type="publication" />
-      </PageHeading>
+        description="Notes on what I'm learning and the things I'm building."
+      />
 
       <Slide className="folio">
         <div className="lg:col-span-3 mb-6">

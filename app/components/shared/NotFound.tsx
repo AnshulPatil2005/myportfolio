@@ -1,4 +1,4 @@
-import FeaturedPosts from "../pages/FeaturedPosts";
+import Link from "next/link";
 
 type props = {
   title: string;
@@ -17,15 +17,15 @@ export default function NotFoundComponent({ title, description }: props) {
           {title}
         </h1>
         <div className="folio">
-          <p className="lg:col-start-4 lg:col-span-6 text-lead text-muted">
-            {description}
-          </p>
+          <div className="lg:col-start-4 lg:col-span-6">
+            <p className="text-lead text-muted mb-8">{description}</p>
+            <Link href="/" className="group link text-lead">
+              Back to the homepage{" "}
+              <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">&rarr;</span>
+            </Link>
+          </div>
         </div>
       </header>
-
-      <div className="max-w-4xl grid lg:grid-cols-2 grid-cols-1 gap-4 mt-12">
-        <FeaturedPosts />
-      </div>
     </main>
   );
 }
