@@ -20,7 +20,7 @@ export default function Theme() {
     <button
       onClick={toggleTheme}
       className="min-w-[3.75rem] font-mono text-meta text-muted hover:text-fg border border-line hover:border-muted px-2 py-1 transition-colors duration-150"
-      aria-label="Toggle Theme"
+      aria-label={`${currentTheme === "light" ? "Dark" : "Light"} theme`}
     >
       {currentTheme === "light" ? "Dark" : "Light"}
     </button>

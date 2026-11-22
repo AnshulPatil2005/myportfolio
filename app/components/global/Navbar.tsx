@@ -62,9 +62,8 @@ export default function Navbar() {
                 window.dispatchEvent(new CustomEvent("career-mode:open"))
               }
               className="hidden lg:flex items-center gap-1.5 whitespace-nowrap font-mono text-meta text-muted hover:text-fg px-2 py-1.5 transition-colors duration-150 cursor-pointer"
-              aria-label="Play Career Mode game"
             >
-              <span className="text-[0.625rem]">▶</span> Play as a game
+              <span className="text-[0.625rem]" aria-hidden="true">▶</span> Play as a game
             </button>
             <button
               onClick={() =>
@@ -73,7 +72,7 @@ export default function Navbar() {
                 )
               }
               className="hidden lg:flex items-center font-mono text-meta text-muted hover:text-fg border border-line hover:border-muted px-2 py-1 transition-colors duration-150 cursor-pointer"
-              aria-label="Open command palette"
+              aria-label="Open command palette ⌘K"
             >
               <kbd>⌘K</kbd>
             </button>
