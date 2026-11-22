@@ -223,7 +223,7 @@ function LeetCodeCard() {
         <div className="flex flex-wrap items-center justify-between mt-4 gap-x-8 gap-y-2">
           <p className="font-mono text-meta text-muted">
             {stats
-              ? `${stats.totalActiveDays} active day${stats.totalActiveDays !== 1 ? "s" : ""} · ${stats.streak} day streak`
+              ? `${stats.totalActiveDays} active day${stats.totalActiveDays !== 1 ? "s" : ""} · ${stats.streak}-day streak`
               : loading
               ? "Loading..."
               : ""}

@@ -15,7 +15,7 @@ export default function EmptyState({ value, title, message }: stateType) {
         {message ??
           `There are no ${
             value && value.toLowerCase()
-          } available at this time. Check back again.`}
+          } available at this time. Check back soon.`}
       </p>
     </div>
   );

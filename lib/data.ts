@@ -161,7 +161,7 @@ export const projects: ProjectType[] = [
     _id: "ai-pr-reviewer",
     name: "AI Pull Request Reviewer",
     slug: "ai-pr-reviewer",
-    tagline: "Python, FastAPI, GitHub API, LLM APIs, REST APIs",
+    tagline: "Python, FastAPI, React, TypeScript, GitHub API, OpenRouter",
     projectUrl: "https://ai-pr-reviewer-theta.vercel.app/",
     repository: "https://github.com/AnshulPatil2005/AI-PR-Reviewer",
     logo: "",
@@ -212,7 +212,7 @@ export const showcaseProjects: ProjectType[] = [
     _id: "ai-pr-reviewer",
     name: "AI Pull Request Reviewer",
     slug: "ai-pr-reviewer",
-    tagline: "FastAPI, React, TypeScript, GitHub API, OpenRouter",
+    tagline: "Python, FastAPI, React, TypeScript, GitHub API, OpenRouter",
     projectUrl: "https://ai-pr-reviewer-theta.vercel.app/",
     repository: "https://github.com/AnshulPatil2005/AI-PR-Reviewer",
     logo: "",
@@ -331,7 +331,7 @@ export const openSourceContributions: OpenSourceContributionType[] = [
     name: "Extralit/extralit",
     repository: "https://github.com/Extralit/extralit",
     description:
-      "Open-source AI document intelligence platform for systemic data extraction with LLM assistance.",
+      "Open-source AI document intelligence platform for systematic data extraction with LLM assistance.",
     focus:
       "Document workflows, dataset configuration, frontend validation, testing utilities, and deployment reliability.",
     pullRequests: [
@@ -397,7 +397,7 @@ export const researchProjects: ResearchProjectType[] = [
     shortDescription:
       "A machine-learning-ready dataset of Gujarati bail orders (CrPC 436–439) from court records across 33 districts. I built the eCourts scraper. I also decoded the legacy Gujarati fonts that normal PDF extraction turns into gibberish, by reverse-engineering a font converter (with OCR as a fallback).",
     fullDescription: [
-      "This project constructs a low-resource Gujarati legal NLP pipeline using scraped Gujarat eCourt PDFs. The core challenge is that court documents use inconsistent encodings — valid Unicode, legacy fonts (LMG-Arun, TERAFONT-VARUN), and corrupted ToUnicode mappings — so the pipeline evaluates multiple text extraction strategies before any model training.",
+      "This project constructs a low-resource Gujarati legal NLP pipeline using scraped Gujarat eCourts PDFs. The core challenge is that court documents use inconsistent encodings — valid Unicode, legacy fonts (LMG-Arun, TERAFONT-VARUN), and corrupted ToUnicode mappings — so the pipeline evaluates multiple text extraction strategies before any model training.",
       "Once text is extracted and normalized, each case is converted into a structured JSONL record with metadata (district, court, year, CNR number, section) and task-specific labels. Supervised fine-tuning targets include legal text classification, named entity recognition, and legal summarization.",
       "The retrieval layer uses multilingual sentence embeddings (LaBSE, BGE-M3, multilingual-e5) to enable semantic search and RAG over the corpus. The ML contribution is studying how OCR noise propagates into downstream NLP model performance on real district court data.",
     ],

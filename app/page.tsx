@@ -221,7 +221,7 @@ export default function Home() {
               </a>
             </div>
             <p className="mt-10 font-mono text-meta text-muted">
-              Currently at IIIT Surat &middot; Mumbai, India &middot; Open to remote and hybrid roles
+              Currently at IIIT Surat &middot; Mumbai, Maharashtra &middot; Open to remote and hybrid roles
             </p>
           </div>
         </div>

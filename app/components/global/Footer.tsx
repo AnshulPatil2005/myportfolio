@@ -29,7 +29,7 @@ export default function Footer() {
 
           <small className="text-meta">
             Copyright &copy; Anshul Patil {new Date().getFullYear()} All rights
-            Reserved
+            reserved
           </small>
         </div>
       </footer>

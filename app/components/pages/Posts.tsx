@@ -56,7 +56,7 @@ export default function Posts() {
           )}
         </div>
       ) : (
-        <EmptyState value="Blog Post" />
+        <EmptyState value="Blog Posts" />
       )}
     </section>
   );
