@@ -7,13 +7,20 @@ import PlayCareerButton from "./PlayCareerButton";
 // without committing to playing anything — which matters most for the
 // visitors who would never open a game.
 //
-// Drop a recording at public/career-mode.mp4 (see README) and it appears
-// here automatically. Until then this degrades to a still frame.
+// Drop a recording at public/career-mode.mp4 (and optionally a poster at
+// public/career-mode-poster.jpg) and it appears here on the next build. The
+// page checks for the files on the server, so without them nothing 404s.
 const SRC = "/career-mode.mp4";
 const POSTER = "/career-mode-poster.jpg";
 
-export default function GameTrailer() {
-  const [failed, setFailed] = useState(false);
+export default function GameTrailer({
+  hasVideo,
+  hasPoster,
+}: {
+  hasVideo: boolean;
+  hasPoster: boolean;
+}) {
+  const [failed, setFailed] = useState(!hasVideo);
 
   if (failed) {
     return (
@@ -44,7 +51,7 @@ export default function GameTrailer() {
     <figure className="m-0">
       <video
         src={SRC}
-        poster={POSTER}
+        poster={hasPoster ? POSTER : undefined}
         autoPlay
         muted
         loop

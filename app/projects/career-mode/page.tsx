@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import fs from "fs";
+import path from "path";
 import Link from "next/link";
 import { Slide } from "@/app/animation/Slide";
 import GameTrailer from "@/app/components/pages/GameTrailer";
@@ -30,6 +32,9 @@ const STACK: [string, string][] = [
   ["Pipeline", "gltf-transform scripts that strip and then verify models, run with npm run optimize:models"],
 ];
 
+const inPublic = (file: string) =>
+  fs.existsSync(path.join(process.cwd(), "public", file));
+
 export default function CareerModeCaseStudy() {
   return (
     <main id="main" className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 pb-24 pt-10 md:pt-16">
@@ -57,7 +62,10 @@ export default function CareerModeCaseStudy() {
       </Slide>
 
       <Slide delay={0.06}>
-        <GameTrailer />
+        <GameTrailer
+          hasVideo={inPublic("career-mode.mp4")}
+          hasPoster={inPublic("career-mode-poster.jpg")}
+        />
       </Slide>
 
       <Slide delay={0.1}>
