@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 export default async function Blog() {
   return (
-    <main className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
+    <main id="main" className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
       <PageHeading
         title="Blog"
         description="Welcome to my blog domain where I share personal stories about things I've learned, projects I'm hacking on and just general findings. I also write for other publications."

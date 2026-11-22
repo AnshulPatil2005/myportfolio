@@ -35,7 +35,7 @@ export default function ResearchDetail({ params }: Props) {
   if (!project) notFound();
 
   return (
-    <main className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 mb-20">
+    <main id="main" className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 mb-20">
       {/* Back link */}
       <Link href="/#research" className="inline-block mt-8 font-mono text-meta link-muted">
         ← Research

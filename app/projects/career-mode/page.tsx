@@ -32,7 +32,7 @@ const STACK: [string, string][] = [
 
 export default function CareerModeCaseStudy() {
   return (
-    <main className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 pb-24 pt-10 md:pt-16">
+    <main id="main" className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 pb-24 pt-10 md:pt-16">
       <div className="folio">
       <article className="lg:col-start-4 lg:col-span-6">
       <Slide>

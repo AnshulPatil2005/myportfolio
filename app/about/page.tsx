@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
 export default function About() {
   return (
-    <main className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
+    <main id="main" className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
       <section className="folio pt-10 md:pt-16 mb-24 md:mb-32">
         <h1
           className="lg:col-span-10 lg:row-start-1 leading-[1.02] tracking-[-0.02em] mb-12 max-w-[22ch]"

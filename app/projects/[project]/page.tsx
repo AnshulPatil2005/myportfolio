@@ -36,7 +36,7 @@ export default function Project({ params }: Props) {
   const tags = project.tagline.split(",").map((t) => t.trim());
 
   return (
-    <main className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 mb-16">
+    <main id="main" className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16 mb-16">
       <article className="pt-10 md:pt-16">
         <h1
           className="leading-[0.95] tracking-[-0.025em] max-w-[16ch]"

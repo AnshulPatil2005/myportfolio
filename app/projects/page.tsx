@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function Project() {
   return (
-    <main className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
+    <main id="main" className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
       <PageHeading
         title="Projects"
         description="Focused repositories across AI code review, legal data scraping, distributed-systems reliability, competitive programming, portfolio tooling, and notebook-based ML experimentation."

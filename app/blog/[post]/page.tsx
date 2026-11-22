@@ -55,7 +55,7 @@ export default function Post({ params }: Props) {
   const readTime = `${Math.ceil(post.body.split(" ").length / 200)} min read`;
 
   return (
-    <main className="max-w-7xl mx-auto md:px-16 px-6">
+    <main id="main" className="max-w-7xl mx-auto md:px-16 px-6">
       <header>
         <Slide className="relative flex items-center gap-x-2 border-b border-line pb-8">
           <Link

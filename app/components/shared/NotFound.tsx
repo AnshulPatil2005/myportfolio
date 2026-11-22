@@ -7,7 +7,7 @@ type props = {
 
 export default function NotFoundComponent({ title, description }: props) {
   return (
-    <main className="min-h-[60vh] max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
+    <main id="main" className="min-h-[60vh] max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
       <header className="pt-10 md:pt-16">
         <span className="block w-2 h-2 bg-fg mb-8" aria-hidden="true" />
         <h1

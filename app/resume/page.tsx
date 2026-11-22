@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 // content as plain text for ATS forms.
 export default function ResumePage() {
   return (
-    <main className="max-w-3xl mx-auto px-6 md:px-12 py-10 md:py-16 print:py-0 print:max-w-none">
+    <main id="main" className="max-w-3xl mx-auto px-6 md:px-12 py-10 md:py-16 print:py-0 print:max-w-none">
       <div className="print:hidden mb-8 flex flex-wrap items-center gap-3 border border-line p-4">
         <p className="font-mono text-meta text-muted mr-auto">
           Generated from the same data as this site — it cannot drift.
